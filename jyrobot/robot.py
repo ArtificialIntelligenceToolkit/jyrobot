@@ -247,7 +247,7 @@ class Robot():
 
         ##self.direction += PI/180
         tvx = self.vx * math.sin(-self.direction + math.pi/2) + self.vy * math.cos(-self.direction + math.pi/2)
-        tvy = self.vx * Math.cos(-self.direction + math.pi/2) - self.vy * math.sin(-self.direction + math.pi/2)
+        tvy = self.vx * math.cos(-self.direction + math.pi/2) - self.vy * math.sin(-self.direction + math.pi/2)
         ## proposed positions:
         px = self.x + tvx
         py = self.y + tvy

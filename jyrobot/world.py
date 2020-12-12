@@ -1,5 +1,8 @@
-from .utils import (Point, Color, Canvas, Line)
+from .utils import (Point, Color, Line)
 from .robot import Robot
+from .canvas import Canvas
+
+from ipycanvas import hold_canvas
 
 class Wall():
     def __init__(self, color, robot, *lines):
@@ -69,33 +72,34 @@ class World():
             robot.update(time)
 
     def draw(self, canvas):
-        canvas.clear()
-        canvas.noStroke()
-        canvas.fill(self.ground_color)
-        canvas.rect(self.at_x, self.at_y, self.w, self.h)
-        ## Draw walls:
-        for wall in self.walls:
-            if (wall.lines.length >= 1 and wall.robot == None):
+        with hold_canvas(canvas.gc):
+            canvas.clear()
+            canvas.noStroke()
+            canvas.fill(self.ground_color)
+            canvas.rect(self.at_x, self.at_y, self.w, self.h)
+            ## Draw walls:
+            for wall in self.walls:
+                if (len(wall.lines) >= 1 and wall.robot == None):
+                    c = wall.color
+                    canvas.noStroke()
+                    canvas.fill(c)
+                    canvas.beginShape()
+                    for line in wall.lines:
+                        canvas.vertex(line.p1.x, line.p1.y)
+                        canvas.vertex(line.p2.x, line.p2.y)
+
+                    canvas.endShape()
+
+            ## Draw borders:
+            for wall in self.walls:
                 c = wall.color
-                canvas.noStroke()
-                canvas.fill(c)
-                canvas.beginShape()
-                for line in wall.lines:
-                    canvas.vertex(line.p1.x, line.p1.y)
-                    canvas.vertex(line.p2.x, line.p2.y)
+                if (len(wall.lines) == 1):
+                    canvas.strokeStyle(c, 3)
+                    canvas.line(wall.lines[0].p1.x, wall.lines[0].p1.y,
+                                wall.lines[0].p2.x, wall.lines[0].p2.y)
+                    canvas.lineWidth(1)
+                    canvas.noStroke()
 
-                canvas.endShape()
-
-        ## Draw borders:
-        for wall in self.walls:
-            c = wall.color
-            if (wall.lines.length == 1):
-                canvas.strokeStyle(c, 3)
-                canvas.line(wall.lines[0].p1.x, wall.lines[0].p1.y,
-                            wall.lines[0].p2.x, wall.lines[0].p2.y)
-                canvas.lineWidth(1)
-                canvas.noStroke()
-
-        ## Draw robots:
-        for robot in self.robots:
-            robot.draw(canvas)
+            ## Draw robots:
+            for robot in self.robots:
+                robot.draw(canvas)

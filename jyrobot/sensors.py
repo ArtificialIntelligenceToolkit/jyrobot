@@ -94,7 +94,7 @@ class Camera():
             angle = i/self.cameraShape[0] * self.angle - self.angle/2
             self.camera[i] = self.robot.castRay(
                 self.robot.x, self.robot.y,
-                math.pi/2 -self.robot.direction - angle, 1000, false)
+                math.pi/2 -self.robot.direction - angle, 1000, False)
 
         ## Only needed if other robots:
         for i in range(self.cameraShape[0]):
@@ -148,7 +148,7 @@ class Camera():
                 s = max(min(1.0 - hit.distance/size, 1.0), 0.0)
                 sc = max(min(1.0 - hit.distance/size * self.colorsFadeWithDistance, 1.0), 0.0)
                 distance_to = self.cameraShape[1]/2 * (1.0 - s)
-                height = 30 * s
+                height = round(30 * s)
                 r = hit.color.red
                 g = hit.color.green
                 b = hit.color.blue
@@ -210,7 +210,7 @@ class DepthCamera(Camera):
                 s = max(min(1.0 - hit.distance/size, 1.0), 0.0)
                 sc = max(min(1.0 - hit.distance/size * self.colorsFadeWithDistance, 1.0), 0.0)
                 distance_to = self.cameraShape[1]/2 * (1.0 - s)
-                height = 30 * s
+                height = round(30 * s)
                 hcolor = Color(255 * sc)
                 for j in range(height):
                     pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
