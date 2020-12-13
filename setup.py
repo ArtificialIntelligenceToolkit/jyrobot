@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# *************************************
+# jyrobot: Python robot simulator
+#
+# Copyright (c) 2020 Calysto Developers
+#
+# https://github.com/Calysto/jyrobot
+#
+# *************************************
+
 """
 jyrobot setup
 """
@@ -10,6 +20,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
 name = "jyrobot"
+
 
 # Get our version
 def get_version(file, name="__version__"):

@@ -32,8 +32,8 @@ class RangeSensor:
         self.reading = 1.0
         self.robot = robot
         self.position = config.get("position", 10)
-        self.direction = config.get("direction", 0)  ## comes in degrees
-        self.direction = self.direction * math.pi * 180  ## save as radians
+        self.direction = config.get("direction", 0)  # comes in degrees
+        self.direction = self.direction * math.pi * 180  # save as radians
         self.max = config.get("max", 100)
         self.width = config.get("width", 1.0)
         self.distance = self.reading * self.max
@@ -114,10 +114,10 @@ class Camera:
     def __init__(self, robot, config):
         self.robot = robot
         self.cameraShape = [config.get("width", 256), config.get("height", 128)]
-        ## 0 = no fade, 1.0 = max fade
+        # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 1.0)
-        self.angle = config.get("angle", 60)  ## comes in degrees
-        self.angle = self.angle * math.pi / 180  ## save in radians
+        self.angle = config.get("angle", 60)  # comes in degrees
+        self.angle = self.angle * math.pi / 180  # save in radians
         self.camera = [0 for i in range(self.cameraShape[0])]
         self.robotHits = [None for i in range(self.cameraShape[0])]
 
@@ -132,7 +132,7 @@ class Camera:
                 False,
             )
 
-        ## Only needed if other robots:
+        # Only needed if other robots:
         for i in range(self.cameraShape[0]):
             angle = i / self.cameraShape[0] * self.angle - self.angle / 2
             self.robotHits[i] = self.robot.castRayRobot(
@@ -151,7 +151,7 @@ class Camera:
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
         size = max(self.robot.world.w, self.robot.world.h)
         hcolor = None
-        ## draw non-robot walls first:
+        # draw non-robot walls first:
         for i in range(self.cameraShape[0]):
             hit = self.camera[i]
             high = None
@@ -171,21 +171,21 @@ class Camera:
                 high = 0
 
             for j in range(self.cameraShape[1]):
-                if j < high / 2:  ## sky
+                if j < high / 2:  # sky
                     pic.set(i, j, Color(0, 0, 128))
-                elif j < self.cameraShape[1] - high / 2:  ## hit
+                elif j < self.cameraShape[1] - high / 2:  # hit
                     if hcolor is not None:
                         pic.set(i, j, hcolor)
-                else:  ## ground
+                else:  # ground
                     pic.set(i, j, Color(0, 128, 0))
 
-        ## Other robots, draw on top of walls:
+        # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
             hits = self.robotHits[i]
-            hits.sort(key=lambda a: a.distance)  ## further away first
+            hits.sort(key=lambda a: a.distance)  # further away first
             for hit in hits:
                 if self.camera[i] and (hit.distance > self.camera[i].distance):
-                    ## Behind this wall
+                    # Behind this wall
                     break
                 s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
                 sc = max(
@@ -214,7 +214,7 @@ class DepthCamera(Camera):
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
         size = max(self.robot.world.w, self.robot.world.h)
         hcolor = None
-        ## draw non-robot walls first:
+        # draw non-robot walls first:
         for i in range(self.cameraShape[0]):
             hit = self.camera[i]
             high = None
@@ -238,26 +238,26 @@ class DepthCamera(Camera):
                 ground = max(
                     min((j - horizon) / horizon * self.colorsFadeWithDistance, 1.0), 0.0
                 )
-                if j < high / 2:  ## sky
+                if j < high / 2:  # sky
                     if self.reflectSky:
                         color = Color(255 - (255 * sky))
                         pic.set(i, j, color)
 
-                elif j < self.cameraShape[1] - high / 2:  ## hit
+                elif j < self.cameraShape[1] - high / 2:  # hit
                     if hcolor is not None:
                         pic.set(i, j, hcolor)
-                else:  ## ground
+                else:  # ground
                     if self.reflectGround:
                         color = Color(255 * ground)
                         pic.set(i, j, color)
 
-        ## Other robots, draw on top of walls:
+        # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
             hits = self.robotHits[i]
-            hits.sort(key=lambda a: a.distance)  ## further away first
+            hits.sort(key=lambda a: a.distance)  # further away first
             for hit in hits:
                 if self.camera[i] and (hit.distance > self.camera[i].distance):
-                    ## Behind this wall
+                    # Behind this wall
                     break
                 s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
                 sc = max(

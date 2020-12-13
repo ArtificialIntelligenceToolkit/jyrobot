@@ -193,7 +193,7 @@ class Robot:
 
         for wall in self.world.walls:
             # if a wall, or self, continue:
-            if wall.robot == None or wall.robot is self:
+            if wall.robot is None or wall.robot is self:
                 continue
             for line in wall.lines:
                 p1 = line.p1
