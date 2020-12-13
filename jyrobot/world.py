@@ -12,7 +12,14 @@ class Wall():
 
 class World():
     def __init__(self, config, canvas=None):
+        self.config = config
         self.canvas = canvas
+        self.reset()
+        if canvas:
+            self.update()
+            self.draw()
+        
+    def reset(self):
         self.time_step = 0.10
         self.time = 0.0
         self.at_x = 0
@@ -21,7 +28,7 @@ class World():
         self.walls = []
         self.boundary_wall_width = 1
         self.time = 0
-        self.setConfig(config.get("world", {}))
+        self.setConfig(self.config.get("world", {}))
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
         ## Put a wall around boundary:
@@ -35,7 +42,7 @@ class World():
         self.addWall(self.boundary_wall_color, None, Line(p3, p4))
         self.addWall(self.boundary_wall_color, None, Line(p4, p1))
         ## Create robot, and add to world:
-        for robotConfig in config.get("robots", []):
+        for robotConfig in self.config.get("robots", []):
             robot = Robot(robotConfig)
             self.addRobot(robot)
 
@@ -43,9 +50,11 @@ class World():
         self.w = config.get("width", 500)
         self.h = config.get("height", 250)
         for box in config.get("boxes", []):
-            self.addBox(Color(box["color"][0], box["color"][1], box["color"][2]),
-                        box["p1"]["x"], box["p1"]["y"], box["p2"]["x"], box["p2"]["y"])
-
+            self.addBox(Color(box["color"][0], 
+                              box["color"][1], box["color"][2]),
+                        box["p1"]["x"], box["p1"]["y"], 
+                        box["p2"]["x"], box["p2"]["y"])
+    
     def format(self, v):
         return v ## parseFloat(v.toFixed(2))
 
@@ -69,19 +78,25 @@ class World():
         robot.world = self
         self.addWall(robot.color, robot, *robot.bounding_lines)
 
-    def run(self, seconds, time_step=None, show=False):
+    def step(self, steps=1, function=None, time_step=None, show=True):
+        time_step = time_step if time_step is not None else self.time_step
+        for step in range(steps):
+            self.update(time_step)
+            if show and self.canvas:
+                self.draw()
+            if function is not None:
+                function(self)
+        
+    def run(self, seconds, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
-        for step in range(count):
-            self.update(time_step)
-        if show and self.canvas:
-            self.draw()
+        self.step(count, function, time_step, show)
 
-    def update(self, time_step=None):
+    def update(self, time_step=None, move=True):
         ## Draw robots:
         time_step = time_step if time_step is not None else self.time_step
         for robot in self.robots:
-            robot.update(time_step)
+            robot.update(time_step, move)
         self.time += time_step
 
     def draw(self, canvas=None):

@@ -234,25 +234,34 @@ class Robot():
         self.bounding_lines[3].p2.x = p1[0]
         self.bounding_lines[3].p2.y = p1[1]
 
-    def update(self, time_step):
+    def update(self, time_step, move=True):
         if (self.doTrace):
             self.trace.append(Point(self.x, self.y))
             if (len(self.trace) > self.max_trace_length):
                 self.trace.shift()
 
         ##self.direction += PI/180
-        tvx = self.vx * math.sin(-self.direction + math.pi/2) + self.vy * math.cos(-self.direction + math.pi/2) * time_step
-        tvy = self.vx * math.cos(-self.direction + math.pi/2) - self.vy * math.sin(-self.direction + math.pi/2) * time_step
+        offset = math.pi/2
         ## proposed positions:
-        px = self.x + tvx
-        py = self.y + tvy
-        pdirection = self.direction - self.va * time_step
+        if move:
+            pdirection = self.direction - self.va * time_step
+            tvx = (self.vx * math.sin(-pdirection + offset) + 
+                   self.vy * math.cos(-pdirection + offset) * time_step)
+            tvy = (self.vx * math.cos(-pdirection + offset) - 
+                   self.vy * math.sin(-pdirection + offset) * time_step)
+            px = self.x + tvx
+            py = self.y + tvy
+        else:
+            pdirection = self.direction
+            px = self.x
+            py = self.y
         ## check to see if collision
         ## bounding box:
-        p1 = self.rotateAround(px, py, 10, pdirection + math.pi/4 + 0 * math.pi/2)
-        p2 = self.rotateAround(px, py, 10, pdirection + math.pi/4 + 1 * math.pi/2)
-        p3 = self.rotateAround(px, py, 10, pdirection + math.pi/4 + 2 * math.pi/2)
-        p4 = self.rotateAround(px, py, 10, pdirection + math.pi/4 + 3 * math.pi/2)
+        ## FIXME: use actual bounding box points:
+        p1 = self.rotateAround(px, py, 10, pdirection + offset/2 + 0 * offset)
+        p2 = self.rotateAround(px, py, 10, pdirection + offset/2 + 1 * offset)
+        p3 = self.rotateAround(px, py, 10, pdirection + offset/2 + 2 * offset)
+        p4 = self.rotateAround(px, py, 10, pdirection + offset/2 + 3 * offset)
 
         self.updateBoundingBox(p1, p2, p3, p4)
 
