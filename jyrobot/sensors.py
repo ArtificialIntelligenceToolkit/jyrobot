@@ -17,7 +17,6 @@ class RangeSensor():
     """
 
     def __init__(self, robot, config):
-        self.time = 0
         self.reading = 1.0
         self.robot = robot
         self.position = config.get("position", 10)
@@ -27,7 +26,7 @@ class RangeSensor():
         self.width = config.get("width", 1.0)
         self.distance = self.reading * self.max
 
-    def update(self, time):
+    def update(self, time_step):
         p = self.robot.rotateAround(
             self.robot.x, self.robot.y, self.position, self.robot.direction + self.direction)
         self.setReading(1.0)
@@ -89,7 +88,7 @@ class Camera():
         self.camera = [0 for i in range(self.cameraShape[0])]
         self.robotHits = [None for i in range(self.cameraShape[0])]
 
-    def update(self, time):
+    def update(self, time_step):
         for i in range(self.cameraShape[0]):
             angle = i/self.cameraShape[0] * self.angle - self.angle/2
             self.camera[i] = self.robot.castRay(

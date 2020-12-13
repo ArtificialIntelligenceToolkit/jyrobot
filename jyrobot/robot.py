@@ -44,14 +44,12 @@ class Robot():
         self.y = 0 ## cm
         self.direction = 0 ## radians
         self.state = ""
-        self.time = 0
         self.debug = False
-        self.vx = 0.0 ## velocity in x direction
-        self.vy = 0.0 ## velocity in y direction
+        self.vx = 0.0 ## velocity in x direction, CM per second
+        self.vy = 0.0 ## velocity in y direction, degrees per second
         self.va = 0.0 ## turn velocity
         self.stalled = False
         self.state = ""
-        self.time = 0
         self.bounding_lines = [
             Line(Point(0,0), Point(0,0)),
             Line(Point(0,0), Point(0,0)),
@@ -61,7 +59,6 @@ class Robot():
         self.range_sensors = []
         self.cameras = []
         self.state = ""
-        self.time = 0
         self.initBoundingBox()
 
     def setConfig(self, config):
@@ -238,20 +235,19 @@ class Robot():
         self.bounding_lines[3].p2.x = p1[0]
         self.bounding_lines[3].p2.y = p1[1]
 
-    def update(self, time):
-        self.time = time
+    def update(self, time_step):
         if (self.doTrace):
             self.trace.append(Point(self.x, self.y))
             if (len(self.trace) > self.max_trace_length):
                 self.trace.shift()
 
         ##self.direction += PI/180
-        tvx = self.vx * math.sin(-self.direction + math.pi/2) + self.vy * math.cos(-self.direction + math.pi/2)
-        tvy = self.vx * math.cos(-self.direction + math.pi/2) - self.vy * math.sin(-self.direction + math.pi/2)
+        tvx = self.vx * math.sin(-self.direction + math.pi/2) + self.vy * math.cos(-self.direction + math.pi/2) * time_step
+        tvy = self.vx * math.cos(-self.direction + math.pi/2) - self.vy * math.sin(-self.direction + math.pi/2) * time_step
         ## proposed positions:
         px = self.x + tvx
         py = self.y + tvy
-        pdirection = self.direction - self.va
+        pdirection = self.direction - self.va * time_step
         ## check to see if collision
         ## bounding box:
         p1 = self.rotateAround(px, py, 10, pdirection + math.pi/4 + 0 * math.pi/2)
@@ -288,11 +284,11 @@ class Robot():
 
         ## Range Sensors:
         for range_sensor in self.range_sensors:
-            range_sensor.update(time)
+            range_sensor.update(time_step)
 
         ## Cameras:
         for camera in self.cameras:
-            camera.update(time)
+            camera.update(time_step)
 
     def rotateAround(self, x1, y1, length, angle):
         return [

@@ -12,6 +12,8 @@ class Wall():
 
 class World():
     def __init__(self, config):
+        self.time_step = 0.10
+        self.time = 0.0
         self.at_x = 0
         self.at_y = 0
         self.robots = []
@@ -66,10 +68,12 @@ class World():
         robot.world = self
         self.addWall(robot.color, robot, *robot.bounding_lines)
 
-    def update(self, time):
+    def update(self, time_step=None):
         ## Draw robots:
+        time_step = time_step if time_step is not None else self.time_step
         for robot in self.robots:
-            robot.update(time)
+            robot.update(time_step)
+        self.time += time_step
 
     def draw(self, canvas):
         with hold_canvas(canvas.gc):
