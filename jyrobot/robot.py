@@ -31,7 +31,6 @@ class Robot():
             if (camera):
                 self.cameras.append(camera)
 
-        print("Done!")
         for rangeConfig in config.get("rangeSensors", []):
             sensor = RangeSensor(self, rangeConfig)
             self.range_sensors.append(sensor)
