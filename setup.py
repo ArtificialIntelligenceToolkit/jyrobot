@@ -1,18 +1,18 @@
 """
 jyrobot setup
 """
-import os
 import io
+import os
 
 import setuptools
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # The name of the project
-name="jyrobot"
+name = "jyrobot"
 
 # Get our version
-def get_version(file, name='__version__'):
+def get_version(file, name="__version__"):
     """Get the version of the package from the given file by
     executing it and extracting the given `name`.
     """
@@ -21,6 +21,7 @@ def get_version(file, name='__version__'):
     with io.open(path, encoding="utf8") as f:
         exec(f.read(), {}, version_ns)
     return version_ns[name]
+
 
 version = get_version(os.path.join(HERE, "jyrobot/_version.py"))
 
@@ -33,12 +34,10 @@ setup_args = dict(
     url="https://github.com/Calysto/%s" % name,
     author="Douglas Blank",
     description="A lightweight Python Robot simulator",
-    long_description= long_description,
+    long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=[
-        "ipycanvas", "ipylab"
-    ],
+    install_requires=["ipycanvas", "ipylab"],
     python_requires=">=3.6",
     license="BSD-3-Clause",
     platforms="Linux, Mac OS X, Windows",

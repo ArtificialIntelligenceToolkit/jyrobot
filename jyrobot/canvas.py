@@ -1,13 +1,24 @@
+# -*- coding: utf-8 -*-
+# *************************************
+# jyrobot: Python robot simulator
+#
+# Copyright (c) 2020 Calysto Developers
+#
+# https://github.com/Calysto/jyrobot
+#
+# *************************************
+
 import math
 
 from ipycanvas import Canvas as ICanvas
 
-class Canvas():
+
+class Canvas:
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.gc = ICanvas(width=self.width, height=self.height)
-        self.shape = False ##  in the middle of a shape?
+        self.shape = False  ##  in the middle of a shape?
 
     def clear(self):
         self.gc.clear_rect(0, 0, self.width, self.height)
@@ -22,7 +33,7 @@ class Canvas():
         self.gc.line_width = width
 
     def strokeStyle(self, color, width):
-        if (color):
+        if color:
             self.gc.stroke_style = str(color)
         else:
             self.gc.stroke_style = "#000000"
@@ -35,7 +46,7 @@ class Canvas():
         self.gc.stroke_style = "#000000"
 
     def fill(self, color):
-        if (color):
+        if color:
             self.gc.fill_style = str(color)
         else:
             self.gc.fill_style = "#000000"
@@ -76,7 +87,7 @@ class Canvas():
         self.gc.fill()
 
     def vertex(self, x, y):
-        if (self.shape):
+        if self.shape:
             self.gc.line_to(x, y)
         else:
             self.gc.move_to(x, y)
@@ -101,7 +112,7 @@ class Canvas():
             for col in range(pic.width):
                 sourcePixel = pic.get(col, row)
                 for x in range(scale):
-                    subLine.set(sourcePixel, x*4)
+                    subLine.set(sourcePixel, x * 4)
                 for y in range(scale):
                     destRow = row * scale + y
                     destCol = col * scale

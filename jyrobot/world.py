@@ -1,16 +1,28 @@
-from .utils import (Point, Color, Line)
-from .robot import Robot
-from .canvas import Canvas
+# -*- coding: utf-8 -*-
+# *************************************
+# jyrobot: Python robot simulator
+#
+# Copyright (c) 2020 Calysto Developers
+#
+# https://github.com/Calysto/jyrobot
+#
+# *************************************
 
 from ipycanvas import hold_canvas
 
-class Wall():
+from .canvas import Canvas
+from .robot import Robot
+from .utils import Color, Line, Point
+
+
+class Wall:
     def __init__(self, color, robot, *lines):
         self.color = color
         self.lines = lines
         self.robot = robot
 
-class World():
+
+class World:
     def __init__(self, config, canvas=None):
         self.config = config
         self.canvas = canvas
@@ -18,7 +30,7 @@ class World():
         if canvas:
             self.update()
             self.draw()
-        
+
     def reset(self):
         self.time_step = 0.10
         self.time = 0.0
@@ -50,13 +62,16 @@ class World():
         self.w = config.get("width", 500)
         self.h = config.get("height", 250)
         for box in config.get("boxes", []):
-            self.addBox(Color(box["color"][0], 
-                              box["color"][1], box["color"][2]),
-                        box["p1"]["x"], box["p1"]["y"], 
-                        box["p2"]["x"], box["p2"]["y"])
-    
+            self.addBox(
+                Color(box["color"][0], box["color"][1], box["color"][2]),
+                box["p1"]["x"],
+                box["p1"]["y"],
+                box["p2"]["x"],
+                box["p2"]["y"],
+            )
+
     def format(self, v):
-        return v ## parseFloat(v.toFixed(2))
+        return v  ## parseFloat(v.toFixed(2))
 
     def addBox(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
@@ -64,11 +79,9 @@ class World():
         p3 = Point(x2, y2)
         p4 = Point(x1, y2)
         ## Pairs of points make Line:
-        self.addWall(color, None,
-                     Line(p1, p2),
-                     Line(p2, p3),
-                     Line(p3, p4),
-                     Line(p4, p1))
+        self.addWall(
+            color, None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1)
+        )
 
     def addWall(self, c, robot=None, *lines):
         self.walls.append(Wall(c, robot, *lines))
@@ -86,7 +99,7 @@ class World():
                 self.draw()
             if function is not None:
                 function(self)
-        
+
     def run(self, seconds, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
@@ -108,7 +121,7 @@ class World():
             canvas.rect(self.at_x, self.at_y, self.w, self.h)
             ## Draw walls:
             for wall in self.walls:
-                if (len(wall.lines) >= 1 and wall.robot == None):
+                if len(wall.lines) >= 1 and wall.robot == None:
                     c = wall.color
                     canvas.noStroke()
                     canvas.fill(c)
@@ -122,10 +135,14 @@ class World():
             ## Draw borders:
             for wall in self.walls:
                 c = wall.color
-                if (len(wall.lines) == 1):
+                if len(wall.lines) == 1:
                     canvas.strokeStyle(c, 3)
-                    canvas.line(wall.lines[0].p1.x, wall.lines[0].p1.y,
-                                wall.lines[0].p2.x, wall.lines[0].p2.y)
+                    canvas.line(
+                        wall.lines[0].p1.x,
+                        wall.lines[0].p1.y,
+                        wall.lines[0].p2.x,
+                        wall.lines[0].p2.y,
+                    )
                     canvas.lineWidth(1)
                     canvas.noStroke()
 
