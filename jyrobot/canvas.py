@@ -18,12 +18,12 @@ class Canvas:
         self.width = width
         self.height = height
         self.gc = ICanvas(width=self.width, height=self.height)
-        self.shape = False  ##  in the middle of a shape?
+        self.shape = False  # in the middle of a shape?
 
     def clear(self):
         self.gc.clear_rect(0, 0, self.width, self.height)
 
-    def font(selfstyle):
+    def font(self, style):
         self.gc.font = style
 
     def text(self, t, x, y):
@@ -120,7 +120,7 @@ class Canvas:
         return scaled
 
     def arc(self, x, y, width, height, startAngle, endAngle):
-        ##  Draw the pie:
+        #  Draw the pie:
         self.gc.stroke_style = "#000000"
         self.gc.begin_path()
         self.gc.move_to(x, y)
@@ -128,7 +128,7 @@ class Canvas:
         self.gc.line_to(x, y)
         self.gc.fill()
 
-        ##  Draw the arc:
+        #  Draw the arc:
         self.gc.stroke_style = "#000000"
         self.gc.begin_path()
         self.gc.arc(x, y, width, startAngle, endAngle)

@@ -10,7 +10,6 @@
 
 from ipycanvas import hold_canvas
 
-from .canvas import Canvas
 from .robot import Robot
 from .utils import Color, Line, Point
 
@@ -71,7 +70,7 @@ class World:
             )
 
     def format(self, v):
-        return v  ## parseFloat(v.toFixed(2))
+        return v  # parseFloat(v.toFixed(2))
 
     def addBox(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
@@ -121,7 +120,7 @@ class World:
             canvas.rect(self.at_x, self.at_y, self.w, self.h)
             ## Draw walls:
             for wall in self.walls:
-                if len(wall.lines) >= 1 and wall.robot == None:
+                if len(wall.lines) >= 1 and wall.robot is None:
                     c = wall.color
                     canvas.noStroke()
                     canvas.fill(c)
