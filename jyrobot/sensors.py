@@ -116,6 +116,7 @@ class Camera:
         self.cameraShape = [config.get("width", 256), config.get("height", 128)]
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 1.0)
+        self.sizeFadeWithDistance = config.get("sizeFadeWithDistance", 1.0)
         self.angle = config.get("angle", 60)  # comes in degrees
         self.angle = self.angle * math.pi / 180  # save in radians
         self.camera = [0 for i in range(self.cameraShape[0])]
@@ -157,7 +158,9 @@ class Camera:
             high = None
             hcolor = None
             if hit:
-                s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
+                s = max(
+                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
+                )
                 sc = max(
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
@@ -187,7 +190,9 @@ class Camera:
                 if self.camera[i] and (hit.distance > self.camera[i].distance):
                     # Behind this wall
                     break
-                s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
+                s = max(
+                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
+                )
                 sc = max(
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
@@ -220,7 +225,9 @@ class DepthCamera(Camera):
             high = None
             hcolor = None
             if hit:
-                s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
+                s = max(
+                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
+                )
                 sc = max(
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
@@ -259,7 +266,9 @@ class DepthCamera(Camera):
                 if self.camera[i] and (hit.distance > self.camera[i].distance):
                     # Behind this wall
                     break
-                s = max(min(1.0 - hit.distance / size, 1.0), 0.0)
+                s = max(
+                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
+                )
                 sc = max(
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
