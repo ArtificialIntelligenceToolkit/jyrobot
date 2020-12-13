@@ -16,15 +16,15 @@ from PIL import Image as Image
 class Color:
     def __init__(self, red, green=None, blue=None, alpha=None):
         self.red = red
-        if green != None:
+        if green is not None:
             self.green = green
         else:
             self.green = red
-        if blue != None:
+        if blue is not None:
             self.blue = blue
         else:
             self.blue = red
-        if alpha != None:
+        if alpha is not None:
             self.alpha = alpha
         else:
             self.alpha = 255
