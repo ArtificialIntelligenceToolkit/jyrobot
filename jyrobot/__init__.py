@@ -8,14 +8,17 @@
 #
 # *************************************
 
-from ._version import __version__
+from ._version import __version__  # noqa: F401
 
 config = {
     "world": {
         "width": 500,
         "height": 250,
         "boxes": [
-            {"color": [0, 0, 0], "p1": {"x": 100, "y": 0}, "p2": {"x": 110, "y": 110}},
+            {
+                "color": [0, 0, 0],
+                "p1": {"x": 100, "y": 0},
+                "p2": {"x": 110, "y": 110}},
             {
                 "color": [255, 0, 255],
                 "p1": {"x": 200, "y": 95},
@@ -50,9 +53,12 @@ config = {
                 }
             ],
             "rangeSensors": [
-                {"position": 8.2, "direction": 0, "max": 100, "width": 0.05},
-                {"position": 8.2, "direction": 22.5, "max": 20, "width": 1.0},
-                {"position": 8.2, "direction": -22.5, "max": 20, "width": 1.0},
+                {"position": 8.2, "direction": 0,
+                 "max": 100, "width": 0.05,},
+                {"position": 8.2, "direction": 22.5,
+                 "max": 20, "width": 1.0,},
+                {"position": 8.2, "direction": -22.5,
+                 "max": 20, "width": 1.0,},
             ],
             "body": [
                 [4.17, 5.0],
@@ -107,9 +113,12 @@ config = {
                 },
             ],
             "rangeSensors": [
-                {"position": 8.2, "direction": 0, "max": 100, "width": 0.05},
-                {"position": 8.2, "direction": 22.5, "max": 20, "width": 1.0},
-                {"position": 8.2, "direction": -22.5, "max": 20, "width": 1.0},
+                {"position": 8.2, "direction": 0,
+                 "max": 100, "width": 0.05},
+                {"position": 8.2, "direction": 22.5,
+                 "max": 20, "width": 1.0},
+                {"position": 8.2, "direction": -22.5,
+                 "max": 20, "width": 1.0},
             ],
             "body": [
                 [4.17, 5.0],
