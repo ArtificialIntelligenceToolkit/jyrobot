@@ -11,14 +11,23 @@
 import math
 
 from ipycanvas import Canvas as ICanvas
+from PIL import Image
+
+from .utils import Picture
 
 
 class Canvas:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.gc = ICanvas(width=self.width, height=self.height)
+        self.gc = ICanvas(width=self.width, height=self.height, sync_image_data=True)
         self.shape = False  # in the middle of a shape?
+
+    def takePicture(self):
+        image_data = self.gc.get_image_data()
+        img = Image.fromarray(image_data, "RGBA")
+        picture = Picture(img.size[0], img.size[1], img)
+        return picture
 
     def clear(self):
         self.gc.clear_rect(0, 0, self.width, self.height)

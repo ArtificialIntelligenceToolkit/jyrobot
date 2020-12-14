@@ -46,10 +46,13 @@ class Line:
 
 
 class Picture:
-    def __init__(self, width, height):
+    def __init__(self, width, height, image=None):
         self.width = width
         self.height = height
-        self.image = Image.new("RGBA", (self.width, self.height))
+        if image is None:
+            self.image = Image.new("RGBA", (self.width, self.height))
+        else:
+            self.image = image
         self.pixels = self.image.load()
 
     def set(self, x, y, color):
