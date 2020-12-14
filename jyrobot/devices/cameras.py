@@ -74,7 +74,7 @@ class Camera:
 
     def find_closest_wall(self, hits):
         for hit in reversed(hits):  # reverse make it closest first
-            if hit.distance < 1.0:  # skip non-walls
+            if hit.height < 1.0:  # skip non-walls
                 continue
             return hit.distance
         return float("inf")
@@ -87,9 +87,10 @@ class Camera:
         hcolor = None
         # draw non-robot walls first:
         for i in range(self.cameraShape[0]):
-            if len(self.hits[i]) == 0:
+            hits = [hit for hit in self.hits[i] if hit.height == 1.0]  # only walls
+            if len(hits) == 0:
                 continue
-            hit = self.hits[i][-1]  # get closest
+            hit = hits[-1]  # get closest
             high = None
             hcolor = None
             if hit:
