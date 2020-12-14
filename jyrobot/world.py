@@ -90,26 +90,33 @@ class World:
         robot.world = self
         self.addWall(robot.color, robot, *robot.bounding_lines)
 
-    def step(self, steps=1, function=None, time_step=None, show=True):
+    def seconds(self, seconds=5.0, function=None, time_step=None, show=True):
+        time_step = time_step if time_step is not None else self.time_step
+        count = round(seconds / time_step)
+        self.steps(count, function, time_step, show)
+
+    def steps(self, steps=1, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         for step in range(steps):
-            self.update(time_step)
+            self.step(time_step)
+            self.update()
             if show and self.canvas:
                 self.draw()
             if function is not None:
-                function(self)
+                stop = function(self)
+                if stop:
+                    break
 
-    def run(self, seconds, function=None, time_step=None, show=True):
-        time_step = time_step if time_step is not None else self.time_step
-        count = round(seconds / time_step)
-        self.step(count, function, time_step, show)
-
-    def update(self, time_step=None, move=True):
-        ## Draw robots:
+    def step(self, time_step=None):
         time_step = time_step if time_step is not None else self.time_step
         for robot in self.robots:
-            robot.update(time_step, move)
+            robot.step(time_step)
         self.time += time_step
+
+    def update(self):
+        ## Update robots:
+        for robot in self.robots:
+            robot.update()
 
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas

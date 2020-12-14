@@ -245,31 +245,21 @@ class Robot:
         self.bounding_lines[3].p2.x = p1[0]
         self.bounding_lines[3].p2.y = p1[1]
 
-    def update(self, time_step, move=True):
-        if self.doTrace:
-            self.trace.append(Point(self.x, self.y))
-            if len(self.trace) > self.max_trace_length:
-                self.trace.shift()
-
+    def step(self, time_step):
         # self.direction += PI/180
         offset = math.pi / 2
         # proposed positions:
-        if move:
-            pdirection = self.direction - self.va * time_step
-            tvx = (
-                self.vx * math.sin(-pdirection + offset)
-                + self.vy * math.cos(-pdirection + offset) * time_step
-            )
-            tvy = (
-                self.vx * math.cos(-pdirection + offset)
-                - self.vy * math.sin(-pdirection + offset) * time_step
-            )
-            px = self.x + tvx
-            py = self.y + tvy
-        else:
-            pdirection = self.direction
-            px = self.x
-            py = self.y
+        pdirection = self.direction - self.va * time_step
+        tvx = (
+            self.vx * math.sin(-pdirection + offset)
+            + self.vy * math.cos(-pdirection + offset) * time_step
+        )
+        tvy = (
+            self.vx * math.cos(-pdirection + offset)
+            - self.vy * math.sin(-pdirection + offset) * time_step
+        )
+        px = self.x + tvx
+        py = self.y + tvy
         # check to see if collision
         # bounding box:
         # FIXME: use actual bounding box points:
@@ -309,13 +299,24 @@ class Robot:
             self.y = py
             self.direction = pdirection
 
+        self.trace.append((Point(self.x, self.y), self.direction))
+
         # Range Sensors:
         for range_sensor in self.range_sensors:
-            range_sensor.update(time_step)
+            range_sensor.step(time_step)
 
         # Cameras:
         for camera in self.cameras:
-            camera.update(time_step)
+            camera.step(time_step)
+
+    def update(self):
+        # Range Sensors:
+        for range_sensor in self.range_sensors:
+            range_sensor.update()
+
+        # Cameras:
+        for camera in self.cameras:
+            camera.update()
 
     def rotateAround(self, x1, y1, length, angle):
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
@@ -324,7 +325,8 @@ class Robot:
         if self.doTrace:
             canvas.strokeStyle(Color(200, 200, 200), 1)
             canvas.beginShape()
-            for point in self.trace:
+            # The last max_trace_length points:
+            for (point, direction) in self.trace[-self.max_trace_length :]:
                 canvas.vertex(point.x, point.y)
 
             canvas.stroke()

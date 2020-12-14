@@ -38,7 +38,10 @@ class RangeSensor:
         self.width = config.get("width", 1.0)
         self.distance = self.reading * self.max
 
-    def update(self, time_step):
+    def step(self, time_step):
+        pass
+
+    def update(self):
         p = self.robot.rotateAround(
             self.robot.x,
             self.robot.y,
@@ -119,10 +122,37 @@ class Camera:
         self.sizeFadeWithDistance = config.get("sizeFadeWithDistance", 1.0)
         self.angle = config.get("angle", 60)  # comes in degrees
         self.angle = self.angle * math.pi / 180  # save in radians
+        self.reset()
+
+    def reset(self):
         self.camera = [0 for i in range(self.cameraShape[0])]
         self.robotHits = [None for i in range(self.cameraShape[0])]
 
-    def update(self, time_step):
+    def step(self, time_step):
+        pass
+
+    def set_angle(self, angle):
+        # given in degrees
+        # save in radians
+        self.angle = angle * math.pi / 180.0
+        self.reset()
+
+    def set_depth(self, depth):
+        # 1.0 - walls fade off to horizon
+        # lower values have a shorter depth of field
+        self.sizeFadeWithDistance = depth
+        self.colorsFadeWithDistance = depth
+        self.reset()
+
+    def set_size(self, width, height):
+        self.cameraShape[0] = width
+        self.cameraShape[1] = height
+        self.reset()
+
+    def update(self):
+        self.reset()
+
+    def _update(self):
         for i in range(self.cameraShape[0]):
             angle = i / self.cameraShape[0] * self.angle - self.angle / 2
             self.camera[i] = self.robot.castRay(
@@ -149,6 +179,7 @@ class Camera:
         canvas.rect(5.0, -3.33, 1.33, 6.33)
 
     def takePicture(self):
+        self._update()
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
         size = max(self.robot.world.w, self.robot.world.h)
         hcolor = None
@@ -216,6 +247,7 @@ class DepthCamera(Camera):
         self.reflectSky = config.get("reflectGround", False)
 
     def takePicture(self):
+        self._update()
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
         size = max(self.robot.world.w, self.robot.world.h)
         hcolor = None
