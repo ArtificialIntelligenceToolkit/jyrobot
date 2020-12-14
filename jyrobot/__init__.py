@@ -40,6 +40,7 @@ config = {
             "y": 50,
             "direction": 180,
             "color": [255, 0, 0],
+            "height": 0.23,
             "cameras": [
                 {
                     "type": "Camera",
@@ -82,10 +83,11 @@ config = {
             "x": 30,
             "y": 50,
             "direction": 0,
+            "height": 0.23,
             "color": [0, 0, 255],
             "cameras": [
                 {
-                    "type": "DepthCamera",
+                    "type": "Camera",
                     "width": 256,
                     "height": 128,
                     "colorsFadeWithDistance": 1.0,

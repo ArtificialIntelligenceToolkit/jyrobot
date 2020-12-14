@@ -10,8 +10,9 @@
 
 import math
 
+from .devices.cameras import Camera
+from .devices.rangesensors import RangeSensor
 from .hit import Hit
-from .sensors import Camera, DepthCamera, RangeSensor
 from .utils import Color, Line, Point
 
 
@@ -21,6 +22,7 @@ class Robot:
         self.name = config.get("name", "Robbie")
         self.x = config.get("x", 100)
         self.y = config.get("y", 100)
+        self.height = config.get("height", 0.25)  # ratio, 0 to 1 of height
         self.direction = config.get("direction", 0)  # comes in as degrees
         self.direction = self.direction * math.pi / 180  # save as radians
         color = config.get("color", None)
@@ -34,8 +36,6 @@ class Robot:
             camera = None
             if cameraConfig["type"] == "Camera":
                 camera = Camera(self, cameraConfig)
-            elif cameraConfig["type"] == "DepthCamera":
-                camera = DepthCamera(self, cameraConfig)
             else:
                 print("Unknown camera type:", cameraConfig["type"])
 
@@ -156,19 +156,15 @@ class Robot:
     def distance(self, x1, y1, x2, y2):
         return math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
-    def castRay(self, x1, y1, a, maxRange, seeRobots):
-        # Just walls, not robots
+    def castRay(self, x1, y1, a, maxRange):
+        # walls and robots
         hits = []
         x2 = math.sin(a) * maxRange + x1
         y2 = math.cos(a) * maxRange + y1
-        dist = None
-        # height
 
         for wall in self.world.walls:
-            # either seeRobots is true and not self, or only walls
-            if (seeRobots and (wall.robot is self)) or (
-                not seeRobots and (wall.robot is not None)
-            ):
+            # never detect hit with yourself
+            if wall.robot is self:
                 continue
             for line in wall.lines:
                 p1 = line.p1
@@ -176,43 +172,13 @@ class Robot:
                 pos = self.intersect_hit(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)
                 if pos is not None:
                     dist = self.distance(pos[0], pos[1], x1, y1)
-                    hits.append(Hit(1.0, pos[0], pos[1], dist, wall.color, x1, y1))
+                    height = 1.0 if wall.robot is None else wall.robot.height
+                    hits.append(Hit(height, pos[0], pos[1], dist, wall.color, x1, y1))
 
-        if len(hits) == 0:
-            return None
-        else:
-            return self.min_hit(hits)
-
-    def castRayRobot(self, x1, y1, a, maxRange):
-        # Just robots, not walls
-        hits = []
-        x2 = math.sin(a) * maxRange + x1
-        y2 = math.cos(a) * maxRange + y1
-        dist = None
-        # height
-
-        for wall in self.world.walls:
-            # if a wall, or self, continue:
-            if wall.robot is None or wall.robot is self:
-                continue
-            for line in wall.lines:
-                p1 = line.p1
-                p2 = line.p2
-                pos = self.intersect_hit(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)
-                if pos is not None:
-                    dist = self.distance(pos[0], pos[1], x1, y1)
-                    hits.append(Hit(1.0, pos[0], pos[1], dist, wall.color, x1, y1))
-
+        hits.sort(
+            key=lambda a: a.distance, reverse=True
+        )  # further away first, back to front
         return hits
-
-    def min_hit(self, hits):
-        # requires at least one Hit
-        minimum = hits[0]
-        for hit in hits:
-            if hit.distance < minimum.distance:
-                minimum = hit
-
-        return minimum
 
     def initBoundingBox(self):
         px = self.x

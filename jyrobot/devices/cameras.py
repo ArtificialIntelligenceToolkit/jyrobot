@@ -10,107 +10,7 @@
 
 import math
 
-from .utils import Color, Picture
-
-
-def arange(start, stop, step):
-    current = start
-    while current <= stop:
-        yield current
-        current += step
-
-
-class RangeSensor:
-    """
-       A range sensor that reads "reading" when
-       no obstacle has been detected. "reading" is
-       a ratio of distance/max, and "distance" is
-       the reading in CM.
-    """
-
-    def __init__(self, robot, config):
-        self.reading = 1.0
-        self.robot = robot
-        self.position = config.get("position", 10)
-        self.direction = config.get("direction", 0)  # comes in degrees
-        self.direction = self.direction * math.pi * 180  # save as radians
-        self.max = config.get("max", 100)
-        self.width = config.get("width", 1.0)
-        self.distance = self.reading * self.max
-
-    def step(self, time_step):
-        pass
-
-    def update(self):
-        p = self.robot.rotateAround(
-            self.robot.x,
-            self.robot.y,
-            self.position,
-            self.robot.direction + self.direction,
-        )
-        self.setReading(1.0)
-        if self.width != 0:
-            for incr in arange(-self.width / 2, self.width / 2, self.width / 2):
-                hit = self.robot.castRay(
-                    p[0],
-                    p[1],
-                    -self.robot.direction + math.pi / 2.0 + incr,
-                    self.max,
-                    True,
-                )
-                if hit:
-                    if hit.distance < self.getDistance():
-                        self.setDistance(hit.distance)
-        else:
-            hit = self.robot.castRay(
-                p[0], p[1], -self.robot.direction + math.pi / 2.0, self.max, True
-            )
-            if hit:
-                if hit.distance < self.getDistance():
-                    self.setDistance(hit.distance)
-
-    def draw(self, canvas):
-        if self.getReading() < 1.0:
-            canvas.strokeStyle(Color(255), 1)
-        else:
-            canvas.strokeStyle(Color(0), 1)
-
-        canvas.fill(Color(128, 0, 128, 64))
-        p1 = self.robot.rotateAround(
-            self.robot.x,
-            self.robot.y,
-            self.position,
-            self.robot.direction + self.direction,
-        )
-        dist = self.getDistance()
-        if self.width > 0:
-            canvas.arc(
-                p1[0],
-                p1[1],
-                dist,
-                dist,
-                self.robot.direction - self.width / 2,
-                self.robot.direction + self.width / 2,
-            )
-        else:
-            end = self.robot.rotateAround(
-                p1[0], p1[1], dist, self.direction + self.direction
-            )
-            canvas.line(p1[0], p1[1], end[0], end[1])
-
-    def getDistance(self):
-        return self.distance
-
-    def getReading(self):
-        return self.reading
-
-    def setDistance(self, distance):
-        self.distance = distance
-        self.reading = distance / self.max
-
-    def setReading(self, reading):
-        self.reading = reading
-        self.distance = reading * self.max
+from ..utils import Color, Picture
 
 
 class Camera:
@@ -120,13 +20,14 @@ class Camera:
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 1.0)
         self.sizeFadeWithDistance = config.get("sizeFadeWithDistance", 1.0)
+        self.reflectGround = config.get("reflectGround", True)
+        self.reflectSky = config.get("reflectGround", False)
         self.angle = config.get("angle", 60)  # comes in degrees
         self.angle = self.angle * math.pi / 180  # save in radians
         self.reset()
 
     def reset(self):
-        self.camera = [0 for i in range(self.cameraShape[0])]
-        self.robotHits = [None for i in range(self.cameraShape[0])]
+        self.hits = [[] for i in range(self.cameraShape[0])]
 
     def step(self, time_step):
         pass
@@ -150,23 +51,16 @@ class Camera:
         self.reset()
 
     def update(self):
+        """
+        Cameras operate in a lazy way: they don't actually update
+        until needed because they are so expensive.
+        """
         self.reset()
 
     def _update(self):
         for i in range(self.cameraShape[0]):
             angle = i / self.cameraShape[0] * self.angle - self.angle / 2
-            self.camera[i] = self.robot.castRay(
-                self.robot.x,
-                self.robot.y,
-                math.pi / 2 - self.robot.direction - angle,
-                1000,
-                False,
-            )
-
-        # Only needed if other robots:
-        for i in range(self.cameraShape[0]):
-            angle = i / self.cameraShape[0] * self.angle - self.angle / 2
-            self.robotHits[i] = self.robot.castRayRobot(
+            self.hits[i] = self.robot.castRay(
                 self.robot.x,
                 self.robot.y,
                 math.pi / 2 - self.robot.direction - angle,
@@ -178,6 +72,13 @@ class Camera:
         canvas.strokeStyle(None, 0)
         canvas.rect(5.0, -3.33, 1.33, 6.33)
 
+    def find_closest_wall(self, hits):
+        for hit in reversed(hits):  # reverse make it closest first
+            if hit.distance < 1.0:  # skip non-walls
+                continue
+            return hit.distance
+        return float("inf")
+
     def takePicture(self):
         self._update()
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
@@ -185,7 +86,9 @@ class Camera:
         hcolor = None
         # draw non-robot walls first:
         for i in range(self.cameraShape[0]):
-            hit = self.camera[i]
+            if len(self.hits[i]) == 0:
+                continue
+            hit = self.hits[i][-1]  # get closest
             high = None
             hcolor = None
             if hit:
@@ -215,10 +118,10 @@ class Camera:
 
         # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
-            hits = self.robotHits[i]
-            hits.sort(key=lambda a: a.distance)  # further away first
+            closest_wall_dist = self.find_closest_wall(self.hits[i])
+            hits = [hit for hit in self.hits[i] if hit.height < 1.0]
             for hit in hits:
-                if self.camera[i] and (hit.distance > self.camera[i].distance):
+                if hit.distance > closest_wall_dist:
                     # Behind this wall
                     break
                 s = max(
@@ -229,7 +132,9 @@ class Camera:
                     0.0,
                 )
                 distance_to = self.cameraShape[1] / 2 * (1.0 - s)
-                height = round(30 * s)
+                # scribbler was 30, so 0.23 height ratio
+                # height is ratio, 0 to 1
+                height = round(hit.height * self.cameraShape[1] * s)
                 r = hit.color.red
                 g = hit.color.green
                 b = hit.color.blue
@@ -240,20 +145,9 @@ class Camera:
         return pic
 
 
-class DepthCamera(Camera):
-    def __init__(self, robot, config):
-        super().__init__(robot, config)
-        self.reflectGround = config.get("reflectGround", True)
-        self.reflectSky = config.get("reflectGround", False)
-
-    def takePicture(self):
-        self._update()
-        pic = Picture(self.cameraShape[0], self.cameraShape[1])
-        size = max(self.robot.world.w, self.robot.world.h)
-        hcolor = None
-        # draw non-robot walls first:
+"""
         for i in range(self.cameraShape[0]):
-            hit = self.camera[i]
+            hit = self.hits[i]
             high = None
             hcolor = None
             if hit:
@@ -292,10 +186,10 @@ class DepthCamera(Camera):
 
         # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
-            hits = self.robotHits[i]
+            hits = self.hits[i]
             hits.sort(key=lambda a: a.distance)  # further away first
             for hit in hits:
-                if self.camera[i] and (hit.distance > self.camera[i].distance):
+                if self.wallHits[i] and (hit.distance > self.wallHits[i].distance):
                     # Behind this wall
                     break
                 s = max(
@@ -312,3 +206,4 @@ class DepthCamera(Camera):
                     pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
 
         return pic
+"""

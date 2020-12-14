@@ -98,25 +98,25 @@ class World:
     def steps(self, steps=1, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         for step in range(steps):
-            self.step(time_step)
-            self.update()
-            if show and self.canvas:
-                self.draw()
+            self.step(time_step, show=show)
             if function is not None:
                 stop = function(self)
                 if stop:
                     break
 
-    def step(self, time_step=None):
+    def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         for robot in self.robots:
             robot.step(time_step)
         self.time += time_step
+        self.update(show)
 
-    def update(self):
+    def update(self, show=True):
         ## Update robots:
         for robot in self.robots:
             robot.update()
+        if show and self.canvas:
+            self.draw()
 
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
