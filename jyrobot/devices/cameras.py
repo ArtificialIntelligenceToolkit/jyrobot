@@ -18,12 +18,11 @@ class Camera:
         self.robot = robot
         self.cameraShape = [config.get("width", 256), config.get("height", 128)]
         # 0 = no fade, 1.0 = max fade
-        self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 1.0)
+        self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 0.5)
         self.sizeFadeWithDistance = config.get("sizeFadeWithDistance", 1.0)
         self.reflectGround = config.get("reflectGround", True)
-        self.reflectSky = config.get("reflectGround", False)
-        self.angle = config.get("angle", 60)  # comes in degrees
-        self.angle = self.angle * math.pi / 180  # save in radians
+        self.reflectSky = config.get("reflectSky", False)
+        self.set_fov(config.get("angle", 60))  # comes in degrees
         self.reset()
 
     def reset(self):
@@ -32,17 +31,12 @@ class Camera:
     def step(self, time_step):
         pass
 
-    def set_angle(self, angle):
+    def set_fov(self, angle):
         # given in degrees
         # save in radians
+        scale = min(max(angle / 6.0, 0.0), 1.0)
         self.angle = angle * math.pi / 180.0
-        self.reset()
-
-    def set_depth(self, depth):
-        # 1.0 - walls fade off to horizon
-        # lower values have a shorter depth of field
-        self.sizeFadeWithDistance = depth
-        self.colorsFadeWithDistance = depth
+        self.sizeFadeWithDistance = scale
         self.reset()
 
     def set_size(self, width, height):
@@ -79,7 +73,7 @@ class Camera:
             return hit.distance
         return float("inf")
 
-    def takePicture(self):
+    def takePicture(self, type="color"):
         # Lazy; only get the data when we need it:
         self._update()
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
@@ -94,6 +88,7 @@ class Camera:
             high = None
             hcolor = None
             if hit:
+                distance_ratio = max(min(1.0 - hit.distance / size, 1.0), 0.0)
                 s = max(
                     min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
                 )
@@ -101,22 +96,52 @@ class Camera:
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
                 )
-                r = hit.color.red
-                g = hit.color.green
-                b = hit.color.blue
-                hcolor = Color(r * sc, g * sc, b * sc)
+                if type == "color":
+                    r = hit.color.red * sc
+                    g = hit.color.green * sc
+                    b = hit.color.blue * sc
+                elif type == "depth":
+                    r = 255 * distance_ratio
+                    g = 255 * distance_ratio
+                    b = 255 * distance_ratio
+                else:
+                    avg = (hit.color.red + hit.color.green + hit.color.blue) / 3.0
+                    r = avg * sc
+                    g = avg * sc
+                    b = avg * sc
+                hcolor = Color(r, g, b)
                 high = (1.0 - s) * self.cameraShape[1]
             else:
                 high = 0
 
+            horizon = self.cameraShape[1] / 2
             for j in range(self.cameraShape[1]):
+                dist = max(min(abs(j - horizon) / horizon, 1.0), 0.0)
                 if j < high / 2:  # sky
-                    pic.set(i, j, Color(0, 0, 128))
+                    if type == "depth":
+                        if self.reflectSky:
+                            color = Color(255 * dist)
+                        else:
+                            color = Color(0)
+                    elif type == "color":
+                        color = Color(0, 0, 128)
+                    else:
+                        color = Color(128 / 3)
+                    pic.set(i, j, color)
                 elif j < self.cameraShape[1] - high / 2:  # hit
                     if hcolor is not None:
                         pic.set(i, j, hcolor)
                 else:  # ground
-                    pic.set(i, j, Color(0, 128, 0))
+                    if type == "depth":
+                        if self.reflectGround:
+                            color = Color(255 * dist)
+                        else:
+                            color = Color(0)
+                    elif type == "color":
+                        color = Color(0, 128, 0)
+                    else:
+                        color = Color(128 / 3)
+                    pic.set(i, j, color)
 
         # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
@@ -126,6 +151,7 @@ class Camera:
                 if hit.distance > closest_wall_dist:
                     # Behind this wall
                     break
+                distance_ratio = max(min(1.0 - hit.distance / size, 1.0), 0.0)
                 s = max(
                     min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
                 )
@@ -133,78 +159,25 @@ class Camera:
                     min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
                     0.0,
                 )
-                distance_to = self.cameraShape[1] / 2 * (1.0 - s)
+                distance_to = self.cameraShape[1] / 2 * (1.0 - sc)
                 # scribbler was 30, so 0.23 height ratio
                 # height is ratio, 0 to 1
                 height = round(hit.height * self.cameraShape[1] / 2.0 * s)
-                r = hit.color.red
-                g = hit.color.green
-                b = hit.color.blue
-                hcolor = Color(r * sc, g * sc, b * sc)
+                if type == "color":
+                    r = hit.color.red * sc
+                    g = hit.color.green * sc
+                    b = hit.color.blue * sc
+                elif type == "depth":
+                    r = 255 * distance_ratio
+                    g = 255 * distance_ratio
+                    b = 255 * distance_ratio
+                else:
+                    avg = (hit.color.red + hit.color.green + hit.color.blue) / 3.0
+                    r = avg * sc
+                    g = avg * sc
+                    b = avg * sc
+                hcolor = Color(r, g, b)
+                horizon = self.cameraShape[1] / 2
                 for j in range(height):
                     pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
         return pic
-
-
-"""
-        for i in range(self.cameraShape[0]):
-            hit = self.hits[i]
-            high = None
-            hcolor = None
-            if hit:
-                s = max(
-                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
-                )
-                sc = max(
-                    min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
-                    0.0,
-                )
-                hcolor = Color(255 * sc)
-                high = (1.0 - s) * self.cameraShape[1]
-            else:
-                high = 0
-
-            horizon = self.cameraShape[1] / 2
-            for j in range(self.cameraShape[1]):
-                sky = max(
-                    min(1.0 - j / horizon * self.colorsFadeWithDistance, 1.0), 0.0
-                )
-                ground = max(
-                    min((j - horizon) / horizon * self.colorsFadeWithDistance, 1.0), 0.0
-                )
-                if j < high / 2:  # sky
-                    if self.reflectSky:
-                        color = Color(255 - (255 * sky))
-                        pic.set(i, j, color)
-
-                elif j < self.cameraShape[1] - high / 2:  # hit
-                    if hcolor is not None:
-                        pic.set(i, j, hcolor)
-                else:  # ground
-                    if self.reflectGround:
-                        color = Color(255 * ground)
-                        pic.set(i, j, color)
-
-        # Other robots, draw on top of walls:
-        for i in range(self.cameraShape[0]):
-            hits = self.hits[i]
-            hits.sort(key=lambda a: a.distance)  # further away first
-            for hit in hits:
-                if self.wallHits[i] and (hit.distance > self.wallHits[i].distance):
-                    # Behind this wall
-                    break
-                s = max(
-                    min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
-                )
-                sc = max(
-                    min(1.0 - hit.distance / size * self.colorsFadeWithDistance, 1.0),
-                    0.0,
-                )
-                distance_to = self.cameraShape[1] / 2 * (1.0 - s)
-                height = round(30 * s)
-                hcolor = Color(255 * sc)
-                for j in range(height):
-                    pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
-
-        return pic
-"""

@@ -15,22 +15,22 @@ config = {
         "width": 500,
         "height": 250,
         "boxes": [
-            # {"color": [0, 0, 0], "p1": {"x": 100, "y": 0}, "p2": {"x": 110, "y": 110}},
-            # {
-            #     "color": [255, 0, 255],
-            #     "p1": {"x": 200, "y": 95},
-            #     "p2": {"x": 210, "y": 170},
-            # },
-            # {
-            #     "color": [255, 255, 0],
-            #     "p1": {"x": 300, "y": 0},
-            #     "p2": {"x": 310, "y": 95},
-            # },
-            # {
-            #     "color": [255, 128, 0],
-            #     "p1": {"x": 300, "y": 190},
-            #     "p2": {"x": 310, "y": 250},
-            # },
+            {"color": [0, 0, 0], "p1": {"x": 100, "y": 0}, "p2": {"x": 110, "y": 110}},
+            {
+                "color": [255, 0, 255],
+                "p1": {"x": 200, "y": 95},
+                "p2": {"x": 210, "y": 170},
+            },
+            {
+                "color": [255, 255, 0],
+                "p1": {"x": 300, "y": 0},
+                "p2": {"x": 310, "y": 95},
+            },
+            {
+                "color": [255, 128, 0],
+                "p1": {"x": 300, "y": 190},
+                "p2": {"x": 310, "y": 250},
+            },
         ],
     },
     "robots": [
@@ -46,8 +46,9 @@ config = {
                     "type": "Camera",
                     "width": 256,
                     "height": 128,
-                    "colorsFadeWithDistance": 1.0,
+                    "colorsFadeWithDistance": 0.5,
                     "angle": 60,
+                    "reflectGround": True,
                 }
             ],
             "rangeSensors": [
@@ -90,22 +91,9 @@ config = {
                     "type": "Camera",
                     "width": 256,
                     "height": 128,
-                    "colorsFadeWithDistance": 1.0,
+                    "colorsFadeWithDistance": 0.5,
                     "angle": 60,
-                },
-                {
-                    "type": "Camera",
-                    "width": 256,
-                    "height": 128,
-                    "colorsFadeWithDistance": 1.0,
-                    "angle": 60,
-                },
-                {
-                    "type": "Camera",
-                    "width": 256,
-                    "height": 128,
-                    "colorsFadeWithDistance": 1.0,
-                    "angle": 30,
+                    "reflectGround": True,
                 },
             ],
             "rangeSensors": [
