@@ -17,3 +17,12 @@ class Hit:
         self.distance = distance
         self.color = color
         self.start_x = start_x
+        self.start_y = start_y
+
+    def __repr__(self):
+        return "<Hit(%s,%s) distance=%s, height=%s>" % (
+            self.x,
+            self.y,
+            self.distance,
+            self.height,
+        )

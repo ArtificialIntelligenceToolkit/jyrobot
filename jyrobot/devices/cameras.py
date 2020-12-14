@@ -55,7 +55,7 @@ class Camera:
         Cameras operate in a lazy way: they don't actually update
         until needed because they are so expensive.
         """
-        self.reset()
+        pass
 
     def _update(self):
         for i in range(self.cameraShape[0]):
@@ -80,6 +80,7 @@ class Camera:
         return float("inf")
 
     def takePicture(self):
+        # Lazy; only get the data when we need it:
         self._update()
         pic = Picture(self.cameraShape[0], self.cameraShape[1])
         size = max(self.robot.world.w, self.robot.world.h)
@@ -119,7 +120,7 @@ class Camera:
         # Other robots, draw on top of walls:
         for i in range(self.cameraShape[0]):
             closest_wall_dist = self.find_closest_wall(self.hits[i])
-            hits = [hit for hit in self.hits[i] if hit.height < 1.0]
+            hits = [hit for hit in self.hits[i] if hit.height < 1.0]  # obstacles
             for hit in hits:
                 if hit.distance > closest_wall_dist:
                     # Behind this wall
@@ -134,14 +135,13 @@ class Camera:
                 distance_to = self.cameraShape[1] / 2 * (1.0 - s)
                 # scribbler was 30, so 0.23 height ratio
                 # height is ratio, 0 to 1
-                height = round(hit.height * self.cameraShape[1] * s)
+                height = round(hit.height * self.cameraShape[1] / 2.0 * s)
                 r = hit.color.red
                 g = hit.color.green
                 b = hit.color.blue
                 hcolor = Color(r * sc, g * sc, b * sc)
                 for j in range(height):
                     pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
-
         return pic
 
 

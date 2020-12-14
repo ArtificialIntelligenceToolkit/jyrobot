@@ -26,8 +26,10 @@ class World:
         self.config = config
         self.canvas = canvas
         self.reset()
+        # Two updates to force all robots to see each other
+        self.update()
+        self.update()
         if canvas:
-            self.update()
             self.draw()
 
     def reset(self):
@@ -68,9 +70,6 @@ class World:
                 box["p2"]["x"],
                 box["p2"]["y"],
             )
-
-    def format(self, v):
-        return v  # parseFloat(v.toFixed(2))
 
     def addBox(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
@@ -155,3 +154,6 @@ class World:
             ## Draw robots:
             for robot in self.robots:
                 robot.draw(canvas)
+
+            canvas.fill(Color(255))
+            canvas.text("Time: %0.1f" % self.time, 10, canvas.height - 200)

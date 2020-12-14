@@ -38,11 +38,17 @@ class Point:
         self.x = x
         self.y = y
 
+    def __repr__(self):
+        return "Point(%s,%s)" % (self.x, self.y)
+
 
 class Line:
     def __init__(self, p1, p2):
         self.p1 = p1
         self.p2 = p2
+
+    def __repr__(self):
+        return "Line(%s,%s)" % (self.x, self.y)
 
 
 class Picture:

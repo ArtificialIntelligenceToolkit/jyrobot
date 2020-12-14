@@ -276,6 +276,7 @@ class Robot:
             camera.step(time_step)
 
     def update(self):
+        self.initBoundingBox()
         # Range Sensors:
         for range_sensor in self.range_sensors:
             range_sensor.update()
