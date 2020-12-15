@@ -18,17 +18,35 @@
 import hashlib
 import os
 import shutil
+import sys
 import tarfile
 import zipfile
 from urllib.error import HTTPError, URLError
+from urllib.request import urlretrieve
 
-import urlretrieve
+try:
+    from tqdm import tqdm as Progbar
+except ImportError:
+
+    class Progbar:
+        def __init__(self, total_size):
+            self.total_size = total_size
+
+        def update(self, size):
+            print(".", end="")
+            sys.stdout.flush()
+
+        def close(self):
+            print()
+
+
+def round_to_nearest(x, base):
+    return base * round(x / base)
 
 
 def get_file(
     fname,
     origin,
-    untar=False,
     md5_hash=None,
     file_hash=None,
     cache_subdir="datasets",
@@ -40,9 +58,9 @@ def get_file(
     """Downloads a file from a URL if it not already in the cache.
 
     By default the file at the url `origin` is downloaded to the
-    cache_dir `~/.keras`, placed in the cache_subdir `datasets`,
+    cache_dir `~/.jyrobot`, placed in the cache_subdir `datasets`,
     and given the filename `fname`. The final location of a file
-    `example.txt` would therefore be `~/.keras/datasets/example.txt`.
+    `example.txt` would therefore be `~/.jyrobot/datasets/example.txt`.
 
     Files in tar, tar.gz, tar.bz, and zip formats can also be extracted.
     Passing a hash will verify the file after download. The command line
@@ -52,13 +70,11 @@ def get_file(
         fname: Name of the file. If an absolute path `/path/to/file.txt` is
             specified the file will be saved at that location.
         origin: Original URL of the file.
-        untar: Deprecated in favor of 'extract'.
-            boolean, whether the file should be decompressed
         md5_hash: Deprecated in favor of 'file_hash'.
             md5 hash of the file for verification
         file_hash: The expected hash string of the file after download.
             The sha256 and md5 hash algorithms are both supported.
-        cache_subdir: Subdirectory under the Keras cache dir where the file is
+        cache_subdir: Subdirectory under the Jyrobot cache dir where the file is
             saved. If an absolute path `/path/to/folder` is
             specified the file will be saved at that location.
         hash_algorithm: Select the hash algorithm to verify the file.
@@ -71,8 +87,7 @@ def get_file(
             The default 'auto' is ['tar', 'zip'].
             None or an empty list will return no matches found.
         cache_dir: Location to store cached files, when None it
-            defaults to the [Keras
-              Directory](/faq/#where-is-the-keras-configuration-filed-stored).
+            defaults to the Jyrobot default.
 
     Returns:
         Path to the downloaded file
@@ -88,11 +103,7 @@ def get_file(
     datadir = os.path.join(datadir_base, cache_subdir)
     _makedirs_exist_ok(datadir)
 
-    if untar:
-        untar_fpath = os.path.join(datadir, fname)
-        fpath = untar_fpath + ".tar.gz"
-    else:
-        fpath = os.path.join(datadir, fname)
+    fpath = os.path.join(datadir, fname)
 
     download = False
     if os.path.exists(fpath):
@@ -113,13 +124,6 @@ def get_file(
 
     if download:
         print("Downloading data from", origin)
-
-        class Progbar:
-            def __init__(self, total_size):
-                self.total_size = total_size
-
-            def update(self, size):
-                pass
 
         class ProgressTracker(object):
             # Maintain progbar for the lifetime of download.
@@ -146,12 +150,8 @@ def get_file(
             if os.path.exists(fpath):
                 os.remove(fpath)
             raise
+        ProgressTracker.progbar.close()
         ProgressTracker.progbar = None
-
-    if untar:
-        if not os.path.exists(untar_fpath):
-            _extract_archive(fpath, datadir, archive_format="tar")
-        return untar_fpath
 
     if extract:
         _extract_archive(fpath, datadir, archive_format)
@@ -183,7 +183,7 @@ def _extract_archive(file_path, path=".", archive_format="auto"):
         return False
     if archive_format == "auto":
         archive_format = ["tar", "zip"]
-    if isinstance(archive_format, [str]):
+    if isinstance(archive_format, (str,)):
         archive_format = [archive_format]
 
     for archive_type in archive_format:
