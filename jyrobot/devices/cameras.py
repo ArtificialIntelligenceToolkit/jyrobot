@@ -181,3 +181,24 @@ class Camera:
                 for j in range(height):
                     pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
         return pic
+
+    def get_point_cloud(self):
+        depth_pic = self.takePicture("depth")
+        color_pic = self.takePicture("color")
+        points = []
+        for x in range(self.cameraShape[0]):
+            for y in range(self.cameraShape[1]):
+                dist_color = depth_pic.get(x, y)
+                color = color_pic.get(x, y)
+                if dist_color[0] != 255:
+                    points.append(
+                        [
+                            self.cameraShape[0] - x - 1,
+                            self.cameraShape[1] - y - 1,
+                            dist_color[0],
+                            color[0],
+                            color[1],
+                            color[2],
+                        ]
+                    )
+        return points
