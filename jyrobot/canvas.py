@@ -17,11 +17,19 @@ from .utils import Picture
 
 
 class Canvas:
-    def __init__(self, width, height):
+    def __init__(self, width, height, gc=None):
         self.width = width
         self.height = height
-        self.gc = ICanvas(width=self.width, height=self.height, sync_image_data=True)
+        if gc is None:
+            self.gc = ICanvas(
+                width=self.width, height=self.height, sync_image_data=True
+            )
+        else:
+            self.gc = gc
         self.shape = False  # in the middle of a shape?
+
+    def __del__(self):
+        self.gc.close()
 
     def takePicture(self):
         image_data = self.gc.get_image_data()

@@ -12,9 +12,11 @@ import signal
 from contextlib import contextmanager
 
 from ipycanvas import hold_canvas
+from ipylab import JupyterFrontEnd, Panel
+from IPython.display import display
 
 from .robot import Robot
-from .utils import Color, Line, Point
+from .utils import Color, Line, Point, get_canvas
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -36,6 +38,37 @@ class World:
         self.update()
         if canvas:
             self.draw()
+
+    def watch(self, where=None):
+        # FIXME: allow for other kinds of canvases (test, text-only)
+        if where == "panel":
+            app = JupyterFrontEnd()
+
+            panel = None
+            for widget in app.shell.widgets.values():
+                if (
+                    hasattr(widget, "title")
+                    and widget.title.label == "Jyrobot Simulator"
+                ):
+                    panel = widget
+                    break
+
+            if panel is None:
+                if self.canvas is None:
+                    self.canvas = get_canvas(self.config, 500, 250, 1.75)
+
+                panel = Panel()
+                panel.children = [self.canvas.gc]
+                panel.title.label = "Jyrobot Simulator"
+                app.shell.add(panel, "main", {"mode": "split-right"})
+            else:
+                gc = panel.children[0]
+                self.canvas = get_canvas(self.config, 500, 250, 1.75, gc)
+        else:
+            display(self.canvas.gc)
+
+        self.update()
+        self.update()
 
     def reset(self):
         self.stop = False

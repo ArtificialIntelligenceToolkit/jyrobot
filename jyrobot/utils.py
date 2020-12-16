@@ -10,7 +10,30 @@
 
 import io
 
+from ipywidgets import Layout
 from PIL import Image as Image
+
+# from ipylab import JupyterFrontEnd
+
+# def remove_canvases():
+#     app = JupyterFrontEnd()
+#     for widget in app.shell.widgets.values():
+#         print(widget)
+#         if hasattr(widget, "title") and title.startswith("Jyrobot"):
+#             widget.close()
+
+
+def get_canvas(config, width, height, scale=1.0, gc=None):
+    from .canvas import Canvas
+
+    config["width"] = round(width * scale)
+    config["height"] = round(height * scale)
+
+    canvas = Canvas(config["width"], config["height"], gc)
+    if gc is None:
+        canvas.gc.scale(scale, scale)
+    canvas.gc.layout = Layout(width="%spx" % config["width"])
+    return canvas
 
 
 class Color:
