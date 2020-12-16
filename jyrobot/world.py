@@ -8,10 +8,15 @@
 #
 # *************************************
 
+import signal
+from contextlib import contextmanager
+
 from ipycanvas import hold_canvas
 
 from .robot import Robot
 from .utils import Color, Line, Point
+
+DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
 
 class Wall:
@@ -33,6 +38,7 @@ class World:
             self.draw()
 
     def reset(self):
+        self.stop = False
         self.time_step = 0.10
         self.time = 0.0
         self.at_x = 0
@@ -89,19 +95,50 @@ class World:
         robot.world = self
         self.addWall(robot.color, robot, *robot.bounding_lines)
 
+    def signal_handler(self, signal, frame):
+        self.stop = True
+
+    @contextmanager
+    def no_interrupt(self):
+        """
+        Suspends signal handling execution
+        """
+        self.stop = False
+        signal.signal(signal.SIGINT, self.signal_handler)
+
+        try:
+            yield None
+        finally:
+            signal.signal(signal.SIGINT, DEFAULT_HANDLER)
+
     def seconds(self, seconds=5.0, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
         self.steps(count, function, time_step, show)
 
     def steps(self, steps=1, function=None, time_step=None, show=True):
-        time_step = time_step if time_step is not None else self.time_step
-        for step in range(steps):
-            self.step(time_step, show=show)
-            if function is not None:
-                stop = function(self)
-                if stop:
+        with self.no_interrupt():
+            time_step = time_step if time_step is not None else self.time_step
+            for step in range(steps):
+                if self.stop:
                     break
+                self.step(time_step, show=show)
+                if function is not None:
+                    stop = function(self)
+                    if stop:
+                        break
+
+    def run(self, function=None, time_step=None, show=True):
+        with self.no_interrupt():
+            time_step = time_step if time_step is not None else self.time_step
+            while True:
+                if self.stop:
+                    break
+                self.step(time_step, show=show)
+                if function is not None:
+                    stop = function(self)
+                    if stop:
+                        break
 
     def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
