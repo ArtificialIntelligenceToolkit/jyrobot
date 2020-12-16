@@ -144,6 +144,7 @@ class Camera:
                     pic.set(i, j, color)
 
         # Other robots, draw on top of walls:
+        self.obstacles = {}
         for i in range(self.cameraShape[0]):
             closest_wall_dist = self.find_closest_wall(self.hits[i])
             hits = [hit for hit in self.hits[i] if hit.height < 1.0]  # obstacles
@@ -178,9 +179,58 @@ class Camera:
                     b = avg * sc
                 hcolor = Color(r, g, b)
                 horizon = self.cameraShape[1] / 2
-                for j in range(height):
-                    pic.set(i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor)
+                self.record_obstacle(
+                    hit.robot,
+                    i,
+                    self.cameraShape[1] - 1 - round(distance_to),
+                    self.cameraShape[1] - height - 1 - 1 - round(distance_to),
+                )
+                if not hit.robot.has_image():
+                    for j in range(height):
+                        pic.set(
+                            i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor
+                        )
+        self.show_obstacles(pic)
         return pic
+
+    def show_obstacles(self, image):
+        for data in self.obstacles.values():
+            if data["robot"].has_image():
+                radians = (data["robot"].direction - self.robot.direction) % (
+                    math.pi * 2
+                )
+                degrees = round(radians * 180 / math.pi)
+                picture = data["robot"].get_image(degrees)  # degrees
+                x1, y1 = data["min_x"], data["min_y"]
+                x2, y2 = data["max_x"], data["max_y"]
+                # picture.thumbnail((x2 - x1, y2 - y1)) # to keep aspect ratio
+                try:  # like too small
+                    picture = picture.resize((x2 - x1, y2 - y1))
+                    image.image.paste(picture, (x1, y1), picture)
+                except Exception:
+                    pass
+
+    def record_obstacle(self, robot, x, y1, y2):
+        if robot.name not in self.obstacles:
+            self.obstacles[robot.name] = {
+                "robot": robot,
+                "max_x": float("-inf"),
+                "max_y": float("-inf"),
+                "min_x": float("inf"),
+                "min_y": float("inf"),
+            }
+        self.obstacles[robot.name]["max_x"] = max(
+            self.obstacles[robot.name]["max_x"], x
+        )
+        self.obstacles[robot.name]["min_x"] = min(
+            self.obstacles[robot.name]["min_x"], x
+        )
+        self.obstacles[robot.name]["max_y"] = max(
+            self.obstacles[robot.name]["max_y"], y1, y2
+        )
+        self.obstacles[robot.name]["min_y"] = min(
+            self.obstacles[robot.name]["min_y"], y1, y2
+        )
 
     def get_point_cloud(self):
         depth_pic = self.takePicture("depth")

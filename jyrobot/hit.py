@@ -10,7 +10,8 @@
 
 
 class Hit:
-    def __init__(self, height, x, y, distance, color, start_x, start_y):
+    def __init__(self, robot, height, x, y, distance, color, start_x, start_y):
+        self.robot = robot
         self.height = height
         self.x = x
         self.y = y

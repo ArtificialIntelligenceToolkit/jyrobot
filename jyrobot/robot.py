@@ -10,6 +10,7 @@
 
 import math
 
+from .datasets import get_dataset
 from .devices.cameras import Camera
 from .devices.rangesensors import RangeSensor
 from .hit import Hit
@@ -20,6 +21,11 @@ class Robot:
     def __init__(self, config):
         self.initialize()
         self.name = config.get("name", "Robbie")
+        self.image_data = config.get("image_data", [])  # ["dataset", index]
+        if len(self.image_data) == 0:
+            self.get_dataset_image = None
+        else:
+            self.get_dataset_image = get_dataset(self.image_data[0])
         self.x = config.get("x", 100)
         self.y = config.get("y", 100)
         self.height = config.get("height", 0.25)  # ratio, 0 to 1 of height
@@ -156,6 +162,12 @@ class Robot:
     def distance(self, x1, y1, x2, y2):
         return math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
+    def has_image(self):
+        return self.get_dataset_image is not None
+
+    def get_image(self, degrees):
+        return self.get_dataset_image(self.image_data[1], degrees)
+
     def castRay(self, x1, y1, a, maxRange):
         # walls and robots
         hits = []
@@ -173,7 +185,11 @@ class Robot:
                 if pos is not None:
                     dist = self.distance(pos[0], pos[1], x1, y1)
                     height = 1.0 if wall.robot is None else wall.robot.height
-                    hits.append(Hit(height, pos[0], pos[1], dist, wall.color, x1, y1))
+                    hits.append(
+                        Hit(
+                            wall.robot, height, pos[0], pos[1], dist, wall.color, x1, y1
+                        )
+                    )
 
         hits.sort(
             key=lambda a: a.distance, reverse=True

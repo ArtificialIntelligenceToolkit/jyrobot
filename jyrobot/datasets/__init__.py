@@ -21,3 +21,12 @@ if not os.path.exists(_jyrobot_dir):
         os.makedirs(_jyrobot_dir)
     except OSError:
         pass
+
+
+def get_dataset(dataset):
+    get = None
+    if dataset == "coil20":
+        from .coil20 import get
+    elif dataset == "coil100":
+        from .coil100 import get
+    return get
