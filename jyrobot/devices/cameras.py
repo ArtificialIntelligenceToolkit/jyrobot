@@ -199,16 +199,21 @@ class Camera:
     def show_obstacles(self, image):
         for data in self.obstacles.values():
             if data["robot"].has_image():
-                radians = (data["robot"].direction - self.robot.direction) % (
-                    math.pi * 2
+                # the angle to me + offset for graphics + the robot angle:
+                radians = (
+                    math.atan2(
+                        data["robot"].x - self.robot.x, data["robot"].y - self.robot.y
+                    )
+                    + math.pi / 2
+                    + data["robot"].direction
                 )
                 degrees = round(radians * 180 / math.pi)
                 picture = data["robot"].get_image(degrees)  # degrees
                 x1, y1 = data["min_x"], data["min_y"]
                 x2, y2 = data["max_x"], data["max_y"]
-                # picture.thumbnail((x2 - x1, y2 - y1)) # to keep aspect ratio
                 try:  # like too small
-                    picture = picture.resize((x2 - x1, y2 - y1))
+                    picture.thumbnail((x2 - x1, y2 - y1))  # to keep aspect ratio
+                    # picture = picture.resize((x2 - x1, y2 - y1))
                     image.paste(picture, (x1, y1), picture)
                 except Exception:
                     print("Exception in processing image")

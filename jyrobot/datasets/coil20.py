@@ -32,7 +32,8 @@ DATA_RANGE = {
 
 
 def get(obj_num, degree):
-    slice = degree * 2  # convert from 360 to 720
+    offset = -180.0  # make 0 be facing forwards
+    slice = degree * 2 + offset  # convert from 360 to 720
     slice = slice % 720  # map into range 0 to 720
     slice = max(
         min(round(round_to_nearest(slice, 10) / 10), 71), 0
