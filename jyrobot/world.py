@@ -31,44 +31,28 @@ class Wall:
 class World:
     def __init__(self, config, canvas=None):
         self.config = config
-        self.canvas = canvas
+        if canvas is None:
+            self.canvas = get_canvas(self.config, 500, 250, 1.75)
+        else:
+            self.canvas = canvas
         self.reset()
         # Two updates to force all robots to see each other
         self.update()
         self.update()
-        if canvas:
-            self.draw()
+        self.draw()
 
     def watch(self, where=None):
         # FIXME: allow for other kinds of canvases (test, text-only)
         if where == "panel":
             app = JupyterFrontEnd()
-
-            panel = None
-            for widget in app.shell.widgets.values():
-                if (
-                    hasattr(widget, "title")
-                    and widget.title.label == "Jyrobot Simulator"
-                ):
-                    panel = widget
-                    break
-
-            if panel is None:
-                if self.canvas is None:
-                    self.canvas = get_canvas(self.config, 500, 250, 1.75)
-
-                panel = Panel()
-                panel.children = [self.canvas.gc]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "main", {"mode": "split-right"})
-            else:
-                gc = panel.children[0]
-                self.canvas = get_canvas(self.config, 500, 250, 1.75, gc)
+            panel = Panel()
+            panel.children = [self.canvas.gc]
+            panel.title.label = "Jyrobot Simulator"
+            app.shell.add(panel, "main", {"mode": "split-right"})
+            # self.canvas.gc.layout.width = "100%"
+            # self.canvas.gc.layout.height = "auto"
         else:
             display(self.canvas.gc)
-
-        self.update()
-        self.update()
 
     def reset(self):
         self.stop = False
@@ -189,6 +173,7 @@ class World:
 
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
+
         with hold_canvas(canvas.gc):
             canvas.clear()
             canvas.noStroke()

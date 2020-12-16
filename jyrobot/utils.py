@@ -8,10 +8,7 @@
 #
 # *************************************
 
-import io
-
 from ipywidgets import Layout
-from PIL import Image as Image
 
 # from ipylab import JupyterFrontEnd
 
@@ -53,7 +50,10 @@ class Color:
             self.alpha = 255
 
     def __str__(self):
-        return "#%02X%02X%02X%02X" % (self.red, self.green, self.blue, self.alpha)
+        return "#%02X%02X%02X%02X" % self.to_tuple()
+
+    def to_tuple(self):
+        return (int(self.red), int(self.green), int(self.blue), int(self.alpha))
 
 
 class Point:
@@ -72,34 +72,3 @@ class Line:
 
     def __repr__(self):
         return "Line(%s,%s)" % (self.x, self.y)
-
-
-class Picture:
-    def __init__(self, width, height, image=None):
-        self.width = width
-        self.height = height
-        if image is None:
-            self.image = Image.new("RGBA", (self.width, self.height))
-        else:
-            self.image = image
-        self.pixels = self.image.load()
-
-    def set(self, x, y, color):
-        self.pixels[x, y] = (
-            int(color.red),
-            int(color.green),
-            int(color.blue),
-            int(color.alpha),
-        )
-
-    def get(self, x, y):
-        return self.pixels[x, y]
-
-    def to_bytes(self, format="png"):
-        with io.BytesIO() as fp:
-            self.image.save(fp, format=format)
-            data = fp.getvalue()
-        return data
-
-    def _repr_png_(self):
-        return self.to_bytes()

@@ -31,4 +31,5 @@ def load(filename):
                 world = World(config)
                 world.update()
                 return world
+    print("No such world found: %r" % filename)
     return None

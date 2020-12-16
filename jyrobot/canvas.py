@@ -13,8 +13,6 @@ import math
 from ipycanvas import Canvas as ICanvas
 from PIL import Image
 
-from .utils import Picture
-
 
 class Canvas:
     def __init__(self, width, height, gc=None):
@@ -24,6 +22,8 @@ class Canvas:
             self.gc = ICanvas(
                 width=self.width, height=self.height, sync_image_data=True
             )
+            self.gc.layout.width = "100%"
+            self.gc.layout.height = "auto"
         else:
             self.gc = gc
         self.shape = False  # in the middle of a shape?
@@ -33,8 +33,7 @@ class Canvas:
 
     def takePicture(self):
         image_data = self.gc.get_image_data()
-        img = Image.fromarray(image_data, "RGBA")
-        picture = Picture(img.size[0], img.size[1], img)
+        picture = Image.fromarray(image_data, "RGBA")
         return picture
 
     def clear(self):
@@ -123,11 +122,12 @@ class Canvas:
         self.gc.put_image_data(scaled, x, y)
 
     def scaleImageData(self, pic, scale):
+        pic_pixels = pic.load()
         scaled = self.gc.create_image_data(pic.width * scale, pic.height * scale)
         subLine = self.gc.create_image_data(scale, 1).data
         for row in range(pic.height):
             for col in range(pic.width):
-                sourcePixel = pic.get(col, row)
+                sourcePixel = pic_pixels[col, row]
                 for x in range(scale):
                     subLine.set(sourcePixel, x * 4)
                 for y in range(scale):

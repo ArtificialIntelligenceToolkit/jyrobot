@@ -10,7 +10,9 @@
 
 import math
 
-from ..utils import Color, Picture
+from PIL import Image as Image
+
+from ..utils import Color
 
 
 class Camera:
@@ -34,9 +36,9 @@ class Camera:
     def set_fov(self, angle):
         # given in degrees
         # save in radians
-        scale = min(max(angle / 6.0, 0.0), 1.0)
+        # scale = min(max(angle / 6.0, 0.0), 1.0)
         self.angle = angle * math.pi / 180.0
-        self.sizeFadeWithDistance = scale
+        # self.sizeFadeWithDistance = scale
         self.reset()
 
     def set_size(self, width, height):
@@ -76,7 +78,8 @@ class Camera:
     def takePicture(self, type="color"):
         # Lazy; only get the data when we need it:
         self._update()
-        pic = Picture(self.cameraShape[0], self.cameraShape[1])
+        pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
+        pic_pixels = pic.load()
         size = max(self.robot.world.w, self.robot.world.h)
         hcolor = None
         # draw non-robot walls first:
@@ -127,10 +130,10 @@ class Camera:
                         color = Color(0, 0, 128)
                     else:
                         color = Color(128 / 3)
-                    pic.set(i, j, color)
+                    pic_pixels[i, j] = color.to_tuple()
                 elif j < self.cameraShape[1] - high / 2:  # hit
                     if hcolor is not None:
-                        pic.set(i, j, hcolor)
+                        pic_pixels[i, j] = hcolor.to_tuple()
                 else:  # ground
                     if type == "depth":
                         if self.reflectGround:
@@ -141,7 +144,7 @@ class Camera:
                         color = Color(0, 128, 0)
                     else:
                         color = Color(128 / 3)
-                    pic.set(i, j, color)
+                    pic_pixels[i, j] = color.to_tuple()
 
         # Other robots, draw on top of walls:
         self.obstacles = {}
@@ -187,9 +190,9 @@ class Camera:
                 )
                 if not hit.robot.has_image():
                     for j in range(height):
-                        pic.set(
-                            i, self.cameraShape[1] - j - 1 - round(distance_to), hcolor
-                        )
+                        pic_pixels[
+                            i, self.cameraShape[1] - j - 1 - round(distance_to)
+                        ] = hcolor.to_tuple()
         self.show_obstacles(pic)
         return pic
 
@@ -206,9 +209,9 @@ class Camera:
                 # picture.thumbnail((x2 - x1, y2 - y1)) # to keep aspect ratio
                 try:  # like too small
                     picture = picture.resize((x2 - x1, y2 - y1))
-                    image.image.paste(picture, (x1, y1), picture)
+                    image.paste(picture, (x1, y1), picture)
                 except Exception:
-                    pass
+                    print("Exception in processing image")
 
     def record_obstacle(self, robot, x, y1, y2):
         if robot.name not in self.obstacles:
@@ -234,12 +237,14 @@ class Camera:
 
     def get_point_cloud(self):
         depth_pic = self.takePicture("depth")
+        depth_pixels = depth_pic.load()
         color_pic = self.takePicture("color")
+        color_pixels = color_pic.load()
         points = []
         for x in range(self.cameraShape[0]):
             for y in range(self.cameraShape[1]):
-                dist_color = depth_pic.get(x, y)
-                color = color_pic.get(x, y)
+                dist_color = depth_pixels[x, y]
+                color = color_pixels[x, y]
                 if dist_color[0] != 255:
                     points.append(
                         [
