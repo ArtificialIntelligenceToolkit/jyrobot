@@ -49,8 +49,8 @@ class World:
             panel.children = [self.canvas.gc]
             panel.title.label = "Jyrobot Simulator"
             app.shell.add(panel, "main", {"mode": "split-right"})
-            # self.canvas.gc.layout.width = "100%"
-            # self.canvas.gc.layout.height = "auto"
+            self.canvas.gc.layout.width = "100%"
+            self.canvas.gc.layout.height = "auto"
         else:
             display(self.canvas.gc)
 

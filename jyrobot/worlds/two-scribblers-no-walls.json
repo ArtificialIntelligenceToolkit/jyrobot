@@ -10,7 +10,7 @@
             "x": 430,
             "y": 50,
             "direction": 180,
-	    "image_data": ["coil20", 1],
+            "image_data": ["coil20", 1],
             "color": [255, 0, 0],
             "height": 0.23,
             "cameras": [
@@ -53,12 +53,12 @@
             ]
         },
         {
-            "name": "Blue",
+            "name": "White",
             "x": 30,
             "y": 50,
             "direction": 0,
             "height": 0.23,
-            "color": [0, 0, 255],
+            "color": [255, 255, 255],
 	    "image_data": ["coil20", 1],
             "cameras": [
                 {

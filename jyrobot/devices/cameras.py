@@ -197,6 +197,8 @@ class Camera:
         return pic
 
     def show_obstacles(self, image):
+        # FIXME: show back to front
+        # FIXME: how to show when partially behind wall?
         for data in self.obstacles.values():
             if data["robot"].has_image():
                 # the angle to me + offset for graphics + the robot angle:
@@ -209,12 +211,14 @@ class Camera:
                 )
                 degrees = round(radians * 180 / math.pi)
                 picture = data["robot"].get_image(degrees)  # degrees
-                x1, y1 = data["min_x"], data["min_y"]
+                x1, y1 = data["min_x"], data["min_y"]  # noqa: F841
                 x2, y2 = data["max_x"], data["max_y"]
                 try:  # like too small
-                    picture.thumbnail((x2 - x1, y2 - y1))  # to keep aspect ratio
+                    picture.thumbnail((x2 - x1, 10000))  # to keep aspect ratio
                     # picture = picture.resize((x2 - x1, y2 - y1))
-                    image.paste(picture, (x1, y1), picture)
+                    x3 = x2 - picture.height
+                    y3 = y2 - picture.width
+                    image.paste(picture, (x3, y3), picture)
                 except Exception:
                     print("Exception in processing image")
 
