@@ -15,8 +15,8 @@ from PIL import Image
 from .utils import get_file, round_to_nearest
 
 _filename = get_file(
-    "coil-20-proc.zip",
-    "https://media.githubusercontent.com/media/Calysto/conx-data/master/coil/coil-20-proc.zip",
+    "coil-20-no-backgrounds.zip",
+    "https://media.githubusercontent.com/media/Calysto/conx-data/master/coil/coil-20-no-backgrounds.zip",
     extract=True,
 )
 
