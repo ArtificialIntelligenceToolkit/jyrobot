@@ -1,9 +1,7 @@
 {
-    "world": {
-        "width": 500,
-        "height": 250,
-        "boxes": []
-    },
+    "width": 500,
+    "height": 250,
+    "walls": [],
     "robots": [
         {
             "name": "Red",

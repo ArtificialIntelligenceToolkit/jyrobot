@@ -80,7 +80,8 @@ class Camera:
         self._update()
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
         pic_pixels = pic.load()
-        size = max(self.robot.world.w, self.robot.world.h)
+        # FIXME: probably should have a specific size rather than scale it to world
+        size = max(self.robot.world.width, self.robot.world.height)
         hcolor = None
         # draw non-robot walls first:
         for i in range(self.cameraShape[0]):

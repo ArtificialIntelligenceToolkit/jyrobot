@@ -52,6 +52,17 @@ class Robot:
             sensor = RangeSensor(self, rangeConfig)
             self.range_sensors.append(sensor)
 
+    def __repr__(self):
+        return "<Robot(name=%r, position=(%s,%s,%s) v=(%s, %s, %s)>" % (
+            self.name,
+            self.x,
+            self.y,
+            self.direction,
+            self.va,
+            self.vx,
+            self.va,
+        )
+
     def initialize(self):
         self.doTrace = True
         self.trace = []

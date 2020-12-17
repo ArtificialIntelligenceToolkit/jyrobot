@@ -8,31 +8,7 @@
 #
 # *************************************
 
-from ipywidgets import Layout
-
 from .color_data import COLORS
-
-# from ipylab import JupyterFrontEnd
-
-# def remove_canvases():
-#     app = JupyterFrontEnd()
-#     for widget in app.shell.widgets.values():
-#         print(widget)
-#         if hasattr(widget, "title") and title.startswith("Jyrobot"):
-#             widget.close()
-
-
-def get_canvas(config, width, height, scale=1.0, gc=None):
-    from .canvas import Canvas
-
-    config["width"] = round(width * scale)
-    config["height"] = round(height * scale)
-
-    canvas = Canvas(config["width"], config["height"], gc)
-    if gc is None:
-        canvas.gc.scale(scale, scale)
-    canvas.gc.layout = Layout(width="%spx" % config["width"])
-    return canvas
 
 
 class Color:
@@ -47,6 +23,12 @@ class Color:
                 self.name = red
                 hex_string = COLORS.get(red, "#00000000")
                 red, green, blue, alpha = self.hex_to_rgba(hex_string)
+        elif isinstance(red, (list, tuple)):
+            if len(red) == 3:
+                red, green, blue = red
+                alpha = 255
+            else:
+                red, green, blue, alpha = red
 
         self.red = red
         if green is not None:
@@ -103,4 +85,4 @@ class Line:
         self.p2 = p2
 
     def __repr__(self):
-        return "Line(%s,%s)" % (self.x, self.y)
+        return "Line(%s,%s)" % (self.p1, self.p2)

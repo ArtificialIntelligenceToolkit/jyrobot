@@ -10,26 +10,40 @@
 
 import math
 
-from ipycanvas import Canvas as ICanvas
+from ipycanvas import Canvas as IPyCanvas
+from ipywidgets import Layout
 from PIL import Image
 
 
 class Canvas:
-    def __init__(self, width, height, gc=None):
-        self.width = width
-        self.height = height
-        if gc is None:
-            self.gc = ICanvas(
-                width=self.width, height=self.height, sync_image_data=True
-            )
-            self.gc.layout.width = "100%"
-            self.gc.layout.height = "auto"
-        else:
-            self.gc = gc
+    def __init__(self, width, height, scale):
+        self.width = round(width)
+        self.height = round(height)
+        self._scale = 1.0
+        layout = Layout(width="100%", height="auto")
+        self.gc = IPyCanvas(
+            width=round(self.width * self._scale),
+            height=round(self.height * self._scale),
+            sync_image_data=True,
+            layout=layout,
+        )
         self.shape = False  # in the middle of a shape?
+        self.change_scale(scale)  # will update canvas appropriately
 
-    def __del__(self):
-        self.gc.close()
+    def change_size(self, width, height):
+        if self.width != width or self.height != height:
+            self.gc.width = round(width * self._scale)
+            self.gc.height = round(height * self._scale)
+            self.width = round(width)
+            self.height = round(height)
+
+    def change_scale(self, scale):
+        if scale != self._scale:
+            self._scale = scale
+            self.gc.width = round(self.width * self._scale)
+            self.gc.height = round(self.height * self._scale)
+            self.resetScale()
+            self.scale(self._scale, self._scale)
 
     def takePicture(self):
         image_data = self.gc.get_image_data()
