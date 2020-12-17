@@ -18,14 +18,43 @@ from ..utils import Color
 class Camera:
     def __init__(self, robot, config):
         self.robot = robot
-        self.cameraShape = [config.get("width", 256), config.get("height", 128)]
+        self.cameraShape = [256, 128]
         # 0 = no fade, 1.0 = max fade
-        self.colorsFadeWithDistance = config.get("colorsFadeWithDistance", 0.5)
-        self.sizeFadeWithDistance = config.get("sizeFadeWithDistance", 1.0)
-        self.reflectGround = config.get("reflectGround", True)
-        self.reflectSky = config.get("reflectSky", False)
-        self.set_fov(config.get("angle", 60))  # comes in degrees
+        self.colorsFadeWithDistance = 0.5
+        self.sizeFadeWithDistance = 1.0
+        self.reflectGround = True
+        self.reflectSky = False
+        self.set_fov(60)  # degrees
         self.reset()
+
+    def from_json(self, config):
+        if "width" in config:
+            self.cameraShape[0] = config["width"]
+        if "height" in config:
+            self.cameraShape[1] = config["height"]
+
+        if "colorsFadeWithDistance" in config:
+            self.colorsFadeWithDistance = config["colorsFadeWithDistance"]
+        if "sizeFadeWithDistance" in config:
+            self.sizeFadeWithDistance = config["sizeFadeWithDistance"]
+        if "reflectGround" in config:
+            self.reflectGround = config["reflectGround"]
+        if "reflectSky" in config:
+            self.reflectSky = config["reflectSky"]
+        if "angle" in config:
+            self.set_fov(config["angle"])  # degrees
+
+    def to_json(self):
+        return {
+            "type": "Camera",
+            "width": self.cameraShape[0],
+            "height": self.cameraShape[1],
+            "colorsFadeWithDistance": self.colorsFadeWithDistance,
+            "sizeFadeWithDistance": self.sizeFadeWithDistance,
+            "reflectGround": self.reflectGround,
+            "reflectSky": self.reflectSky,
+            "angle": self.angle * 180 / math.pi,  # save in degrees
+        }
 
     def reset(self):
         self.hits = [[] for i in range(self.cameraShape[0])]

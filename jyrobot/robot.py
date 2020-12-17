@@ -79,7 +79,7 @@ class Robot:
         if "y" in config:
             self.y = config["y"]
         if "direction" in config:
-            self.direction = config["direction"]
+            self.direction = config["direction"] * math.pi / 180
 
         if "image_data" in config:
             self.image_data = config["image_data"]  # ["dataset", index]

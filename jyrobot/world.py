@@ -139,11 +139,15 @@ class World:
         }
         for wall in self.walls:
             if len(wall.lines) == 4 and wall.robot is None:
-                # box, save these
-                print(wall)
+                w = {
+                    "color": str(wall.color),
+                    "p1": {"x": wall.lines[0].p1.x, "y": wall.lines[0].p1.y,},
+                    "p2": {"x": wall.lines[2].p1.x, "y": wall.lines[2].p1.y,},
+                }
+                config["walls"].append(w)
 
         for robot in self.robots:
-            robot.to_json(config["robots"])
+            config["robots"].append(robot.to_json(config["robots"]))
 
         return config
 
