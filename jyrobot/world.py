@@ -8,6 +8,8 @@
 #
 # *************************************
 
+import json
+import os
 import signal
 import sys
 import time
@@ -19,7 +21,7 @@ from IPython.display import display
 
 from .canvas import Canvas
 from .robot import Robot
-from .utils import Color, Line, Point
+from .utils import Color, Line, Point, throttle
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -36,6 +38,7 @@ class Wall:
 
 class World:
     def __init__(self, config=None):
+        self.real_time = True
         self.canvas = None
         self.config = config if config is not None else {}
         self.init()  # default values
@@ -124,19 +127,36 @@ class World:
 
     def to_json(self):
         config = {
-            "width": self.width,
-            "height": self.height,
+            "width": int(self.width),
+            "height": int(self.height),
             "scale": self.scale,
+            "boundary_wall": self.boundary_wall,  # bool
+            "boundary_wall_color": str(self.boundary_wall_color),
+            "boundary_wall_width": self.boundary_wall_width,
+            "ground_color": str(self.ground_color),
             "walls": [],
             "robots": [],
         }
         for wall in self.walls:
-            print(wall)
+            if len(wall.lines) == 4 and wall.robot is None:
+                # box, save these
+                print(wall)
 
         for robot in self.robots:
             robot.to_json(config["robots"])
 
         return config
+
+    def save(self):
+        if hasattr(self.config, "filename") and os.path.exists(self.config["filename"]):
+            with open(self.config["filename"], "w") as fp:
+                json.dump(self.to_json(), fp, sort_keys=True, indent=4)
+        else:
+            raise Exception("unable to save world config file")
+
+    def save_as(self, filename):
+        with open(filename, "w") as fp:
+            json.dump(self.to_json(), fp, sort_keys=True, indent=4)
 
     def update_size(self):
         self.canvas.change_size(self.width, self.height)
@@ -252,10 +272,10 @@ class World:
             robot.update()
         if show and self.canvas:
             self.draw()
-            # Need to wait some in case we need to handle an interrupt
-            # otherwise it is in the queue of messages to process
-            time.sleep(0.1)
+            if self.real_time:
+                time.sleep(0.1)
 
+    @throttle(0.1)
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
 

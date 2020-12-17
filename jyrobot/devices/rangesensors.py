@@ -29,14 +29,35 @@ class RangeSensor:
     """
 
     def __init__(self, robot, config):
-        self.reading = 1.0
         self.robot = robot
-        self.position = config.get("position", 10)
-        self.direction = config.get("direction", 0)  # comes in degrees
-        self.direction = self.direction * math.pi * 180  # save as radians
-        self.max = config.get("max", 100)
-        self.width = config.get("width", 1.0)
+        self.reading = 1.0
+        self.position = 10
+        self.direction = 0  # comes in degrees, save as radians
+        self.max = 100
+        self.width = 1.0
         self.distance = self.reading * self.max
+        self.from_json(config)
+
+    def from_json(self, config):
+        if "position" in config:
+            self.position = config["position"]
+        if "direction" in config:
+            self.direction = config["direction"] * math.pi / 180  # save as radians
+        if "max" in config:
+            self.max = config["max"]
+        if "width" in config:
+            self.width = config["width"]
+
+        self.distance = self.reading * self.max
+
+    def to_json(self):
+        config = {
+            "position": self.position,
+            "direction": self.direction * 180 / math.pi,  # save as degrees
+            "max": self.max,
+            "width": self.width,
+        }
+        return config
 
     def step(self, time_step):
         pass

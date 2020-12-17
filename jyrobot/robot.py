@@ -20,37 +20,7 @@ from .utils import Color, Line, Point
 class Robot:
     def __init__(self, config):
         self.initialize()
-        self.name = config.get("name", "Robbie")
-        self.image_data = config.get("image_data", [])  # ["dataset", index]
-        if len(self.image_data) == 0:
-            self.get_dataset_image = None
-        else:
-            self.get_dataset_image = get_dataset(self.image_data[0])
-        self.x = config.get("x", 100)
-        self.y = config.get("y", 100)
-        self.height = config.get("height", 0.25)  # ratio, 0 to 1 of height
-        self.direction = config.get("direction", 0)  # comes in as degrees
-        self.direction = self.direction * math.pi / 180  # save as radians
-        color = config.get("color", None)
-        if color is not None:
-            self.color = Color(color[0], color[1], color[2])
-        else:
-            self.color = Color(255, 0, 0)
-
-        self.body = config.get("body", [])
-        for cameraConfig in config.get("cameras", []):
-            camera = None
-            if cameraConfig["type"] == "Camera":
-                camera = Camera(self, cameraConfig)
-            else:
-                print("Unknown camera type:", cameraConfig["type"])
-
-            if camera:
-                self.cameras.append(camera)
-
-        for rangeConfig in config.get("rangeSensors", []):
-            sensor = RangeSensor(self, rangeConfig)
-            self.range_sensors.append(sensor)
+        self.from_json(config)
 
     def __repr__(self):
         return "<Robot(name=%r, position=(%s,%s,%s) v=(%s, %s, %s)>" % (
@@ -64,11 +34,14 @@ class Robot:
         )
 
     def initialize(self):
+        self.name = "Robbie"
+        self.color = Color("red")
         self.doTrace = True
         self.trace = []
         self.max_trace_length = 1000
         self.x = 0  # cm
         self.y = 0  # cm
+        self.height = 0.25
         self.direction = 0  # radians
         self.state = ""
         self.debug = False
@@ -86,40 +59,77 @@ class Robot:
         self.range_sensors = []
         self.cameras = []
         self.state = ""
+        self.image_data = []
+        self.get_dataset_image = None
         self.initBoundingBox()
 
-    def setConfig(self, config):
-        vx = config.get("vx", None)
-        if vx is not None:
-            self.vx = vx
+    def from_json(self, config):
+        if "name" in config:
+            self.name = config["name"]
 
-        vy = config.get("vy", None)
-        if vy is not None:
-            self.vy = vy
+        if "va" in config:
+            self.va = config["va"]
+        if "vx" in config:
+            self.vx = config["vx"]
+        if "vy" in config:
+            self.vy = config["vy"]
 
-        va = config.get("va", None)
-        if va is not None:
-            self.va = va
+        if "x" in config:
+            self.x = config["x"]
+        if "y" in config:
+            self.y = config["y"]
+        if "direction" in config:
+            self.direction = config["direction"]
+
+        if "image_data" in config:
+            self.image_data = config["image_data"]  # ["dataset", index]
+        if len(self.image_data) == 0:
+            self.get_dataset_image = None
+        else:
+            self.get_dataset_image = get_dataset(self.image_data[0])
+
+        if "height" in config:
+            self.height = config["height"]  # ratio, 0 to 1 of height
+
+        if "color" in config:
+            self.color = Color(config["color"])
+
+        if "body" in config:
+            self.body = config["body"]
+
+        if "cameras" in config:
+            for cameraConfig in config["cameras"]:
+                camera = None
+                if cameraConfig["type"] == "Camera":
+                    camera = Camera(self, cameraConfig)
+                else:
+                    print("Unknown camera type:", cameraConfig["type"])
+
+                if camera:
+                    self.cameras.append(camera)
+
+        if "rangeSensors" in config:
+            for deviceConfig in config["rangeSensors"]:
+                device = RangeSensor(self, deviceConfig)
+                self.range_sensors.append(device)
 
     def to_json(self, robot_list):
         robot_json = {
+            "name": self.name,
             "va": self.va,
             "vx": self.vx,
             "vy": self.vy,
-            "name": self.name,
-            "image_data": self.image_data,
             "x": self.x,
             "y": self.y,
             "direction": self.direction * 180 / math.pi,
-            "color": list(self.color.to_tuple()),
-            "body": [],
-            "cameras": [],
-            "rangeSensors": [],
+            "image_data": self.image_data,
+            "height": self.height,
+            "color": str(self.color),
+            "body": self.body,
+            "cameras": [camera.to_json() for camera in self.cameras],
+            "rangeSensors": [device.to_json() for device in self.range_sensors],
         }
-        # FIXME: body
-        # FIXME: cameras
-        # FIXME: rangeSensors
-        robot_list.append(robot_json)
+        return robot_json
 
     def forward(self, vx):
         self.vx = vx
