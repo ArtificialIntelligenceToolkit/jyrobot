@@ -9,6 +9,8 @@
 # *************************************
 
 import signal
+import sys
+import time
 from contextlib import contextmanager
 
 from ipycanvas import hold_canvas
@@ -183,7 +185,7 @@ class World:
         wall = Wall(robot.color, robot, *robot.bounding_lines)
         self.walls.append(wall)
 
-    def signal_handler(self, signal, frame):
+    def signal_handler(self, *args, **kwargs):
         self.stop = True
 
     @contextmanager
@@ -199,34 +201,43 @@ class World:
         finally:
             signal.signal(signal.SIGINT, DEFAULT_HANDLER)
 
+    def run(self, function=None, time_step=None, show=True):
+        time_step = time_step if time_step is not None else self.time_step
+        self.steps(sys.maxsize, function, time_step, show)
+
     def seconds(self, seconds=5.0, function=None, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
         self.steps(count, function, time_step, show)
 
     def steps(self, steps=1, function=None, time_step=None, show=True):
+        """
+        Args:
+            function - (optional) either a single function that takes the
+                world, or a list of functions (or None) that each take
+                a robot. If any function returns True, then simulation will
+                stop.
+        """
+        time_step = time_step if time_step is not None else self.time_step
         with self.no_interrupt():
-            time_step = time_step if time_step is not None else self.time_step
             for step in range(steps):
                 if self.stop:
-                    break
+                    return
                 self.step(time_step, show=show)
                 if function is not None:
-                    stop = function(self)
+                    if isinstance(function, (list, tuple)):
+                        # Deterministically run robots round-robin:
+                        stop = any(
+                            [
+                                function[i](self.robots[i])
+                                for i in range(len(function))
+                                if function[i] is not None
+                            ]
+                        )
+                    else:
+                        stop = function(self)
                     if stop:
-                        break
-
-    def run(self, function=None, time_step=None, show=True):
-        with self.no_interrupt():
-            time_step = time_step if time_step is not None else self.time_step
-            while True:
-                if self.stop:
-                    break
-                self.step(time_step, show=show)
-                if function is not None:
-                    stop = function(self)
-                    if stop:
-                        break
+                        return
 
     def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
@@ -241,6 +252,9 @@ class World:
             robot.update()
         if show and self.canvas:
             self.draw()
+            # Need to wait some in case we need to handle an interrupt
+            # otherwise it is in the queue of messages to process
+            time.sleep(0.1)
 
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
