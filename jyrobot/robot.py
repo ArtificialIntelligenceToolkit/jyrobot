@@ -90,6 +90,26 @@ class Robot:
         if va is not None:
             self.va = va
 
+    def to_json(self, robot_list):
+        robot_json = {
+            "va": self.va,
+            "vx": self.vx,
+            "vy": self.vy,
+            "name": self.name,
+            "image_data": self.image_data,
+            "x": self.x,
+            "y": self.y,
+            "direction": self.direction * 180 / math.pi,
+            "color": list(self.color.to_tuple()),
+            "body": [],
+            "cameras": [],
+            "rangeSensors": [],
+        }
+        # FIXME: body
+        # FIXME: cameras
+        # FIXME: rangeSensors
+        robot_list.append(robot_json)
+
     def forward(self, vx):
         self.vx = vx
 

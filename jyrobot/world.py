@@ -41,6 +41,24 @@ class World:
         self.update()
         self.draw()
 
+    def to_json(self):
+        config = {
+            "world": {"boxes": []},
+            "robots": [],
+            "cameras": [],
+        }
+
+        config["world"]["width"] = self.w
+        config["world"]["height"] = self.h
+
+        for wall in self.walls:
+            print(wall)
+
+        for robot in self.robots:
+            robot.to_json(config["robots"])
+
+        return config
+
     def watch(self, where=None):
         # FIXME: allow for other kinds of canvases (test, text-only)
         if where == "panel":
