@@ -57,7 +57,7 @@ class World:
     def init(self):
         self.width = 500
         self.height = 250
-        self.scale = 5.0
+        self.scale = 3.0
         self.stop = False  # should stop?
         self.time_step = 0.10  # seconds
         self.time = 0.0  # seconds
