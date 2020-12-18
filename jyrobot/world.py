@@ -36,8 +36,23 @@ class Wall:
         return "Wall(%r, %r, %r)" % (self.color, self.robot, self.lines)
 
 
+class Robots:
+    def __init__(self, world):
+        self.world = world
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.world._robots[item]
+        elif isinstance(item, str):
+            for robot in self.world._robots:
+                if item.lower() == robot.name.lower():
+                    return robot
+        return None
+
+
 class World:
     def __init__(self, config=None):
+        self.robot = Robots(self)
         self.real_time = True
         self.canvas = None
         self.config = config if config is not None else {}
@@ -47,6 +62,12 @@ class World:
         self.update()
         self.update()
         self.draw()
+
+    def info(self):
+        print("Robots:")
+        print("-" * 25)
+        for i, robot in enumerate(self._robots):
+            print("    robot[%s]: %r" % (i, robot.name))
 
     def _repr_png_(self):
         return self.takePicture()._repr_png_()
@@ -67,12 +88,13 @@ class World:
         self.boundary_wall_width = 1
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
-        self.robots = []
+        self._robots = []
         self.walls = []
 
     def reset(self):
         self.init()
         self.from_json(self.config)
+        self.draw()
 
     def from_json(self, config):
         self.config = config
@@ -146,7 +168,7 @@ class World:
                 }
                 config["walls"].append(w)
 
-        for robot in self.robots:
+        for robot in self._robots:
             config["robots"].append(robot.to_json(config["robots"]))
 
         return config
@@ -203,7 +225,7 @@ class World:
         self.walls.append(wall)
 
     def addRobot(self, robot):
-        self.robots.append(robot)
+        self._robots.append(robot)
         robot.world = self
         # Bounding lines form a wall:
         wall = Wall(robot.color, robot, *robot.bounding_lines)
@@ -253,7 +275,7 @@ class World:
                         # Deterministically run robots round-robin:
                         stop = any(
                             [
-                                function[i](self.robots[i])
+                                function[i](self._robots[i])
                                 for i in range(len(function))
                                 if function[i] is not None
                             ]
@@ -265,16 +287,16 @@ class World:
 
     def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
-        for robot in self.robots:
+        for robot in self._robots:
             robot.step(time_step)
         self.time += time_step
         self.update(show)
 
     def update(self, show=True):
         ## Update robots:
-        for robot in self.robots:
+        for robot in self._robots:
             robot.update()
-        if show and self.canvas:
+        if show:
             self.draw()
             if self.real_time:
                 time.sleep(0.001)
@@ -282,6 +304,8 @@ class World:
     @throttle(0.1)
     def draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
+        if canvas is None:
+            return
 
         with hold_canvas(canvas.gc):
             canvas.clear()
@@ -316,7 +340,7 @@ class World:
                     canvas.noStroke()
 
             ## Draw robots:
-            for robot in self.robots:
+            for robot in self._robots:
                 robot.draw(canvas)
 
             canvas.fill(Color(255))

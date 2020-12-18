@@ -48,6 +48,15 @@ class Robot:
         self.vx = 0.0  # velocity in x direction, CM per second
         self.vy = 0.0  # velocity in y direction, degrees per second
         self.va = 0.0  # turn velocity
+        self.tvx = 0.0
+        self.tvy = 0.0
+        self.tva = 0.0
+        self.va_ramp = 1.0  # seconds to reach max speed
+        self.vx_ramp = 1.0  # seconds to reach max speed
+        self.vy_ramp = 1.0  # seconds to reach max speed
+        self.vx_max = 2.0  # CM/SEC
+        self.va_max = math.pi * 0.90  # RADIANS/SEC
+        self.vy_max = 2.0  # CM/SEC
         self.stalled = False
         self.state = ""
         self.bounding_lines = [
@@ -73,6 +82,20 @@ class Robot:
             self.vx = config["vx"]
         if "vy" in config:
             self.vy = config["vy"]
+
+        if "va_max" in config:
+            self.va_max = config["va_max"]
+        if "vx_max" in config:
+            self.vx_max = config["vx_max"]
+        if "vy_max" in config:
+            self.vy_max = config["vy_max"]
+
+        if "va_ramp" in config:
+            self.va_ramp = config["va_ramp"]
+        if "vx_ramp" in config:
+            self.vx_ramp = config["vx_ramp"]
+        if "vy_ramp" in config:
+            self.vy_ramp = config["vy_ramp"]
 
         if "x" in config:
             self.x = config["x"]
@@ -119,6 +142,9 @@ class Robot:
             "va": self.va,
             "vx": self.vx,
             "vy": self.vy,
+            "va_max": self.va_max,
+            "vx_max": self.vx_max,
+            "vy_max": self.vy_max,
             "x": self.x,
             "y": self.y,
             "direction": self.direction * 180 / math.pi,
@@ -131,19 +157,28 @@ class Robot:
         }
         return robot_json
 
-    def forward(self, vx):
-        self.vx = vx
+    def move(self, translate, rotate):
+        # values between -1 and 1
+        # compute target velocities
+        self.tvx = translate * self.vx_max
+        self.tva = rotate * self.va_max
 
-    def backward(self, vx):
-        self.vx = -vx
+    def forward(self, translate):
+        # values between -1 and 1
+        self.tvx = translate * self.vx_max
 
-    def turn(self, va):
-        self.va = va
+    def backward(self, translate):
+        # values between -1 and 1
+        self.tvx = -translate * self.vx_max
+
+    def turn(self, rotate):
+        # values between -1 and 1
+        self.tva = rotate * self.va_max
 
     def stop(self):
-        self.vx = 0.0
-        self.vy = 0.0
-        self.va = 0.0
+        self.tvx = 0.0
+        self.tvy = 0.0
+        self.tva = 0.0
 
     def ccw(self, ax, ay, bx, by, cx, cy):
         # counter clockwise
@@ -268,18 +303,36 @@ class Robot:
         self.bounding_lines[3].p2.x = p1[0]
         self.bounding_lines[3].p2.y = p1[1]
 
+    def _deltav(self, tv, v, maxv, ramp, time_step):
+        # max change occurs in how long:
+        seconds = ramp
+        # how much can we change in one time step?
+        spt = seconds / time_step
+        dv = maxv / spt  # change in one time step
+        return min(max(tv - v, -dv), dv)  # keep in limit
+
     def step(self, time_step):
-        # self.direction += PI/180
+        # proposed acceleration:
+        va = self.va + self._deltav(
+            self.tva, self.va, self.va_max, self.va_ramp, time_step
+        )
+        vx = self.vx + self._deltav(
+            self.tvx, self.vx, self.vx_max, self.vx_ramp, time_step
+        )
+        vy = self.vy + self._deltav(
+            self.tvy, self.vy, self.vy_max, self.vy_ramp, time_step
+        )
+        # graphics offset:
         offset = math.pi / 2
         # proposed positions:
-        pdirection = self.direction - self.va * time_step
+        pdirection = self.direction - va * time_step
         tvx = (
-            self.vx * math.sin(-pdirection + offset)
-            + self.vy * math.cos(-pdirection + offset) * time_step
+            vx * math.sin(-pdirection + offset)
+            + vy * math.cos(-pdirection + offset) * time_step
         )
         tvy = (
-            self.vx * math.cos(-pdirection + offset)
-            - self.vy * math.sin(-pdirection + offset) * time_step
+            vx * math.cos(-pdirection + offset)
+            - vy * math.sin(-pdirection + offset) * time_step
         )
         px = self.x + tvx
         py = self.y + tvy
@@ -318,9 +371,16 @@ class Robot:
 
         if not self.stalled:
             # if no intersection, make move
+            self.va = va
+            self.vx = vx
+            self.vy = vy
             self.x = px
             self.y = py
             self.direction = pdirection
+        else:
+            self.va = 0
+            self.vy = 0
+            self.vx = 0
 
         self.trace.append((Point(self.x, self.y), self.direction))
 
