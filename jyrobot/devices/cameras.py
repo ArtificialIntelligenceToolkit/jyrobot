@@ -104,7 +104,7 @@ class Camera:
             return hit.distance
         return float("inf")
 
-    def takePicture(self, type="color"):
+    def take_picture(self, type="color"):
         # Lazy; only get the data when we need it:
         self._update()
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
@@ -276,9 +276,9 @@ class Camera:
         )
 
     def get_point_cloud(self):
-        depth_pic = self.takePicture("depth")
+        depth_pic = self.take_picture("depth")
         depth_pixels = depth_pic.load()
-        color_pic = self.takePicture("color")
+        color_pic = self.take_picture("color")
         color_pixels = color_pic.load()
         points = []
         for x in range(self.cameraShape[0]):

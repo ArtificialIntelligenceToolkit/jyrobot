@@ -93,13 +93,6 @@ class Backend:
 
 
 class DebugBackend(Backend):
-    width = 0
-    height = 0
-    font = ""
-    line_width = 0
-    stroke_style = ""
-    fill_style = ""
-
     def arc(self, x, y, width, startAngle, endAngle):
         print("arc(%r,%r,%r,%r,%r)" % (x, y, width, startAngle, endAngle))
 

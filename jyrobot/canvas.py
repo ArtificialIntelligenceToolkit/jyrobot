@@ -45,7 +45,7 @@ class Canvas:
             self.resetScale()
             self.scale(self._scale, self._scale)
 
-    def takePicture(self):
+    def take_picture(self):
         image_data = self.gc.get_image_data()
         picture = Image.fromarray(image_data, "RGBA")
         return picture

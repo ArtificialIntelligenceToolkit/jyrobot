@@ -80,10 +80,10 @@ class World:
         self.draw()
 
     def _repr_png_(self):
-        return self.takePicture()._repr_png_()
+        return self.take_picture()._repr_png_()
 
     def take_picture(self):
-        return self.canvas.takePicture()
+        return self.canvas.take_picture()
 
     def set_backend(self, backend):
         from .backends import DebugBackend
@@ -357,10 +357,14 @@ class World:
 
     def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
+        start_time = time.monotonic()
         for robot in self._robots:
             robot.step(time_step)
         self.time += time_step
         self.update(show)
+        if show and self.real_time:
+            now = time.monotonic()
+            time.sleep(time_step - (now - start_time))
 
     def update(self, show=True):
         ## Update robots:
@@ -372,8 +376,6 @@ class World:
             if debug is not None:
                 for command, args in debug:
                     getattr(self.canvas, command)(*args)
-            if self.real_time:
-                time.sleep(0.001)
 
     @throttle(0.1)
     def draw(self, canvas=None):
