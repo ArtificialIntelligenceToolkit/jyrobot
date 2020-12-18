@@ -82,7 +82,7 @@ class World:
     def _repr_png_(self):
         return self.takePicture()._repr_png_()
 
-    def takePicture(self):
+    def take_picture(self):
         return self.canvas.takePicture()
 
     def init(self):
@@ -139,7 +139,7 @@ class World:
             )
         for wall in config.get("walls", []):
             # Walls are "boxes"... 4 lines:
-            self.addWall(
+            self.add_wall(
                 Color(wall["color"]),
                 wall["p1"]["x"],
                 wall["p1"]["y"],
@@ -149,7 +149,7 @@ class World:
         ## Create robot, and add to world:
         for robotConfig in self.config.get("robots", []):
             robot = Robot(robotConfig)
-            self.addRobot(robot)
+            self.add_robot(robot)
         # Create the canvas is first time:
         if self.canvas is None:
             self.canvas = Canvas(self.width, self.height, self.scale)
@@ -279,7 +279,7 @@ class World:
             box.children = [self.canvas.gc]
             display(box)
 
-    def addWall(self, color, x1, y1, x2, y2):
+    def add_wall(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
         p2 = Point(x2, y1)
         p3 = Point(x2, y2)
@@ -288,7 +288,7 @@ class World:
         wall = Wall(color, None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1))
         self.walls.append(wall)
 
-    def addRobot(self, robot):
+    def add_robot(self, robot):
         self._robots.append(robot)
         robot.world = self
         # Bounding lines form a wall:

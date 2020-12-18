@@ -69,7 +69,7 @@ class RangeSensor:
         dist_from_center = self.robot.distance(0, 0, self.position[0], self.position[1])
         dir_from_center = math.atan2(-self.position[0], self.position[1])
         # This changes:
-        p = self.robot.rotateAround(
+        p = self.robot.rotate_around(
             self.robot.x,
             self.robot.y,
             dist_from_center,
@@ -82,7 +82,7 @@ class RangeSensor:
         self.setReading(1.0)
         if self.width != 0:
             for incr in arange(-self.width / 2, self.width / 2, self.width / 2):
-                hits = self.robot.castRay(
+                hits = self.robot.cast_ray(
                     p[0], p[1], -self.robot.direction + math.pi / 2.0 + incr, self.max,
                 )
                 if hits:
@@ -92,7 +92,7 @@ class RangeSensor:
                     if hits[-1].distance < self.getDistance():
                         self.setDistance(hits[-1].distance)
         else:
-            hits = self.robot.castRay(
+            hits = self.robot.cast_ray(
                 p[0], p[1], -self.robot.direction + math.pi / 2.0, self.max
             )
             if hits:

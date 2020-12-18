@@ -70,7 +70,7 @@ class Robot:
         self.state = ""
         self.image_data = []
         self.get_dataset_image = None
-        self.initBoundingBox()
+        self.init_boundingbox()
 
     def from_json(self, config):
         if "name" in config:
@@ -246,7 +246,7 @@ class Robot:
     def get_image(self, degrees):
         return self.get_dataset_image(self.image_data[1], degrees)
 
-    def castRay(self, x1, y1, a, maxRange):
+    def cast_ray(self, x1, y1, a, maxRange):
         # walls and robots
         hits = []
         x2 = math.sin(a) * maxRange + x1
@@ -274,18 +274,18 @@ class Robot:
         )  # further away first, back to front
         return hits
 
-    def initBoundingBox(self):
+    def init_boundingbox(self):
         px = self.x
         py = self.y
         pdirection = self.direction
         # FIXME: uses 10 rather than body bounding
-        p1 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 0 * math.pi / 2)
-        p2 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 1 * math.pi / 2)
-        p3 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 2 * math.pi / 2)
-        p4 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 3 * math.pi / 2)
-        self.updateBoundingBox(p1, p2, p3, p4)
+        p1 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 0 * math.pi / 2)
+        p2 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 1 * math.pi / 2)
+        p3 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 2 * math.pi / 2)
+        p4 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 3 * math.pi / 2)
+        self.update_boundingbox(p1, p2, p3, p4)
 
-    def updateBoundingBox(self, p1, p2, p3, p4):
+    def update_boundingbox(self, p1, p2, p3, p4):
         self.bounding_lines[0].p1.x = p1[0]
         self.bounding_lines[0].p1.y = p1[1]
         self.bounding_lines[0].p2.x = p2[0]
@@ -342,12 +342,12 @@ class Robot:
         # check to see if collision
         # bounding box:
         # FIXME: use actual bounding box points:
-        p1 = self.rotateAround(px, py, 10, pdirection + offset / 2 + 0 * offset)
-        p2 = self.rotateAround(px, py, 10, pdirection + offset / 2 + 1 * offset)
-        p3 = self.rotateAround(px, py, 10, pdirection + offset / 2 + 2 * offset)
-        p4 = self.rotateAround(px, py, 10, pdirection + offset / 2 + 3 * offset)
+        p1 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 0 * offset)
+        p2 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 1 * offset)
+        p3 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 2 * offset)
+        p4 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 3 * offset)
 
-        self.updateBoundingBox(p1, p2, p3, p4)
+        self.update_boundingbox(p1, p2, p3, p4)
 
         self.stalled = False
         # if intersection, can't move:
@@ -392,14 +392,14 @@ class Robot:
             device.step(time_step)
 
     def update(self, debug=None):
-        self.initBoundingBox()
+        self.init_boundingbox()
 
         # Devices:
         for device in self._devices:
             device.update(debug)
         return debug
 
-    def rotateAround(self, x1, y1, length, angle):
+    def rotate_around(self, x1, y1, length, angle):
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
 
     def draw(self, canvas):

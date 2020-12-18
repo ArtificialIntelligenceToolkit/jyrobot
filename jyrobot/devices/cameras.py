@@ -85,7 +85,7 @@ class Camera:
     def _update(self):
         for i in range(self.cameraShape[0]):
             angle = i / self.cameraShape[0] * self.angle - self.angle / 2
-            self.hits[i] = self.robot.castRay(
+            self.hits[i] = self.robot.cast_ray(
                 self.robot.x,
                 self.robot.y,
                 math.pi / 2 - self.robot.direction - angle,
