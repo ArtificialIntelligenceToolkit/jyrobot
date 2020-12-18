@@ -152,7 +152,7 @@ class World:
         return config
 
     def save(self):
-        if hasattr(self.config, "filename") and os.path.exists(self.config["filename"]):
+        if "filename" in self.config and os.path.exists(self.config["filename"]):
             with open(self.config["filename"], "w") as fp:
                 json.dump(self.to_json(), fp, sort_keys=True, indent=4)
         else:
