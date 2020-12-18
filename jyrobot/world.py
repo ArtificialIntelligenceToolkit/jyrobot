@@ -85,11 +85,11 @@ class World:
         if "boundary_wall" in config:
             self.boundary_wall = config["boundary_wall"]
         if "boundary_wall_color" in config:
-            self.boundary_wall_color = config["boundary_wall_color"]
+            self.boundary_wall_color = Color(config["boundary_wall_color"])
         if "boundary_wall_width" in config:
             self.boundary_wall_width = config["boundary_wall_width"]
         if "ground_color" in config:
-            self.ground_color = config["ground_color"]
+            self.ground_color = Color(config["ground_color"])
 
         if self.boundary_wall:
             p1 = Point(0, 0)
@@ -277,7 +277,7 @@ class World:
         if show and self.canvas:
             self.draw()
             if self.real_time:
-                time.sleep(0.1)
+                time.sleep(0.001)
 
     @throttle(0.1)
     def draw(self, canvas=None):
