@@ -171,6 +171,9 @@ class Robot:
         # values between -1 and 1
         self.tvx = -translate * self.vx_max
 
+    def reverse(self):
+        self.tvx = -self.tvx
+
     def turn(self, rotate):
         # values between -1 and 1
         self.tva = rotate * self.va_max
