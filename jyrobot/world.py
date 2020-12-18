@@ -67,6 +67,7 @@ class Robots:
 
 class World:
     def __init__(self, config=None):
+        self.debug = False
         self.robot = Robots(self)
         self.real_time = True
         self.canvas = None
@@ -357,10 +358,14 @@ class World:
 
     def update(self, show=True):
         ## Update robots:
+        debug = [] if self.debug else None
         for robot in self._robots:
-            robot.update()
+            robot.update(debug)
         if show:
             self.draw()
+            if debug is not None:
+                for command, args in debug:
+                    getattr(self.canvas, command)(*args)
             if self.real_time:
                 time.sleep(0.001)
 

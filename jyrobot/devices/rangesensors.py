@@ -31,7 +31,7 @@ class RangeSensor:
     def __init__(self, robot, config):
         self.robot = robot
         self.reading = 1.0
-        self.position = 10
+        self.position = [10, 10]
         self.direction = 0  # comes in degrees, save as radians
         self.max = 100
         self.width = 1.0
@@ -62,13 +62,22 @@ class RangeSensor:
     def step(self, time_step):
         pass
 
-    def update(self):
+    def update(self, debug):
+        self.debug = []
+        # Get location of sensor (FIXME: doesn't change):
+        dist_from_center = self.robot.distance(0, 0, self.position[0], self.position[1])
+        dir_from_center = math.atan2(-self.position[0], self.position[1])
+        # This changes:
         p = self.robot.rotateAround(
             self.robot.x,
             self.robot.y,
-            self.position,
-            self.robot.direction + self.direction,
+            dist_from_center,
+            self.robot.direction + dir_from_center + math.pi / 2,
         )
+
+        if debug is not None:
+            debug.append(("ellipse", (p[0], p[1], 2, 2)))
+
         self.setReading(1.0)
         if self.width != 0:
             for incr in arange(-self.width / 2, self.width / 2, self.width / 2):
@@ -76,6 +85,8 @@ class RangeSensor:
                     p[0], p[1], -self.robot.direction + math.pi / 2.0 + incr, self.max,
                 )
                 if hits:
+                    if debug is not None:
+                        debug.append(("ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
                     # Closest hit:
                     if hits[-1].distance < self.getDistance():
                         self.setDistance(hits[-1].distance)
@@ -84,6 +95,8 @@ class RangeSensor:
                 p[0], p[1], -self.robot.direction + math.pi / 2.0, self.max
             )
             if hits:
+                if debug is not None:
+                    debug.append(("ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
                 # Closest hit:
                 if hits[-1].distance < self.getDistance():
                     self.setDistance(hits[-1].distance)
@@ -95,27 +108,18 @@ class RangeSensor:
             canvas.strokeStyle(Color(0), 1)
 
         canvas.fill(Color(128, 0, 128, 64))
-        p1 = self.robot.rotateAround(
-            self.robot.x,
-            self.robot.y,
-            self.position,
-            self.robot.direction + self.direction,
-        )
         dist = self.getDistance()
         if self.width > 0:
             canvas.arc(
-                p1[0],
-                p1[1],
+                self.position[0],
+                self.position[1],
                 dist,
                 dist,
-                self.robot.direction - self.width / 2,
-                self.robot.direction + self.width / 2,
+                -self.width / 2,
+                self.width / 2,
             )
         else:
-            end = self.robot.rotateAround(
-                p1[0], p1[1], dist, self.direction + self.direction
-            )
-            canvas.line(p1[0], p1[1], end[0], end[1])
+            canvas.line(self.position[0], self.position[1], dist + self.position[0], 0)
 
     def getDistance(self):
         return self.distance

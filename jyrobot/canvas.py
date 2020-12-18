@@ -151,6 +151,7 @@ class Canvas:
         return scaled
 
     def arc(self, x, y, width, height, startAngle, endAngle):
+        prev_stroke_style = self.gc.stroke_style
         #  Draw the pie:
         self.gc.stroke_style = "#000000"
         self.gc.begin_path()
@@ -160,7 +161,7 @@ class Canvas:
         self.gc.fill()
 
         #  Draw the arc:
-        self.gc.stroke_style = "#000000"
+        self.gc.stroke_style = prev_stroke_style
         self.gc.begin_path()
         self.gc.arc(x, y, width, startAngle, endAngle)
         self.gc.stroke()

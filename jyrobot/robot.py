@@ -66,8 +66,7 @@ class Robot:
             Line(Point(0, 0), Point(0, 0)),
             Line(Point(0, 0), Point(0, 0)),
         ]
-        self.range_sensors = []
-        self.cameras = []
+        self._devices = []
         self.state = ""
         self.image_data = []
         self.get_dataset_image = None
@@ -121,21 +120,18 @@ class Robot:
         if "body" in config:
             self.body = config["body"]
 
-        if "cameras" in config:
-            for cameraConfig in config["cameras"]:
-                camera = None
-                if cameraConfig["type"] == "Camera":
-                    camera = Camera(self, cameraConfig)
+        if "devices" in config:
+            for deviceConfig in config["devices"]:
+                device = None
+                if deviceConfig["type"] == "Camera":
+                    device = Camera(self, deviceConfig)
+                elif deviceConfig["type"] == "RangeSensor":
+                    device = RangeSensor(self, deviceConfig)
                 else:
-                    print("Unknown camera type:", cameraConfig["type"])
+                    print("Unknown device type:", deviceConfig["type"])
 
-                if camera:
-                    self.cameras.append(camera)
-
-        if "rangeSensors" in config:
-            for deviceConfig in config["rangeSensors"]:
-                device = RangeSensor(self, deviceConfig)
-                self.range_sensors.append(device)
+                if device:
+                    self._devices.append(device)
 
     def to_json(self, robot_list):
         robot_json = {
@@ -156,8 +152,7 @@ class Robot:
             "height": self.height,
             "color": str(self.color),
             "body": self.body,
-            "cameras": [camera.to_json() for camera in self.cameras],
-            "rangeSensors": [device.to_json() for device in self.range_sensors],
+            "devices": [device.to_json() for device in self._devices],
         }
         return robot_json
 
@@ -283,6 +278,7 @@ class Robot:
         px = self.x
         py = self.y
         pdirection = self.direction
+        # FIXME: uses 10 rather than body bounding
         p1 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 0 * math.pi / 2)
         p2 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 1 * math.pi / 2)
         p3 = self.rotateAround(px, py, 10, pdirection + math.pi / 4 + 2 * math.pi / 2)
@@ -391,23 +387,17 @@ class Robot:
 
         self.trace.append((Point(self.x, self.y), self.direction))
 
-        # Range Sensors:
-        for range_sensor in self.range_sensors:
-            range_sensor.step(time_step)
+        # Devices:
+        for device in self._devices:
+            device.step(time_step)
 
-        # Cameras:
-        for camera in self.cameras:
-            camera.step(time_step)
-
-    def update(self):
+    def update(self, debug=None):
         self.initBoundingBox()
-        # Range Sensors:
-        for range_sensor in self.range_sensors:
-            range_sensor.update()
 
-        # Cameras:
-        for camera in self.cameras:
-            camera.update()
+        # Devices:
+        for device in self._devices:
+            device.update(debug)
+        return debug
 
     def rotateAround(self, x1, y1, length, angle):
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
@@ -480,10 +470,7 @@ class Robot:
         canvas.strokeStyle(None, 0)
         canvas.ellipse(0, 0, 1.67, 1.67)
 
-        for camera in self.cameras:
-            camera.draw(canvas)
+        for device in self._devices:
+            device.draw(canvas)
 
         canvas.popMatrix()
-
-        for range_sensor in self.range_sensors:
-            range_sensor.draw(canvas)

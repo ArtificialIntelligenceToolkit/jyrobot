@@ -75,7 +75,7 @@ class Camera:
         self.cameraShape[1] = height
         self.reset()
 
-    def update(self):
+    def update(self, debug=None):
         """
         Cameras operate in a lazy way: they don't actually update
         until needed because they are so expensive.
