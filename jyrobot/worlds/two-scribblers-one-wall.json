@@ -88,9 +88,9 @@
                     5.0
                 ]
             ],
+            "color": "#FF0000FF",
             "devices": [
                 {
-		    "type": "Camera",
                     "angle": 59.99999999999999,
                     "colorsFadeWithDistance": 0.5,
                     "height": 128,
@@ -101,28 +101,36 @@
                     "width": 256
                 },
                 {
-		    "type" : "RangeSensor",
                     "direction": 0.0,
                     "max": 100,
-                    "position": [6, 0],
+                    "position": [
+                        6,
+                        0
+                    ],
+                    "type": "RangeSensor",
                     "width": 0.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, 6],
+                    "position": [
+                        6,
+                        6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, -6],
+                    "position": [
+                        6,
+                        -6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 }
             ],
-            "color": "#FF0000FF",
             "direction": 180.0,
             "height": 0.23,
             "image_data": [],
@@ -222,9 +230,9 @@
                     5.0
                 ]
             ],
+            "color": "#0000FFFF",
             "devices": [
                 {
-		    "type": "Camera",
                     "angle": 59.99999999999999,
                     "colorsFadeWithDistance": 0.5,
                     "height": 128,
@@ -235,28 +243,36 @@
                     "width": 256
                 },
                 {
-		    "type" : "RangeSensor",
                     "direction": 0.0,
                     "max": 100,
-                    "position": [6, 0],
+                    "position": [
+                        6,
+                        0
+                    ],
+                    "type": "RangeSensor",
                     "width": 0.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, 6],
+                    "position": [
+                        6,
+                        6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, -6],
+                    "position": [
+                        6,
+                        -6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 }
             ],
-            "color": "#0000FFFF",
             "direction": 0.0,
             "height": 0.23,
             "image_data": [],

@@ -52,6 +52,7 @@ class RangeSensor:
 
     def to_json(self):
         config = {
+            "type": self.__class__.__name__,
             "position": self.position,
             "direction": self.direction * 180 / math.pi,  # save as degrees
             "max": self.max,

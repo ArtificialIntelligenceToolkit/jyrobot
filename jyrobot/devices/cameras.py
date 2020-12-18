@@ -46,7 +46,7 @@ class Camera:
 
     def to_json(self):
         return {
-            "type": "Camera",
+            "type": self.__class__.__name__,
             "width": self.cameraShape[0],
             "height": self.cameraShape[1],
             "colorsFadeWithDistance": self.colorsFadeWithDistance,

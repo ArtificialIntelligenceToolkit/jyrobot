@@ -88,9 +88,9 @@
                     5.0
                 ]
             ],
+            "color": "#FF0000FF",
             "devices": [
                 {
-		    "type": "Camera",
                     "angle": 59.99999999999999,
                     "colorsFadeWithDistance": 0.5,
                     "height": 128,
@@ -101,32 +101,39 @@
                     "width": 256
                 },
                 {
-		    "type" : "RangeSensor",
                     "direction": 0.0,
                     "max": 100,
-                    "position": [6, 0],
+                    "position": [
+                        6,
+                        0
+                    ],
+                    "type": "RangeSensor",
                     "width": 0.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, 6],
+                    "position": [
+                        6,
+                        6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 },
                 {
-		    "type" : "RangeSensor",
-                    "direction": 0,
+                    "direction": 0.0,
                     "max": 20,
-                    "position": [6, -6],
+                    "position": [
+                        6,
+                        -6
+                    ],
+                    "type": "RangeSensor",
                     "width": 1.0
                 }
             ],
-            "color": "#FF0000FF",
             "direction": 180.0,
             "height": 0.23,
-            "image_data": [
-            ],
+            "image_data": [],
             "name": "Red",
             "va": 0.0,
             "va_max": 2.827433388230814,
@@ -223,19 +230,8 @@
                     5.0
                 ]
             ],
-            "cameras": [
-                {
-                    "angle": 59.99999999999999,
-                    "colorsFadeWithDistance": 0.5,
-                    "height": 128,
-                    "reflectGround": true,
-                    "reflectSky": false,
-                    "sizeFadeWithDistance": 1.0,
-                    "type": "Camera",
-                    "width": 256
-                }
-            ],
             "color": "#FFFFFFFF",
+            "devices": [],
             "direction": 0.0,
             "height": 0.23,
             "image_data": [
@@ -243,26 +239,6 @@
                 1
             ],
             "name": "White",
-            "rangeSensors": [
-                {
-                    "direction": 0.0,
-                    "max": 100,
-                    "position": 8.2,
-                    "width": 0.05
-                },
-                {
-                    "direction": 22.5,
-                    "max": 20,
-                    "position": 8.2,
-                    "width": 1.0
-                },
-                {
-                    "direction": -22.5,
-                    "max": 20,
-                    "position": 8.2,
-                    "width": 1.0
-                }
-            ],
             "va": 0.0,
             "va_max": 2.827433388230814,
             "va_ramp": 1.0,
