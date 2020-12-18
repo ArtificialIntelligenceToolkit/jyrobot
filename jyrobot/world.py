@@ -10,6 +10,7 @@
 
 import io
 import json
+import math
 import os
 import signal
 import sys
@@ -18,8 +19,9 @@ from contextlib import contextmanager
 
 from ipycanvas import hold_canvas
 from ipylab import JupyterFrontEnd, Panel
-from IPython.display import display
+from IPython.display import clear_output, display
 from ipywidgets import Box
+from PIL import Image
 
 from .canvas import Canvas
 from .robot import Robot
@@ -203,6 +205,35 @@ class World:
         # Save with config
         self.config["scale"] = self.scale
         self.draw()
+
+    def gallery(self, *images):
+        """
+        Construct a gallery of images
+        """
+        gallery_size = math.ceil(math.sqrt(len(images)))
+        size = images[0].size
+
+        gallery_image = Image.new(
+            mode="RGBA",
+            size=(int(gallery_size * size[0]), int(gallery_size * size[1])),
+            color=(0, 0, 0, 0),
+        )
+
+        for i, image in enumerate(images):
+            if image.mode != "RGBA":
+                image = image.convert("RGBA")
+            location = (
+                int((i % gallery_size) * size[0]),
+                int((i // gallery_size) * size[1]),
+            )
+            gallery_image.paste(image, location)
+        return gallery_image
+
+    def display(self, *objects, **kwargs):
+        if all([isinstance(obj, Image.Image) for obj in objects]) and len(objects) > 1:
+            objects = [self.gallery(*objects)]
+        clear_output(wait=kwargs.get("wait", True))
+        display(*objects)
 
     def watch(self, where="inline", clear=True, **layout):
         if where in ["panel", "left", "right"]:

@@ -108,6 +108,7 @@ class Camera:
         # Lazy; only get the data when we need it:
         self._update()
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
+        pic.__add__ = lambda other: print("other")
         pic_pixels = pic.load()
         # FIXME: probably should have a specific size rather than scale it to world
         size = max(self.robot.world.width, self.robot.world.height)

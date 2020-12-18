@@ -35,6 +35,7 @@ class Robot:
 
     def initialize(self):
         self.name = "Robbie"
+        self.keep_trace_forever = False
         self.color = Color("red")
         self.doTrace = True
         self.trace = []
@@ -418,7 +419,8 @@ class Robot:
             # The last max_trace_length points:
             for (point, direction) in self.trace[-self.max_trace_length :]:
                 canvas.vertex(point.x, point.y)
-
+            if not self.keep_trace_forever:
+                self.trace = self.trace[-self.max_trace_length :]
             canvas.stroke()
 
         if self.debug:

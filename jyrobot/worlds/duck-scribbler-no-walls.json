@@ -237,6 +237,8 @@
             "direction": 0.0,
             "height": 0.23,
             "image_data": [
+                "coil20",
+                1
             ],
             "name": "White",
             "rangeSensors": [
