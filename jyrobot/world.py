@@ -8,6 +8,7 @@
 #
 # *************************************
 
+import io
 import json
 import os
 import signal
@@ -18,6 +19,7 @@ from contextlib import contextmanager
 from ipycanvas import hold_canvas
 from ipylab import JupyterFrontEnd, Panel
 from IPython.display import display
+from ipywidgets import Box
 
 from .canvas import Canvas
 from .robot import Robot
@@ -49,6 +51,17 @@ class Robots:
                     return robot
         return None
 
+    def __repr__(self):
+        with io.StringIO() as fp:
+            if len(self.world._robots) == 0:
+                print("This world has no robots.", file=fp)
+            else:
+                print("Robots:", file=fp)
+                print("-" * 25, file=fp)
+                for i, robot in enumerate(self.world._robots):
+                    print("    robot[%s]: %r" % (i, robot.name), file=fp)
+            return fp.getvalue()
+
 
 class World:
     def __init__(self, config=None):
@@ -62,12 +75,6 @@ class World:
         self.update()
         self.update()
         self.draw()
-
-    def info(self):
-        print("Robots:")
-        print("-" * 25)
-        for i, robot in enumerate(self._robots):
-            print("    robot[%s]: %r" % (i, robot.name))
 
     def _repr_png_(self):
         return self.takePicture()._repr_png_()
@@ -197,23 +204,48 @@ class World:
         self.config["scale"] = self.scale
         self.draw()
 
-    def watch(self, where=None):
-        # FIXME: allow for other kinds of canvases (test, text-only)
+    def watch(self, where="inline", clear=True, **layout):
         if where in ["panel", "left", "right"]:
             app = JupyterFrontEnd()
             panel = Panel()
-            panel.children = [self.canvas.gc]
-            panel.title.label = "Jyrobot Simulator"
+
+            if clear:
+                for widget in list(app.shell.widgets.values()):
+                    if hasattr(widget, "title") and widget.title.label.startswith(
+                        "Jyrobot"
+                    ):
+                        widget.close()
+
             if where == "panel":
+                # Close all Jyro widgets
+                defaults = {"width": "100%", "height": "auto"}
+                defaults.update(layout)
+                box = Box()
+                for keyword in defaults:
+                    setattr(box.layout, keyword, defaults[keyword])
+                    box.children = [self.canvas.gc]
+
+                panel.children = [box]
+                panel.title.label = "Jyrobot Simulator"
                 app.shell.add(panel, "main", {"mode": "split-right"})
             elif where == "left":
-                app.shell.add(panel, "left", {"rank": 0})
+                panel.children = [self.canvas.gc]
+                panel.title.label = "Jyrobot Simulator"
+                app.shell.add(panel, "left", {"rank": 10000})
                 app.shell.expand_left()
             elif where == "right":
-                app.shell.add(panel, "right", {"rank": 1000})
+                panel.children = [self.canvas.gc]
+                panel.title.label = "Jyrobot Simulator"
+                app.shell.add(panel, "right", {"rank": 0})
                 app.shell.expand_right()
-        else:
-            display(self.canvas.gc)
+        else:  # "inline", or something else
+            defaults = {"max_width": "600px"}
+            defaults.update(layout)
+            box = Box()
+            for keyword in defaults:
+                setattr(box.layout, keyword, defaults[keyword])
+            box.children = [self.canvas.gc]
+            display(box)
 
     def addWall(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
