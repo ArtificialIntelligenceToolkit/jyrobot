@@ -85,6 +85,12 @@ class World:
     def take_picture(self):
         return self.canvas.takePicture()
 
+    def set_backend(self, backend):
+        from .backends import DebugBackend
+
+        self.canvas.gc = DebugBackend(
+            self.canvas.gc.width, self.canvas.gc.height)
+
     def init(self):
         self.width = 500
         self.height = 250
