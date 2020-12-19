@@ -69,8 +69,18 @@ class World:
     def _repr_png_(self):
         return self.take_picture()._repr_png_()
 
-    def take_picture(self):
-        return self.canvas.take_picture()
+    def take_picture(self, index=None, size=100):
+        if index is None:
+            return self.canvas.take_picture()
+        else:
+            image_data = self.canvas.gc.get_image_data(
+                self.robot[index].x * self.canvas._scale - size / 2,
+                self.robot[index].y * self.canvas._scale - size / 2,
+                size,
+                size,
+            )
+            image = Image.fromarray(image_data)
+            return image
 
     def info(self):
         if len(self._robots) == 0:
