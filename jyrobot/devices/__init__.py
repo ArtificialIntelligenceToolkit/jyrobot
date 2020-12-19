@@ -7,3 +7,6 @@
 # https://github.com/Calysto/jyrobot
 #
 # *************************************
+
+from .cameras import Camera  # noqa: F401
+from .rangesensors import RangeSensor  # noqa: F401

@@ -162,14 +162,21 @@ class Robot:
             for deviceConfig in config["devices"]:
                 device = None
                 if deviceConfig["type"] == "Camera":
-                    device = Camera(self, deviceConfig)
+                    device = Camera(**deviceConfig)
                 elif deviceConfig["type"] == "RangeSensor":
-                    device = RangeSensor(self, deviceConfig)
+                    device = RangeSensor(**deviceConfig)
                 else:
                     print("Unknown device type:", deviceConfig["type"])
 
                 if device:
-                    self._devices.append(device)
+                    self.add_device(device)
+
+    def add_device(self, device):
+        if device not in self._devices:
+            device.robot = self
+            self._devices.append(device)
+        else:
+            print("Can't add the same device to a robot more than once.")
 
     def to_json(self, robot_list):
         robot_json = {

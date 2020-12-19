@@ -28,9 +28,9 @@ class RangeSensor:
        the reading in CM.
     """
 
-    def __init__(self, robot, config):
+    def __init__(self, **config):
         self.type = "RangeSensor"
-        self.robot = robot
+        self.robot = None
         self.reading = 1.0
         self.position = [10, 10]
         self.direction = 0  # comes in degrees, save as radians

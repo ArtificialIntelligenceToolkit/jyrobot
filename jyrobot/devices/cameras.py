@@ -16,9 +16,9 @@ from ..utils import Color
 
 
 class Camera:
-    def __init__(self, robot, config):
+    def __init__(self, **config):
         self.type = "Camera"
-        self.robot = robot
+        self.robot = None
         self.cameraShape = [256, 128]
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = 0.5
