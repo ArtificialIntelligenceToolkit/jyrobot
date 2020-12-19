@@ -35,21 +35,24 @@ class Devices:
 
 
 class Robot:
-    def __init__(self, config):
+    def __init__(self, **config):
         self.initialize()
         self.from_json(config)
         self.device = Devices(self)
 
     def __repr__(self):
-        return "<Robot(name=%r, position=(%s,%s,%s) v=(%s, %s, %s)>" % (
-            self.name,
-            round(self.x, 2),
-            round(self.y, 2),
-            round(self.direction, 2),
-            round(self.vx, 2),
-            round(self.vy, 2),
-            round(self.va, 2),
-        )
+        if self.world is None:
+            return "<Robot(name=%r, unconnected)>" % (self.name,)
+        else:
+            return "<Robot(name=%r, position=%s,%s,%s v=%s,%s,%s)>" % (
+                self.name,
+                round(self.x, 2),
+                round(self.y, 2),
+                round(self.direction, 2),
+                round(self.vx, 2),
+                round(self.vy, 2),
+                round(self.va, 2),
+            )
 
     def info(self):
         if len(self._devices) == 0:
@@ -60,11 +63,13 @@ class Robot:
             print("  " + ("-" * 25))
 
     def initialize(self):
+        self.world = None
         self.name = "Robbie"
         self.keep_trace_forever = False
         self.color = Color("red")
         self.doTrace = True
         self.trace = []
+        self.body = []
         self.max_trace_length = 1000
         self.x = 0  # cm
         self.y = 0  # cm
@@ -109,6 +114,13 @@ class Robot:
         if "vy" in config:
             self.vy = config["vy"]
 
+        if "tva" in config:
+            self.tva = config["tva"]
+        if "tvx" in config:
+            self.tvx = config["tvx"]
+        if "tvy" in config:
+            self.tvy = config["tvy"]
+
         if "va_max" in config:
             self.va_max = config["va_max"]
         if "vx_max" in config:
@@ -144,7 +156,7 @@ class Robot:
             self.color = Color(config["color"])
 
         if "body" in config:
-            self.body = config["body"]
+            self.body[:] = config["body"]
 
         if "devices" in config:
             for deviceConfig in config["devices"]:
@@ -165,6 +177,9 @@ class Robot:
             "va": self.va,
             "vx": self.vx,
             "vy": self.vy,
+            "tva": self.tva,
+            "tvx": self.tvx,
+            "tvy": self.tvy,
             "va_max": self.va_max,
             "vx_max": self.vx_max,
             "vy_max": self.vy_max,
@@ -500,3 +515,39 @@ class Robot:
             device.draw(canvas)
 
         canvas.popMatrix()
+
+
+SCRIBBLER_CONFIG = {
+    "body": [
+        [4.17, 5.0],
+        [4.17, 6.67],
+        [5.83, 5.83],
+        [5.83, 5.0],
+        [7.5, 5.0],
+        [7.5, -5.0],
+        [5.83, -5.0],
+        [5.83, -5.83],
+        [4.17, -6.67],
+        [4.17, -5.0],
+        [-4.17, -5.0],
+        [-4.17, -6.67],
+        [-5.83, -5.83],
+        [-6.67, -5.0],
+        [-7.5, -4.17],
+        [-7.5, 4.17],
+        [-6.67, 5.0],
+        [-5.83, 5.83],
+        [-4.17, 6.67],
+        [-4.17, 5.0],
+    ],
+    "color": "#FF0000FF",
+    "x": 0,
+    "y": 0,
+}
+
+
+class Scribbler(Robot):
+    def __init__(self, **config):
+        defaults = SCRIBBLER_CONFIG.copy()
+        defaults.update(config)
+        super().__init__(**defaults)

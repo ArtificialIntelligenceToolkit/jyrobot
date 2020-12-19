@@ -11,6 +11,7 @@
 import json
 import math
 import os
+import random
 import signal
 import sys
 import time
@@ -116,6 +117,7 @@ class World:
         )
 
     def init(self):
+        self.seed = 0
         self.width = 500
         self.height = 250
         self.scale = 3.0
@@ -138,6 +140,13 @@ class World:
 
     def from_json(self, config):
         self.config = config
+        if "seed" not in config or config["seed"] == 0:
+            self.seed = random.randint(0, sys.maxsize)
+            print("Random seed initialized to:", self.seed)
+        else:
+            self.seed = config["seed"]
+            print("Reusing random seed:", self.seed)
+        random.seed(self.seed)
         if "width" in config:
             self.width = config["width"]
         if "height" in config:
@@ -158,7 +167,7 @@ class World:
         for wall in config.get("walls", []):
             # Walls are "boxes"... 4 lines:
             self.add_wall(
-                Color(wall["color"]),
+                wall["color"],
                 wall["p1"]["x"],
                 wall["p1"]["y"],
                 wall["p2"]["x"],
@@ -166,7 +175,7 @@ class World:
             )
         ## Create robot, and add to world:
         for robotConfig in self.config.get("robots", []):
-            robot = Robot(robotConfig)
+            robot = Robot(**robotConfig)
             self.add_robot(robot)
         # Create the canvas is first time:
         if self.canvas is None:
@@ -196,6 +205,7 @@ class World:
 
     def to_json(self):
         config = {
+            "seed": self.seed,
             "width": int(self.width),
             "height": int(self.height),
             "scale": self.scale,
@@ -331,15 +341,26 @@ class World:
         p3 = Point(x2, y2)
         p4 = Point(x1, y2)
         ## Pairs of points make Line:
-        wall = Wall(color, None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1))
+        wall = Wall(
+            Color(color), None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1)
+        )
         self.walls.append(wall)
+        self.update()
 
     def add_robot(self, robot):
-        self._robots.append(robot)
-        robot.world = self
-        # Bounding lines form a wall:
-        wall = Wall(robot.color, robot, *robot.bounding_lines)
-        self.walls.append(wall)
+        if robot not in self._robots:
+            if robot.x == 0:
+                robot.x = round(random.random() * (self.width - 10))
+            if robot.y == 0:
+                robot.y = round(random.random() * (self.height - 10))
+            self._robots.append(robot)
+            robot.world = self
+            # Bounding lines form a wall:
+            wall = Wall(robot.color, robot, *robot.bounding_lines)
+            self.walls.append(wall)
+            self.update()
+        else:
+            print("Can't add the same robot to a world more than once.")
 
     def signal_handler(self, *args, **kwargs):
         self.stop = True
@@ -378,7 +399,7 @@ class World:
         with self.no_interrupt():
             for step in range(steps):
                 if self.stop:
-                    return
+                    break
                 self.step(time_step, show=show)
                 if function is not None:
                     if isinstance(function, (list, tuple)):
@@ -393,7 +414,8 @@ class World:
                     else:
                         stop = function(self)
                     if stop:
-                        return
+                        break
+        print("Simulation stopped at:", round(self.time, 1))
 
     def step(self, time_step=None, show=True):
         time_step = time_step if time_step is not None else self.time_step
