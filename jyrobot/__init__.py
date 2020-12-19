@@ -29,7 +29,7 @@ def load(filename):
                 contents = fp.read()
                 config = json.loads(contents)
                 config["filename"] = path_filename
-                world = World(config)
+                world = World(**config)
                 return world
     print("No such world found: %r" % filename)
     return None

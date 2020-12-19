@@ -46,7 +46,14 @@ class Canvas:
             self.scale(self._scale, self._scale)
 
     def take_picture(self):
-        image_data = self.gc.get_image_data()
+        try:
+            image_data = self.gc.get_image_data()
+        except Exception:
+            print(
+                "This backend has not yet rendered. Try world.watch() first, or switch backends."
+            )
+            return None
+
         picture = Image.fromarray(image_data, "RGBA")
         return picture
 
@@ -64,7 +71,7 @@ class Canvas:
 
     def strokeStyle(self, color, width):
         if color:
-            self.gc.stroke_style = str(color)
+            self.gc.stroke_style = color.to_hexcode()
         else:
             self.gc.stroke_style = "#000000"
         self.gc.line_width = width
@@ -77,7 +84,7 @@ class Canvas:
 
     def fill(self, color):
         if color:
-            self.gc.fill_style = str(color)
+            self.gc.fill_style = color.to_hexcode()
         else:
             self.gc.fill_style = "#000000"
 

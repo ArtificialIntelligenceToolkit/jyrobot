@@ -57,31 +57,44 @@ class Robots:
 
 
 class World:
-    def __init__(self, config=None):
+    def __init__(self, **config):
         self.debug = False
         self.robot = Robots(self)
         self.real_time = True
         self.canvas = None
-        self.config = config if config is not None else {}
+        self.config = config.copy()
         self.init()  # default values
         self.reset()  # from config
         self.update()
         self.update()
-        self.draw()
+        self.force_draw()
+
+    def __repr__(self):
+        return "<World width=%r, height=%r>" % (self.width, self.height)
 
     def _repr_png_(self):
-        return self.take_picture()._repr_png_()
+        image = self.take_picture()
+        if image:
+            return image._repr_png_()
+        return
 
     def take_picture(self, index=None, size=100):
         if index is None:
+            # Make sure it is up to date
+            self.force_draw()
             return self.canvas.take_picture()
         else:
-            image_data = self.canvas.gc.get_image_data(
-                self.robot[index].x * self.canvas._scale - size / 2,
-                self.robot[index].y * self.canvas._scale - size / 2,
-                size,
-                size,
-            )
+            try:
+                image_data = self.canvas.gc.get_image_data(
+                    self.robot[index].x * self.canvas._scale - size / 2,
+                    self.robot[index].y * self.canvas._scale - size / 2,
+                    size,
+                    size,
+                )
+            except Exception:
+                print("Unable to take a picture of robot %r" % index)
+                return None
+
             image = Image.fromarray(image_data)
             return image
 
@@ -120,7 +133,7 @@ class World:
     def reset(self):
         self.init()
         self.from_json(self.config)
-        self.draw()
+        self.force_draw()
 
     def from_json(self, config):
         self.config = config
@@ -207,13 +220,17 @@ class World:
         return config
 
     def save(self):
+        # First, save internally.
+        self.config = self.to_json()
         if "filename" in self.config and os.path.exists(self.config["filename"]):
             with open(self.config["filename"], "w") as fp:
-                json.dump(self.to_json(), fp, sort_keys=True, indent=4)
+                json.dump(self.config, fp, sort_keys=True, indent=4)
         else:
-            raise Exception("unable to save world config file")
+            print("Saved in memory. Use world.save_as('filename') to save to disk.")
 
     def save_as(self, filename):
+        # First, save internally.
+        self.config = self.to_json()
         with open(filename, "w") as fp:
             json.dump(self.to_json(), fp, sort_keys=True, indent=4)
 
@@ -228,7 +245,7 @@ class World:
         self.canvas.change_scale(self.scale)
         # Save with config
         self.config["scale"] = self.scale
-        self.draw()
+        self.force_draw()
 
     def gallery(self, *images):
         """
@@ -305,7 +322,7 @@ class World:
         # Two updates to force all robots to see each other
         self.update()
         self.update()
-        self.draw()
+        self.force_draw()
 
     def add_wall(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)
@@ -401,6 +418,9 @@ class World:
 
     @throttle(0.1)
     def draw(self, canvas=None):
+        self.force_draw(canvas)
+
+    def force_draw(self, canvas=None):
         canvas = canvas if canvas is not None else self.canvas
         if canvas is None:
             return
