@@ -111,7 +111,7 @@
                     "width": 0.0
                 },
                 {
-                    "direction": 0.0,
+                    "direction": 90.0,
                     "max": 20,
                     "position": [
                         6,
@@ -121,7 +121,7 @@
                     "width": 57.3
                 },
                 {
-                    "direction": 0.0,
+                    "direction": -90.0,
                     "max": 20,
                     "position": [
                         6,

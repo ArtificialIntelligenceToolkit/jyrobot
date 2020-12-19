@@ -91,7 +91,10 @@ class RangeSensor:
         if self.width != 0:
             for incr in arange(-self.width / 2, self.width / 2, self.width / 2):
                 hits = self.robot.cast_ray(
-                    p[0], p[1], -self.robot.direction + math.pi / 2.0 + incr, self.max,
+                    p[0],
+                    p[1],
+                    -self.robot.direction + math.pi / 2.0 + incr - self.direction,
+                    self.max,
                 )
                 if hits:
                     if debug is not None:
@@ -101,7 +104,10 @@ class RangeSensor:
                         self.setDistance(hits[-1].distance)
         else:
             hits = self.robot.cast_ray(
-                p[0], p[1], -self.robot.direction + math.pi / 2.0, self.max
+                p[0],
+                p[1],
+                -self.robot.direction + math.pi / 2.0 - self.direction,
+                self.max,
             )
             if hits:
                 if debug is not None:
@@ -124,8 +130,8 @@ class RangeSensor:
                 self.position[1],
                 dist,
                 dist,
-                -self.width / 2,
-                self.width / 2,
+                self.direction - self.width / 2,
+                self.direction + self.width / 2,
             )
         else:
             if self.getReading() < 1.0:
