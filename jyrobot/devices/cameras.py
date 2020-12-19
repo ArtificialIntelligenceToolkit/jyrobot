@@ -32,7 +32,7 @@ class Camera:
         return "<Camera size=(%r,%r), angle=%r>" % (
             self.cameraShape[0],
             self.cameraShape[1],
-            self.angle * 180 / math.pi,
+            round(self.angle * 180 / math.pi, 2),
         )
 
     def from_json(self, config):

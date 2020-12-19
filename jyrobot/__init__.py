@@ -30,7 +30,6 @@ def load(filename):
                 config = json.loads(contents)
                 config["filename"] = path_filename
                 world = World(config)
-                world.update()
                 return world
     print("No such world found: %r" % filename)
     return None

@@ -65,6 +65,9 @@ class World:
         self.config = config if config is not None else {}
         self.init()  # default values
         self.reset()  # from config
+        self.update()
+        self.update()
+        self.draw()
 
     def _repr_png_(self):
         return self.take_picture()._repr_png_()
@@ -136,20 +139,8 @@ class World:
         if "ground_color" in config:
             self.ground_color = Color(config["ground_color"])
 
-        if self.boundary_wall:
-            p1 = Point(0, 0)
-            p2 = Point(0, self.height)
-            p3 = Point(self.width, self.height)
-            p4 = Point(self.width, 0)
-            ## Not a box, but surround area with four boundaries:
-            self.walls.extend(
-                [
-                    Wall(self.boundary_wall_color, None, Line(p1, p2)),
-                    Wall(self.boundary_wall_color, None, Line(p2, p3)),
-                    Wall(self.boundary_wall_color, None, Line(p3, p4)),
-                    Wall(self.boundary_wall_color, None, Line(p4, p1)),
-                ]
-            )
+        self.add_boundary_walls()
+
         for wall in config.get("walls", []):
             # Walls are "boxes"... 4 lines:
             self.add_wall(
@@ -169,6 +160,25 @@ class World:
         # Update the canvas if different from original canvas
         self.update_size()
         self.update_scale()
+
+    def clear_boundary_walls(self):
+        self.walls[:] = [wall for wall in self.walls if len(wall.lines) > 1]
+
+    def add_boundary_walls(self):
+        if self.boundary_wall:
+            p1 = Point(0, 0)
+            p2 = Point(0, self.height)
+            p3 = Point(self.width, self.height)
+            p4 = Point(self.width, 0)
+            ## Not a box, but surround area with four boundaries:
+            self.walls.extend(
+                [
+                    Wall(self.boundary_wall_color, None, Line(p1, p2)),
+                    Wall(self.boundary_wall_color, None, Line(p2, p3)),
+                    Wall(self.boundary_wall_color, None, Line(p3, p4)),
+                    Wall(self.boundary_wall_color, None, Line(p4, p1)),
+                ]
+            )
 
     def to_json(self):
         config = {

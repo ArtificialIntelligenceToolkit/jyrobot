@@ -43,12 +43,12 @@ class Robot:
     def __repr__(self):
         return "<Robot(name=%r, position=(%s,%s,%s) v=(%s, %s, %s)>" % (
             self.name,
-            self.x,
-            self.y,
-            self.direction,
-            self.va,
-            self.vx,
-            self.va,
+            round(self.x, 2),
+            round(self.y, 2),
+            round(self.direction, 2),
+            round(self.vx, 2),
+            round(self.vy, 2),
+            round(self.va, 2),
         )
 
     def info(self):
