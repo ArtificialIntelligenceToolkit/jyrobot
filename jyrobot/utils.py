@@ -8,10 +8,57 @@
 #
 # *************************************
 
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from functools import wraps
 
 from .color_data import COLORS
+
+
+def json_dump(config, fp, sort_keys=True, indent=4):
+    dumps(fp, config, sort_keys=sort_keys, indent=indent)
+
+
+def dumps(fp, obj, level=0, sort_keys=True, indent=4, newline="\n", space=" "):
+    if isinstance(obj, dict):
+        if sort_keys:
+            obj = OrderedDict({key: obj[key] for key in sorted(obj.keys())})
+        fp.write(newline + (space * indent * level) + "{" + newline)
+        comma = ""
+        for key, value in obj.items():
+            fp.write(comma)
+            comma = "," + newline
+            fp.write(space * indent * (level + 1))
+            fp.write('"%s":%s' % (key, space))
+            dumps(fp, value, level + 1, sort_keys, indent, newline, space)
+        fp.write(newline + (space * indent * level) + "}")
+    elif isinstance(obj, str):
+        fp.write('"%s"' % obj)
+    elif isinstance(obj, (list, tuple)):
+        if len(obj) == 0:
+            fp.write("[]")
+        else:
+            fp.write(newline + (space * indent * level) + "[")
+            # fp.write("[")
+            comma = ""
+            for item in obj:
+                fp.write(comma)
+                comma = ", "
+                dumps(fp, item, level + 1, sort_keys, indent, newline, space)
+            # each on their own line
+            if len(obj) > 2:
+                fp.write(newline + (space * indent * level))
+            fp.write("]")
+    elif isinstance(obj, bool):
+        fp.write("true" if obj else "false")
+    elif isinstance(obj, int):
+        fp.write(str(obj))
+    elif obj is None:
+        fp.write("null")
+    elif isinstance(obj, float):
+        fp.write("%.7g" % obj)
+    else:
+        raise TypeError("Unknown object %r for json serialization" % obj)
 
 
 class throttle(object):

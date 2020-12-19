@@ -8,7 +8,6 @@
 #
 # *************************************
 
-import json
 import math
 import os
 import random
@@ -25,7 +24,7 @@ from PIL import Image
 
 from .canvas import Canvas
 from .robot import Robot
-from .utils import Color, Line, Point, throttle
+from .utils import Color, Line, Point, json_dump, throttle
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -117,6 +116,7 @@ class World:
         )
 
     def init(self):
+        self.filename = None
         self.seed = 0
         self.width = 500
         self.height = 250
@@ -147,6 +147,8 @@ class World:
             self.seed = config["seed"]
             print("Reusing random seed:", self.seed)
         random.seed(self.seed)
+        if "filename" in config:
+            self.filename = config["filename"]
         if "width" in config:
             self.width = config["width"]
         if "height" in config:
@@ -233,9 +235,9 @@ class World:
     def save(self):
         # First, save internally.
         self.config = self.to_json()
-        if "filename" in self.config and os.path.exists(self.config["filename"]):
-            with open(self.config["filename"], "w") as fp:
-                json.dump(self.config, fp, sort_keys=True, indent=4)
+        if self.filename is not None and os.path.exists(self.filename):
+            with open(self.filename, "w") as fp:
+                json_dump(self.config, fp, sort_keys=True, indent=4)
         else:
             print("Saved in memory. Use world.save_as('filename') to save to disk.")
 
@@ -243,7 +245,7 @@ class World:
         # First, save internally.
         self.config = self.to_json()
         with open(filename, "w") as fp:
-            json.dump(self.to_json(), fp, sort_keys=True, indent=4)
+            json_dump(self.to_json(), fp, sort_keys=True, indent=4)
 
     def update_size(self):
         self.canvas.change_size(self.width, self.height)

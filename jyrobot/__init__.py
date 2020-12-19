@@ -22,7 +22,8 @@ PATHS = ["./", os.path.join(HERE, "worlds")]
 
 
 def load(filename):
-    filename += ".json"
+    if not filename.endswith(".json"):
+        filename += ".json"
     for path in PATHS:
         path_filename = os.path.join(path, filename)
         if os.path.exists(path_filename):
