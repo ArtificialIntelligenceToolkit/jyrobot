@@ -10,9 +10,9 @@
 
 import math
 
-from ipycanvas import Canvas as IPyCanvas
-from ipywidgets import Layout
 from PIL import Image
+
+from .backends import make_backend
 
 
 class Canvas:
@@ -20,13 +20,8 @@ class Canvas:
         self.width = round(width)
         self.height = round(height)
         self._scale = 1.0
-        layout = Layout(width="100%", height="auto")
-        self.gc = IPyCanvas(
-            width=round(self.width * self._scale),
-            height=round(self.height * self._scale),
-            sync_image_data=True,
-            layout=layout,
-        )
+        # Scale is initially 1.0
+        self.gc = make_backend(self.width, self.height, self._scale)
         self.shape = False  # in the middle of a shape?
         self.change_scale(scale)  # will update canvas appropriately
 

@@ -8,6 +8,31 @@
 #
 # *************************************
 
+BACKEND = "jupyter"
+
+
+def switch_backend(backend):
+    global BACKEND
+    BACKEND = backend
+
+
+def make_backend(width, height, scale):
+    if BACKEND == "jupyter":
+        from ipycanvas import Canvas
+        from ipywidgets import Layout
+
+        layout = Layout(width="100%", height="auto")
+        return Canvas(
+            width=round(width * scale),
+            height=round(height * scale),
+            sync_image_data=True,
+            layout=layout,
+        )
+    elif BACKEND == "debug":
+        return DebugBackend(width, height)
+    elif BACKEND is None:
+        return Backend(width, height)
+
 
 class Backend:
     width = 0

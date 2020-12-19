@@ -108,11 +108,12 @@ class World:
                 print("  robot[%s or %r]: %r" % (i, robot.name, robot))
                 robot.info()
 
-    def set_backend(self, backend):
-        from .backends import DebugBackend
+    def switch_backend(self, backend):
+        from .backends import make_backend
 
-        if backend == "debug":
-            self.canvas.gc = DebugBackend(self.canvas.gc.width, self.canvas.gc.height)
+        self.canvas.gc = make_backend(
+            self.canvas.width, self.canvas.height, self.canvas.scale
+        )
 
     def init(self):
         self.width = 500
