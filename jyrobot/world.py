@@ -8,7 +8,6 @@
 #
 # *************************************
 
-import io
 import json
 import math
 import os
@@ -54,15 +53,7 @@ class Robots:
         return None
 
     def __repr__(self):
-        with io.StringIO() as fp:
-            if len(self.world._robots) == 0:
-                print("This world has no robots.", file=fp)
-            else:
-                print("Robots:", file=fp)
-                print("-" * 25, file=fp)
-                for i, robot in enumerate(self.world._robots):
-                    print("    robot[%s]: %r" % (i, robot.name), file=fp)
-            return fp.getvalue()
+        return repr(self.world._robots)
 
 
 class World:
@@ -74,16 +65,22 @@ class World:
         self.config = config if config is not None else {}
         self.init()  # default values
         self.reset()  # from config
-        # Two updates to force all robots to see each other
-        self.update()
-        self.update()
-        self.draw()
 
     def _repr_png_(self):
         return self.take_picture()._repr_png_()
 
     def take_picture(self):
         return self.canvas.take_picture()
+
+    def info(self):
+        if len(self._robots) == 0:
+            print("This world has no robots.")
+        else:
+            print("Robots:")
+            print("-" * 25)
+            for i, robot in enumerate(self._robots):
+                print("  robot[%s or %r]: %r" % (i, robot.name, robot))
+                robot.info()
 
     def set_backend(self, backend):
         from .backends import DebugBackend
@@ -284,6 +281,11 @@ class World:
                 setattr(box.layout, keyword, defaults[keyword])
             box.children = [self.canvas.gc]
             display(box)
+
+        # Two updates to force all robots to see each other
+        self.update()
+        self.update()
+        self.draw()
 
     def add_wall(self, color, x1, y1, x2, y2):
         p1 = Point(x1, y1)

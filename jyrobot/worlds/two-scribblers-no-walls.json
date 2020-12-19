@@ -118,7 +118,7 @@
                         6
                     ],
                     "type": "RangeSensor",
-                    "width": 1.0
+                    "width": 57.3
                 },
                 {
                     "direction": 0.0,
@@ -128,7 +128,7 @@
                         -6
                     ],
                     "type": "RangeSensor",
-                    "width": 1.0
+                    "width": 57.3
                 }
             ],
             "direction": 180.0,
@@ -260,7 +260,7 @@
                         6
                     ],
                     "type": "RangeSensor",
-                    "width": 1.0
+                    "width": 57.3
                 },
                 {
                     "direction": 0.0,
@@ -270,7 +270,7 @@
                         -6
                     ],
                     "type": "RangeSensor",
-                    "width": 1.0
+                    "width": 57.3
                 }
             ],
             "direction": 0.0,

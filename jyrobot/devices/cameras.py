@@ -17,6 +17,7 @@ from ..utils import Color
 
 class Camera:
     def __init__(self, robot, config):
+        self.type = "Camera"
         self.robot = robot
         self.cameraShape = [256, 128]
         # 0 = no fade, 1.0 = max fade
@@ -26,6 +27,13 @@ class Camera:
         self.reflectSky = False
         self.set_fov(60)  # degrees
         self.reset()
+
+    def __repr__(self):
+        return "<Camera size=(%r,%r), angle=%r>" % (
+            self.cameraShape[0],
+            self.cameraShape[1],
+            self.angle * 180 / math.pi,
+        )
 
     def from_json(self, config):
         if "width" in config:
@@ -46,7 +54,7 @@ class Camera:
 
     def to_json(self):
         return {
-            "type": self.__class__.__name__,
+            "type": self.type,
             "width": self.cameraShape[0],
             "height": self.cameraShape[1],
             "colorsFadeWithDistance": self.colorsFadeWithDistance,

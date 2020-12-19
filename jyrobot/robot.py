@@ -17,10 +17,28 @@ from .hit import Hit
 from .utils import Color, Line, Point
 
 
+class Devices:
+    def __init__(self, robot):
+        self.robot = robot
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.robot._devices[item]
+        elif isinstance(item, str):
+            for device in self.robot._devices:
+                if item.lower() == device.type.lower():
+                    return device
+        return None
+
+    def __repr__(self):
+        return repr(self.robot._devices)
+
+
 class Robot:
     def __init__(self, config):
         self.initialize()
         self.from_json(config)
+        self.device = Devices(self)
 
     def __repr__(self):
         return "<Robot(name=%r, position=(%s,%s,%s) v=(%s, %s, %s)>" % (
@@ -32,6 +50,14 @@ class Robot:
             self.vx,
             self.va,
         )
+
+    def info(self):
+        if len(self._devices) == 0:
+            print("  This robot has no devices.")
+        else:
+            for i, device in enumerate(self._devices):
+                print("      device[%s or %r]: %r" % (i, device.type, device))
+            print("  " + ("-" * 25))
 
     def initialize(self):
         self.name = "Robbie"

@@ -29,14 +29,22 @@ class RangeSensor:
     """
 
     def __init__(self, robot, config):
+        self.type = "RangeSensor"
         self.robot = robot
         self.reading = 1.0
         self.position = [10, 10]
         self.direction = 0  # comes in degrees, save as radians
         self.max = 100
-        self.width = 1.0
+        self.width = 1.0  # radians
         self.distance = self.reading * self.max
         self.from_json(config)
+
+    def __repr__(self):
+        return "<RangeSensor angle=%r, range=%r, width=%r>" % (
+            round(self.direction * 180 / math.pi, 1),
+            self.max,
+            round(self.width * 180 / math.pi, 1),
+        )
 
     def from_json(self, config):
         if "position" in config:
@@ -46,17 +54,17 @@ class RangeSensor:
         if "max" in config:
             self.max = config["max"]
         if "width" in config:
-            self.width = config["width"]
+            self.width = config["width"] * math.pi / 180  # save as radians
 
         self.distance = self.reading * self.max
 
     def to_json(self):
         config = {
-            "type": self.__class__.__name__,
+            "type": self.type,
             "position": self.position,
             "direction": self.direction * 180 / math.pi,  # save as degrees
             "max": self.max,
-            "width": self.width,
+            "width": self.width * 180 / math.pi,  # save as degrees
         }
         return config
 
@@ -103,14 +111,14 @@ class RangeSensor:
                     self.setDistance(hits[-1].distance)
 
     def draw(self, canvas):
-        if self.getReading() < 1.0:
-            canvas.strokeStyle(Color(255), 1)
-        else:
-            canvas.strokeStyle(Color(0), 1)
-
         canvas.fill(Color(128, 0, 128, 64))
         dist = self.getDistance()
         if self.width > 0:
+            if self.getReading() < 1.0:
+                canvas.strokeStyle(Color(255), 1)
+            else:
+                canvas.strokeStyle(Color(0), 1)
+
             canvas.arc(
                 self.position[0],
                 self.position[1],
@@ -120,6 +128,11 @@ class RangeSensor:
                 self.width / 2,
             )
         else:
+            if self.getReading() < 1.0:
+                canvas.strokeStyle(Color(255), 1)
+            else:
+                canvas.strokeStyle(Color(128, 0, 128, 64), 1)
+
             canvas.line(self.position[0], self.position[1], dist + self.position[0], 0)
 
     def getDistance(self):
