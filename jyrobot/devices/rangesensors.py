@@ -116,16 +116,16 @@ class RangeSensor:
                 if hits[-1].distance < self.getDistance():
                     self.setDistance(hits[-1].distance)
 
-    def draw(self, canvas):
-        canvas.fill(Color(128, 0, 128, 64))
+    def draw(self, backend):
+        backend.set_fill(Color(128, 0, 128, 64))
         dist = self.getDistance()
         if self.width > 0:
             if self.getReading() < 1.0:
-                canvas.strokeStyle(Color(255), 1)
+                backend.strokeStyle(Color(255), 1)
             else:
-                canvas.strokeStyle(Color(0), 1)
+                backend.strokeStyle(Color(0), 1)
 
-            canvas.arc(
+            backend.draw_arc(
                 self.position[0],
                 self.position[1],
                 dist,
@@ -135,11 +135,13 @@ class RangeSensor:
             )
         else:
             if self.getReading() < 1.0:
-                canvas.strokeStyle(Color(255), 1)
+                backend.strokeStyle(Color(255), 1)
             else:
-                canvas.strokeStyle(Color(128, 0, 128, 64), 1)
+                backend.strokeStyle(Color(128, 0, 128, 64), 1)
 
-            canvas.line(self.position[0], self.position[1], dist + self.position[0], 0)
+            backend.draw_line(
+                self.position[0], self.position[1], dist + self.position[0], 0
+            )
 
     def getDistance(self):
         return self.distance

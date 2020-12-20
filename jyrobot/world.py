@@ -16,13 +16,9 @@ import sys
 import time
 from contextlib import contextmanager
 
-from ipycanvas import hold_canvas
-from ipylab import JupyterFrontEnd, Panel
-from IPython.display import clear_output, display
-from ipywidgets import Box
 from PIL import Image
 
-from .canvas import Canvas
+from .backends import make_backend
 from .robot import Robot
 from .utils import Color, Line, Point, json_dump, throttle
 
@@ -61,7 +57,7 @@ class World:
         self.debug = False
         self.robot = Robots(self)
         self.real_time = True
-        self.canvas = None
+        self.backend = None
         self.config = config.copy()
         self.init()  # default values
         self.reset()  # from config
@@ -79,24 +75,19 @@ class World:
         return
 
     def take_picture(self, index=None, size=100):
-        if index is None:
-            # Make sure it is up to date
-            self.force_draw()
-            return self.canvas.take_picture()
+        # Make sure it is up to date
+        self.force_draw()
+        picture = self.backend.take_picture()
+        if index is not None:
+            # get section of picture
+            # self.robot[index].x * self.canvas._scale - size / 2,
+            # self.robot[index].y * self.canvas._scale - size / 2,
+            # size,
+            # size,
+            # FIXME
+            pass
         else:
-            try:
-                image_data = self.canvas.gc.get_image_data(
-                    self.robot[index].x * self.canvas._scale - size / 2,
-                    self.robot[index].y * self.canvas._scale - size / 2,
-                    size,
-                    size,
-                )
-            except Exception:
-                print("Unable to take a picture of robot %r" % index)
-                return None
-
-            image = Image.fromarray(image_data)
-            return image
+            return picture
 
     def info(self):
         if len(self._robots) == 0:
@@ -109,15 +100,8 @@ class World:
                 robot.info()
 
     def switch_backend(self, backend):
-        from .backends import make_backend
-
-        self.canvas.gc = make_backend(
-            self.canvas.width,
-            self.canvas.height,
-            self.canvas.scale,
-            self.width,
-            self.height,
-        )
+        self.backend = make_backend(self.width, self.height, self.scale)
+        self.backend.update_dimensions(self.width, self.height, self.scale)
 
     def init(self):
         self.filename = None
@@ -128,8 +112,6 @@ class World:
         self.stop = False  # should stop?
         self.time_step = 0.10  # seconds
         self.time = 0.0  # seconds
-        self.at_x = 0
-        self.at_y = 0
         self.boundary_wall = True
         self.boundary_wall_width = 1
         self.boundary_wall_color = Color(128, 0, 128)
@@ -183,12 +165,11 @@ class World:
         for robotConfig in self.config.get("robots", []):
             robot = Robot(**robotConfig)
             self.add_robot(robot)
-        # Create the canvas is first time:
-        if self.canvas is None:
-            self.canvas = Canvas(self.width, self.height, self.scale)
-        # Update the canvas if different from original canvas
-        self.update_size()
-        self.update_scale()
+        # Create the backend if first time:
+        if self.backend is None:
+            self.backend = make_backend(self.width, self.height, self.scale)
+        # Update the backend if it already existed, but differs in config
+        self.backend.update_dimensions(self.width, self.height, self.scale)
 
     def clear_boundary_walls(self):
         self.walls[:] = [wall for wall in self.walls if len(wall.lines) > 1]
@@ -251,15 +232,9 @@ class World:
         with open(filename, "w") as fp:
             json_dump(self.to_json(), fp, sort_keys=True, indent=4)
 
-    def update_size(self):
-        self.canvas.change_size(self.width, self.height)
-
-    def update_scale(self):
-        self.canvas.change_scale(self.scale)
-
     def set_scale(self, scale):
         self.scale = scale
-        self.canvas.change_scale(self.scale)
+        self.backend.change_scale(self.scale)
         # Save with config
         self.config["scale"] = self.scale
         self.force_draw()
@@ -288,54 +263,24 @@ class World:
         return gallery_image
 
     def display(self, *objects, **kwargs):
+        try:
+            from IPython.display import display, clear_output
+        except ImportError:
+            print("IPython module not available; falling back")
+
+            def clear_output(wait=None):
+                pass
+
+            display = print
+
         if all([isinstance(obj, Image.Image) for obj in objects]) and len(objects) > 1:
             objects = [self.gallery(*objects)]
+
         clear_output(wait=kwargs.get("wait", True))
         display(*objects)
 
-    def watch(self, where="inline", clear=True, **layout):
-        if where in ["panel", "left", "right"]:
-            app = JupyterFrontEnd()
-            panel = Panel()
-
-            if clear:
-                for widget in list(app.shell.widgets.values()):
-                    if hasattr(widget, "title") and widget.title.label.startswith(
-                        "Jyrobot"
-                    ):
-                        widget.close()
-
-            if where == "panel":
-                # Close all Jyro widgets
-                defaults = {"width": "100%", "height": "auto"}
-                defaults.update(layout)
-                box = Box()
-                for keyword in defaults:
-                    setattr(box.layout, keyword, defaults[keyword])
-                    box.children = [self.canvas.gc]
-
-                panel.children = [box]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "main", {"mode": "split-right"})
-            elif where == "left":
-                panel.children = [self.canvas.gc]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "left", {"rank": 10000})
-                app.shell.expand_left()
-            elif where == "right":
-                panel.children = [self.canvas.gc]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "right", {"rank": 0})
-                app.shell.expand_right()
-        else:  # "inline", or something else
-            defaults = {"max_width": "600px"}
-            defaults.update(layout)
-            box = Box()
-            for keyword in defaults:
-                setattr(box.layout, keyword, defaults[keyword])
-            box.children = [self.canvas.gc]
-            display(box)
-
+    def watch(self, **kwargs):
+        self.backend.watch(**kwargs)
         # Two updates to force all robots to see each other
         self.update()
         self.update()
@@ -443,52 +388,51 @@ class World:
             self.draw()
             if debug is not None:
                 for command, args in debug:
-                    getattr(self.canvas, command)(*args)
+                    self.backend.do_command(command, *args)
 
     @throttle(0.1)
-    def draw(self, canvas=None):
-        self.force_draw(canvas)
+    def draw(self):
+        self.force_draw()
 
-    def force_draw(self, canvas=None):
-        canvas = canvas if canvas is not None else self.canvas
-        if canvas is None:
+    def force_draw(self):
+        if self.backend is None:
             return
 
-        with hold_canvas(canvas.gc):
-            canvas.clear()
-            canvas.noStroke()
-            canvas.fill(self.ground_color)
-            canvas.rect(self.at_x, self.at_y, self.width, self.height)
+        with self.backend:
+            self.backend.clear()
+            self.backend.noStroke()
+            self.backend.set_fill(self.ground_color)
+            self.backend.draw_rect(0, 0, self.width, self.height)
             ## Draw walls:
             for wall in self.walls:
                 if len(wall.lines) >= 1 and wall.robot is None:
                     c = wall.color
-                    canvas.noStroke()
-                    canvas.fill(c)
-                    canvas.beginShape()
+                    self.backend.noStroke()
+                    self.backend.set_fill(c)
+                    self.backend.beginShape()
                     for line in wall.lines:
-                        canvas.vertex(line.p1.x, line.p1.y)
-                        canvas.vertex(line.p2.x, line.p2.y)
+                        self.backend.vertex(line.p1.x, line.p1.y)
+                        self.backend.vertex(line.p2.x, line.p2.y)
 
-                    canvas.endShape()
+                    self.backend.endShape()
 
             ## Draw borders:
             for wall in self.walls:
                 c = wall.color
                 if len(wall.lines) == 1:
-                    canvas.strokeStyle(c, 3)
-                    canvas.line(
+                    self.backend.strokeStyle(c, 3)
+                    self.backend.draw_line(
                         wall.lines[0].p1.x,
                         wall.lines[0].p1.y,
                         wall.lines[0].p2.x,
                         wall.lines[0].p2.y,
                     )
-                    canvas.lineWidth(1)
-                    canvas.noStroke()
+                    self.backend.lineWidth(1)
+                    self.backend.noStroke()
 
             ## Draw robots:
             for robot in self._robots:
-                robot.draw(canvas)
+                robot.draw(self.backend)
 
-            canvas.fill(Color(255))
-            canvas.text("Time: %0.1f" % self.time, 10, canvas.height - 10)
+            self.backend.set_fill(Color(255))
+            self.backend.text("Time: %0.1f" % self.time, 10, self.height - 10)

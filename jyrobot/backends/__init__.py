@@ -16,7 +16,7 @@ def switch_backend(backend):
     BACKEND = backend
 
 
-def make_backend(width, height, scale, world_width, world_height):
+def make_backend(width, height, scale):
     if BACKEND == "jupyter":
         from ipywidgets import Layout
         from .jupyter import JupyterBackend
@@ -31,12 +31,12 @@ def make_backend(width, height, scale, world_width, world_height):
     elif BACKEND == "svg":
         from .svg import SVGBackend
 
-        return SVGBackend(width, height, world_width, world_height)
+        return SVGBackend(width, height, scale)
     elif BACKEND == "debug":
         from .debug import DebugBackend
 
-        return DebugBackend(width, height)
+        return DebugBackend(width, height, scale)
     elif BACKEND == "dummy":
         from .base import Backend
 
-        return Backend(width, height)
+        return Backend(width, height, scale)

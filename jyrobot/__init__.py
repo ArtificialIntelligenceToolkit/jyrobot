@@ -13,6 +13,7 @@ import os
 from random import random  # noqa: F401
 
 from ._version import __version__  # noqa: F401
+from .backends import switch_backend  # noqa: F401
 from .devices import Camera, RangeSensor  # noqa: F401
 from .robot import Robot, Scribbler  # noqa: F401
 from .world import World

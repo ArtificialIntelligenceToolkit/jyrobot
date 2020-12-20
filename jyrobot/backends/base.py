@@ -17,10 +17,28 @@ class Backend:
     stroke_style = ""
     fill_style = ""
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, scale):
         self.width = width
         self.height = height
+        self.scale = scale
         self.caching = False
+        self.orig_caching = False
+
+    # Canvas API
+
+    def __enter__(self):
+        self.orig_caching = self.caching
+        self.caching = True
+
+    def __exit__(self, *args, **kwargs):
+        self.flush()
+        if not self.orig_caching:
+            self.caching = False
+
+    def flush(self):
+        pass
+
+    # HIGH-LEVEL Drawing API
 
     def set_stroke_style(self, color):
         self.stroke_style = color.to_hexcode()
@@ -28,14 +46,7 @@ class Backend:
     def set_fill_style(self, color):
         self.fill_style = color.to_hexcode()
 
-    def __enter__(self):
-        pass
-
-    def __exit__(self):
-        pass
-
-    def flush(self):
-        pass
+    # LOW-LEVEL SVG Drawing API
 
     def arc(self, x, y, width, startAngle, endAngle):
         pass

@@ -450,78 +450,78 @@ class Robot:
     def rotate_around(self, x1, y1, length, angle):
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
 
-    def draw(self, canvas):
+    def draw(self, backend):
         if self.doTrace:
-            canvas.strokeStyle(Color(200, 200, 200), 1)
-            canvas.beginShape()
+            backend.strokeStyle(Color(200, 200, 200), 1)
+            backend.beginShape()
             # The last max_trace_length points:
             for (point, direction) in self.trace[-self.max_trace_length :]:
-                canvas.vertex(point.x, point.y)
+                backend.vertex(point.x, point.y)
             if not self.keep_trace_forever:
                 self.trace = self.trace[-self.max_trace_length :]
-            canvas.stroke()
+            backend.make_stroke()
 
         if self.debug:
-            canvas.strokeStyle(Color(255), 1)
-            canvas.line(
+            backend.strokeStyle(Color(255), 1)
+            backend.draw_line(
                 self.bounding_lines[0].p1.x,
                 self.bounding_lines[0].p1.y,
                 self.bounding_lines[0].p2.x,
                 self.bounding_lines[0].p2.y,
             )
 
-            canvas.line(
+            backend.draw_line(
                 self.bounding_lines[1].p1.x,
                 self.bounding_lines[1].p1.y,
                 self.bounding_lines[1].p2.x,
                 self.bounding_lines[1].p2.y,
             )
 
-            canvas.line(
+            backend.draw_line(
                 self.bounding_lines[2].p1.x,
                 self.bounding_lines[2].p1.y,
                 self.bounding_lines[2].p2.x,
                 self.bounding_lines[2].p2.y,
             )
 
-            canvas.line(
+            backend.draw_line(
                 self.bounding_lines[3].p1.x,
                 self.bounding_lines[3].p1.y,
                 self.bounding_lines[3].p2.x,
                 self.bounding_lines[3].p2.y,
             )
 
-        canvas.pushMatrix()
-        canvas.translate(self.x, self.y)
-        canvas.rotate(self.direction)
+        backend.pushMatrix()
+        backend.translate(self.x, self.y)
+        backend.rotate(self.direction)
 
         # body:
         if self.stalled:
-            canvas.fill(Color(128, 128, 128))
-            canvas.strokeStyle(Color(255), 1)
+            backend.set_fill(Color(128, 128, 128))
+            backend.strokeStyle(Color(255), 1)
         else:
-            canvas.fill(self.color)
-            canvas.noStroke()
+            backend.set_fill(self.color)
+            backend.noStroke()
 
-        canvas.beginShape()
+        backend.beginShape()
         for i in range(len(self.body)):
-            canvas.vertex(self.body[i][0], self.body[i][1])
+            backend.vertex(self.body[i][0], self.body[i][1])
 
-        canvas.endShape()
-        canvas.noStroke()
+        backend.endShape()
+        backend.noStroke()
         # Draw wheels:
-        canvas.fill(Color(0))
-        canvas.rect(-3.33, -7.67, 6.33, 1.67)
-        canvas.rect(-3.33, 6.0, 6.33, 1.67)
+        backend.set_fill(Color(0))
+        backend.draw_rect(-3.33, -7.67, 6.33, 1.67)
+        backend.draw_rect(-3.33, 6.0, 6.33, 1.67)
         # hole:
-        canvas.fill(Color(0, 64, 0))
-        canvas.strokeStyle(None, 0)
-        canvas.ellipse(0, 0, 1.67, 1.67)
+        backend.set_fill(Color(0, 64, 0))
+        backend.strokeStyle(None, 0)
+        backend.draw_ellipse(0, 0, 1.67, 1.67)
 
         for device in self._devices:
-            device.draw(canvas)
+            device.draw(backend)
 
-        canvas.popMatrix()
+        backend.popMatrix()
 
 
 SCRIBBLER_CONFIG = {

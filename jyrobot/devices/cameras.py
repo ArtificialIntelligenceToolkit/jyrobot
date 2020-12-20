@@ -100,10 +100,10 @@ class Camera:
                 1000,
             )
 
-    def draw(self, canvas):
-        canvas.fill(Color(0, 64, 0))
-        canvas.strokeStyle(None, 0)
-        canvas.rect(5.0, -3.33, 1.33, 6.33)
+    def draw(self, backend):
+        backend.set_fill(Color(0, 64, 0))
+        backend.strokeStyle(None, 0)
+        backend.draw_rect(5.0, -3.33, 1.33, 6.33)
 
     def find_closest_wall(self, hits):
         for hit in reversed(hits):  # reverse make it closest first
