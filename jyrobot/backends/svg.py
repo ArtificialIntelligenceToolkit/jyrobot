@@ -21,6 +21,7 @@ class SVGBackend(Backend):
         self.world_width = world_width
         self.world_height = world_height
         self.stack = []
+        self.points = []
         self.initialize()
 
     def initialize(self):
@@ -30,18 +31,21 @@ class SVGBackend(Backend):
         self.stack.append(dwg)
 
     def set_stroke_style(self, color):
-        self.stroke_style = "rgb%s" % (color.to_tuple(),)
+        self.stroke_style = color.rgb()
 
     def set_fill_style(self, color):
-        self.fill_style = "rgb%s" % (color.to_tuple(),)
+        self.fill_style = color.rgb()
 
-    def get_style(self):
-        fill = ("fill:%s" % self.fill_style) if self.fill_style else None
-        stroke_width = "stroke-width:%s" % self.line_width
-        stroke = ("stroke:%s" % self.stroke_style) if self.stroke_style else None
-        style = ";".join(
-            [item for item in [fill, stroke_width, stroke] if item is not None]
-        )
+    def get_style(self, *items):
+        map = {
+            "fill": ("fill:%s" % self.fill_style) if self.fill_style else None,
+            "stroke-width": "stroke-width:%s" % self.line_width,
+            "stroke": ("stroke:%s" % self.stroke_style) if self.stroke_style else None,
+        }
+        styles = []
+        for item in items:
+            styles.append(map[item])
+        style = ";".join(styles)
         return style
 
     def arc(self, x, y, radius, startAngle, endAngle):
@@ -58,7 +62,7 @@ class SVGBackend(Backend):
         path = [str(item) for item in path]
         d = " ".join(path)
         dwg = self.stack[-1]
-        style = self.get_style()
+        style = self.get_style("fill", "stroke", "stroke-width")
         dwg.add(self.stack[0].path(d=d, style=style))
 
     def get_image_data(self):
@@ -68,30 +72,38 @@ class SVGBackend(Backend):
         self.initialize()
 
     def fill_text(self, text, x, y):
-        style = self.get_style()
+        style = self.get_style("fill")
         dwg = self.stack[-1]
         dwg.add(self.stack[0].text(text=text, insert=(x, y), style=style))
 
     def fill_rect(self, x, y, width, height):
-        style = self.get_style()
+        style = self.get_style("fill")
         self.stack[-1].add(
             self.stack[0].rect(insert=(x, y), size=(width, height), style=style)
         )
 
     def fill(self):
-        pass
+        if len(self.points) >= 2:
+            style = self.get_style("fill")
+            dwg = self.stack[-1]
+            dwg.add(self.stack[0].polygon(points=self.points, style=style))
+            self.points.clear()
 
     def stroke(self):
-        pass
+        if len(self.points) >= 2:
+            style = self.get_style("stroke", "stroke-width")
+            dwg = self.stack[-1]
+            last = self.points[0]
+            for point in self.points[1:]:
+                dwg.add(self.stack[0].line(start=last, end=point, style=style))
+                last = point
+            self.points.clear()
 
     def move_to(self, x, y):
-        self.last_xy = (x, y)
+        self.points = [(x, y)]
 
     def line_to(self, x, y):
-        style = self.get_style()
-        dwg = self.stack[-1]
-        dwg.add(self.stack[0].line(start=self.last_xy, end=(x, y), style=style))
-        self.last_xy = (x, y)
+        self.points.append([x, y])
 
     def save(self):
         dwg = self.stack[0]
@@ -124,7 +136,7 @@ class SVGBackend(Backend):
 
     def ellipse(self, x, y, radiusX, radiusY, a, b, angle):
         dwg = self.stack[-1]
-        style = self.get_style()
+        style = self.get_style("fill", "stroke", "stroke-width")
         dwg.add(self.stack[0].ellipse(center=(x, y), r=(radiusX, radiusY), style=style))
 
     def put_image_data(self, scaled, x, y):
