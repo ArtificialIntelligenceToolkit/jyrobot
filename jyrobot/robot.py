@@ -315,10 +315,9 @@ class Robot:
                 if pos is not None:
                     dist = distance(pos[0], pos[1], x1, y1)
                     height = 1.0 if wall.robot is None else wall.robot.height
+                    color = wall.robot.color if wall.robot else wall.color
                     hits.append(
-                        Hit(
-                            wall.robot, height, pos[0], pos[1], dist, wall.color, x1, y1
-                        )
+                        Hit(wall.robot, height, pos[0], pos[1], dist, color, x1, y1)
                     )
 
         hits.sort(

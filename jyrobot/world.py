@@ -148,15 +148,20 @@ class World:
         self.from_json(self.config)
         self.force_draw()
 
+    def set_seed(self, seed):
+        random.seed(seed)
+        self.seed = seed
+
     def from_json(self, config):
         self.config = config
         if "seed" not in config or config["seed"] == 0:
-            self.seed = random.randint(0, sys.maxsize)
-            print("Random seed initialized to:", self.seed)
+            seed = random.randint(0, sys.maxsize)
+            print("Random seed initialized to:", seed)
         else:
-            self.seed = config["seed"]
+            seed = config["seed"]
             print("Reusing random seed:", self.seed)
-        random.seed(self.seed)
+        self.set_seed(seed)
+
         if "filename" in config:
             self.filename = config["filename"]
         if "width" in config:
