@@ -334,7 +334,8 @@ class World:
             Color(color), None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1)
         )
         self.walls.append(wall)
-        self.update()
+        self.update(show=False)
+        self.force_draw()
 
     def del_robot(self, robot):
         for wall in list(self.walls):
@@ -343,7 +344,8 @@ class World:
         if robot in self._robots:
             robot.world = None
             self._robots.remove(robot)
-        self.update()
+        self.update(show=False)
+        self.force_draw()
 
     def add_robot(self, robot):
         if robot not in self._robots:
@@ -356,7 +358,8 @@ class World:
             # Bounding lines form a wall:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
-            self.update()
+            self.update(show=False)
+            self.force_draw()
         else:
             print("Can't add the same robot to a world more than once.")
 
@@ -426,19 +429,22 @@ class World:
         )
 
     def step(self, time_step=None, show=True, real_time=True):
+        extra_sleep = 0
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
         for robot in self._robots:
             robot.step(time_step)
         self.time += time_step
         self.update(show)
-        if show and real_time:
+        if show and real_time:  # real_time is ignored if not show
             now = time.monotonic()
             # Tries to sleep enough to make even with real time:
             sleep_time = time_step - (now - start_time)
             if sleep_time >= 0:
                 # Sleep even more for slow-motion:
-                time.sleep(sleep_time)
+                time.sleep(sleep_time + extra_sleep)
+            else:
+                extra_sleep += abs(sleep_time)
 
     def update(self, show=True):
         ## Update robots:

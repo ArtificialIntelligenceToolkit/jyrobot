@@ -33,11 +33,11 @@ class RangeSensor:
         self.time = 0.0
         self.robot = None
         self.reading = 1.0
-        self.position = [10, 10]
+        self.position = [8, 0]
         self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
         self.dir_from_center = math.atan2(-self.position[0], self.position[1])
         self.direction = 0  # comes in degrees, save as radians
-        self.max = 100
+        self.max = 20  # CM
         self.width = 1.0  # radians
         self.distance = self.reading * self.max
         self.from_json(config)
