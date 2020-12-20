@@ -16,8 +16,6 @@ import sys
 import time
 from contextlib import contextmanager
 
-from PIL import Image
-
 from .backends import make_backend
 from .robot import Robot
 from .utils import Color, Line, Point, json_dump, throttle
@@ -76,16 +74,17 @@ class World:
 
     def take_picture(self, index=None, size=100):
         # Make sure it is up to date
+        self.update()
         self.force_draw()
         # TODO: May have to wait a second here because it is async
         picture = self.backend.take_picture()
         if index is not None:
+            # FIXME
             # get section of picture
             # self.robot[index].x * self.canvas._scale - size / 2,
             # self.robot[index].y * self.canvas._scale - size / 2,
             # size,
             # size,
-            # FIXME
             pass
         else:
             return picture
@@ -244,6 +243,12 @@ class World:
         """
         Construct a gallery of images
         """
+        try:
+            from PIL import Image
+        except ImportError:
+            print("world.gallery() requires Pillow, Python Image Library (PIL)")
+            return
+
         gallery_size = math.ceil(math.sqrt(len(images)))
         size = images[0].size
 
@@ -265,23 +270,31 @@ class World:
 
     def display(self, *objects, **kwargs):
         try:
+            from PIL import Image
+        except ImportError:
+            Image = None
+
+        try:
             from IPython.display import display, clear_output
         except ImportError:
-            print("IPython module not available; falling back")
 
             def clear_output(wait=None):
                 pass
 
             display = print
 
-        if all([isinstance(obj, Image.Image) for obj in objects]) and len(objects) > 1:
-            objects = [self.gallery(*objects)]
+        if Image is not None:
+            if (
+                all([isinstance(obj, Image.Image) for obj in objects])
+                and len(objects) > 1
+            ):
+                objects = [self.gallery(*objects)]
 
         clear_output(wait=kwargs.get("wait", True))
         display(*objects)
 
-    def watch(self, where="inline", **kwargs):
-        self.backend.watch(where, **kwargs)
+    def watch(self, *args, **kwargs):
+        self.backend.watch(**kwargs)
         # Two updates to force all robots to see each other
         self.update()
         self.update()

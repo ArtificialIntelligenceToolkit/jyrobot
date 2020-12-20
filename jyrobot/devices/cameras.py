@@ -10,8 +10,6 @@
 
 import math
 
-from PIL import Image as Image
-
 from ..utils import Color
 
 
@@ -113,6 +111,12 @@ class Camera:
         return float("inf")
 
     def take_picture(self, type="color"):
+        try:
+            from PIL import Image
+        except ImportError:
+            print("Pillow (PIL) module not available; take_picture() unavailable")
+            return
+
         # Lazy; only get the data when we need it:
         self._update()
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))

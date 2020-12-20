@@ -17,6 +17,10 @@ from PIL import Image
 from .base import Backend
 
 
+def get_args(where="panel", clear=True, **kwargs):
+    return (where, clear, kwargs)
+
+
 class JupyterBackend(Canvas, Backend):
     """
     Widget and a Jyrobot backend.
@@ -32,8 +36,8 @@ class JupyterBackend(Canvas, Backend):
         picture = Image.fromarray(array, "RGBA")
         return picture
 
-    def watch(self, where="inline", **kwargs):
-        clear = kwargs.pop("clear", True)
+    def watch(self, *args, **kwargs):
+        where, clear, kwargs = get_args(*args, **kwargs)
         layout = kwargs
         if where in ["panel", "left", "right"]:
             app = JupyterFrontEnd()

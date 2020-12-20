@@ -42,6 +42,12 @@ class SVGBackend(Backend):
         # No need, SVG handles this
         pass
 
+    def flush(self):
+        pass
+
+    def watch(self, **kwargs):
+        print("This backend does not implement watch(). Use take_picture() instead.")
+
     def take_picture(self):
         try:
             import cairosvg

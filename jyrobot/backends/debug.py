@@ -18,8 +18,8 @@ class DebugBackend(Backend):
 
     # Canvas API:
 
-    def watch(self, where="inline", **kwargs):
-        print("watch(where=%s, **%s)" % (where, kwargs))
+    def watch(self, *args, **kwargs):
+        print("watch(**%s)" % (kwargs,))
 
     def flush(self):
         print("flush()")

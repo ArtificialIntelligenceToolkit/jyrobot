@@ -56,14 +56,14 @@ class Backend:
 
     # Need to implement in subclasses:
 
-    def watch(self, where="inline", **kwargs):
-        pass
+    def watch(self, *args, **kwargs):
+        raise NotImplementedError("backend.watch")
 
     def flush(self):
-        pass
+        raise NotImplementedError("backend.flush")
 
     def take_picture(self):
-        pass
+        raise NotImplementedError("backend.take_picture")
 
     # HIGH-LEVEL Drawing API
 
@@ -165,61 +165,61 @@ class Backend:
     # Need to implement in subclasses
 
     def arc(self, x, y, width, startAngle, endAngle):
-        pass
+        raise NotImplementedError("backend.arc")
 
     def get_image_data(self):
-        pass
+        raise NotImplementedError("backend.get_image_data")
 
     def clear_rect(self, x, y, width, height):
-        pass
+        raise NotImplementedError("backend.clear_rect")
 
     def fill_text(self, t, x, y):
-        pass
+        raise NotImplementedError("backend.fill_text")
 
     def fill_rect(self, x, y, width, height):
-        pass
+        raise NotImplementedError("backend.fill_rect")
 
     def fill(self):
-        pass
+        raise NotImplementedError("backend.fill")
 
     def stroke(self):
-        pass
+        raise NotImplementedError("backend.stroke")
 
     def move_to(self, x, y):
-        pass
+        raise NotImplementedError("backend.move_to")
 
     def line_to(self, x, y):
-        pass
+        raise NotImplementedError("backend.line_to")
 
     def save(self):
-        pass
+        raise NotImplementedError("backend.save")
 
     def restore(self):
-        pass
+        raise NotImplementedError("backend.restore")
 
     def translate(self, x, y):
-        pass
+        raise NotImplementedError("backend.translate")
 
     def scale(self, xscale, yscale):
-        pass
+        raise NotImplementedError("backend.scale")
 
     def set_transform(self, x, y, z, a, b, c):
-        pass
+        raise NotImplementedError("backend.set_transform")
 
     def rotate(self, angle):
-        pass
+        raise NotImplementedError("backend.rotate")
 
     def begin_path(self):
-        pass
+        raise NotImplementedError("backend.begin_path")
 
     def close_path(self):
-        pass
+        raise NotImplementedError("backend.close_path")
 
     def ellipse(self, x, y, radiusX, radiusY, a, b, angle):
-        pass
+        raise NotImplementedError("backend.ellipse")
 
     def put_image_data(self, scaled, x, y):
-        pass
+        raise NotImplementedError("backend.put_image_data")
 
     def create_image_data(sefl, width, height):
-        pass
+        raise NotImplementedError("backend.create_image_data")

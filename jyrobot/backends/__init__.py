@@ -8,12 +8,22 @@
 #
 # *************************************
 
-BACKEND = "jupyter"
+import os
+
+BACKEND = os.environ.get("JYROBOT_BACKEND", "jupyter")
+
+VALID_BACKENDS = ["jupyter", "svg", "debug"]
 
 
-def switch_backend(backend):
+def switch_backend(backend=None):
     global BACKEND
-    BACKEND = backend
+
+    if backend is None:
+        return VALID_BACKENDS
+    elif backend in VALID_BACKENDS:
+        BACKEND = backend
+    else:
+        raise ValueError("unknown backend type: %r" % backend)
 
 
 def make_backend(width, height, scale):
@@ -36,7 +46,5 @@ def make_backend(width, height, scale):
         from .debug import DebugBackend
 
         return DebugBackend(width, height, scale)
-    elif BACKEND == "dummy":
-        from .base import Backend
-
-        return Backend(width, height, scale)
+    else:
+        raise ValueError("unknown backend type: %r" % BACKEND)
