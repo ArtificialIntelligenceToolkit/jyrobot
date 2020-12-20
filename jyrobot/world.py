@@ -75,7 +75,7 @@ class World:
     def take_picture(self, index=None, size=100):
         # Make sure it is up to date
         self.update()
-        self.force_draw()
+        self.draw()
         # TODO: May have to wait a second here because it is async
         picture = self.backend.take_picture()
         if index is not None:
