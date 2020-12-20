@@ -82,22 +82,28 @@ class World:
         # Make sure it is up to date
         self.update()
         self.draw()
-        # TODO: May have to wait a second here because it is async
-        picture = self.backend.take_picture()
+        try:
+            picture = self.backend.take_picture()
+        except RuntimeError:
+            print("Backend is not ready yet; try again")
+            return
+
+        if picture is None:
+            return
+
         if index is not None:
-            if picture:
-                robot = self.robot[index]
-                if robot:
-                    start_x = round(max(robot.x * self.scale - size / 2, 0))
-                    start_y = round(max(robot.y * self.scale - size / 2, 0))
-                    rectangle = (
-                        start_x,
-                        start_y,
-                        min(start_x + size, self.width * self.scale),
-                        min(start_y + size, self.height * self.scale),
-                    )
-                    picture = picture.crop(rectangle)
-                    return picture
+            robot = self.robot[index]
+            if robot:
+                start_x = round(max(robot.x * self.scale - size / 2, 0))
+                start_y = round(max(robot.y * self.scale - size / 2, 0))
+                rectangle = (
+                    start_x,
+                    start_y,
+                    min(start_x + size, self.width * self.scale),
+                    min(start_y + size, self.height * self.scale),
+                )
+                picture = picture.crop(rectangle)
+                return picture
         else:
             return picture
 
