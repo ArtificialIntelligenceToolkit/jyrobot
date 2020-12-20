@@ -171,6 +171,13 @@ class Robot:
                 if device:
                     self.add_device(device)
 
+    def del_device(self, device):
+        if device in self._devices:
+            device.robot = None
+            self._devices.remove(device)
+        else:
+            print("Device is not on robot.")
+
     def add_device(self, device):
         if device not in self._devices:
             device.robot = self

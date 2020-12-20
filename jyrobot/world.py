@@ -53,8 +53,8 @@ class Robots:
 class World:
     def __init__(self, **config):
         self.debug = False
+        self._robots = []
         self.robot = Robots(self)
-        self.real_time = True
         self.backend = None
         self.config = config.copy()
         self.init()  # default values
@@ -72,6 +72,12 @@ class World:
             return image._repr_png_()
         return
 
+    def formatted_time(self):
+        hours = self.time // 3600
+        minutes = (self.time % 3600) // 60
+        seconds = (self.time % 3600) % 60
+        return "%02d:%02d:%04.1f" % (hours, minutes, seconds)
+
     def take_picture(self, index=None, size=100):
         # Make sure it is up to date
         self.update()
@@ -79,17 +85,25 @@ class World:
         # TODO: May have to wait a second here because it is async
         picture = self.backend.take_picture()
         if index is not None:
-            # FIXME
-            # get section of picture
-            # self.robot[index].x * self.canvas._scale - size / 2,
-            # self.robot[index].y * self.canvas._scale - size / 2,
-            # size,
-            # size,
-            pass
+            if picture:
+                robot = self.robot[index]
+                if robot:
+                    start_x = round(max(robot.x * self.scale - size / 2, 0))
+                    start_y = round(max(robot.y * self.scale - size / 2, 0))
+                    rectangle = (
+                        start_x,
+                        start_y,
+                        min(start_x + size, self.width * self.scale),
+                        min(start_y + size, self.height * self.scale),
+                    )
+                    picture = picture.crop(rectangle)
+                    return picture
         else:
             return picture
 
     def info(self):
+        if self.filename:
+            print("This world was loaded from %r" % self.filename)
         if len(self._robots) == 0:
             print("This world has no robots.")
         else:
@@ -116,8 +130,12 @@ class World:
         self.boundary_wall_width = 1
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
-        self._robots = []
         self.walls = []
+        if len(self._robots) > 0:
+            print("Removing robots from world...")
+            for robot in self._robots:
+                robot.world = None
+        self._robots = []
 
     def reset(self):
         self.init()
@@ -312,6 +330,15 @@ class World:
         self.walls.append(wall)
         self.update()
 
+    def del_robot(self, robot):
+        for wall in list(self.walls):
+            if wall.robot is robot:
+                self.walls.remove(wall)
+        if robot in self._robots:
+            robot.world = None
+            self._robots.remove(robot)
+        self.update()
+
     def add_robot(self, robot):
         if robot not in self._robots:
             if robot.x == 0:
@@ -343,16 +370,18 @@ class World:
         finally:
             signal.signal(signal.SIGINT, DEFAULT_HANDLER)
 
-    def run(self, function=None, time_step=None, show=True):
+    def run(self, function=None, time_step=None, show=True, real_time=True):
         time_step = time_step if time_step is not None else self.time_step
-        self.steps(sys.maxsize, function, time_step, show)
+        self.steps(sys.maxsize, function, time_step, show, real_time)
 
-    def seconds(self, seconds=5.0, function=None, time_step=None, show=True):
+    def seconds(
+        self, seconds=5.0, function=None, time_step=None, show=True, real_time=True
+    ):
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
-        self.steps(count, function, time_step, show)
+        self.steps(count, function, time_step, show, real_time)
 
-    def steps(self, steps=1, function=None, time_step=None, show=True):
+    def steps(self, steps=1, function=None, time_step=None, show=True, real_time=True):
         """
         Args:
             function - (optional) either a single function that takes the
@@ -362,10 +391,12 @@ class World:
         """
         time_step = time_step if time_step is not None else self.time_step
         with self.no_interrupt():
+            start_real_time = time.monotonic()
+            start_time = self.time
             for step in range(steps):
                 if self.stop:
                     break
-                self.step(time_step, show=show)
+                self.step(time_step, show=show, real_time=real_time)
                 if function is not None:
                     if isinstance(function, (list, tuple)):
                         # Deterministically run robots round-robin:
@@ -380,18 +411,28 @@ class World:
                         stop = function(self)
                     if stop:
                         break
-        print("Simulation stopped at:", round(self.time, 1))
+            stop_real_time = time.monotonic()
+            stop_time = self.time
+            speed = (stop_time - start_time) / (stop_real_time - start_real_time)
+        print(
+            "Simulation stopped at: %s; speed %s x real time"
+            % (self.formatted_time(), round(speed, 2))
+        )
 
-    def step(self, time_step=None, show=True):
+    def step(self, time_step=None, show=True, real_time=True):
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
         for robot in self._robots:
             robot.step(time_step)
         self.time += time_step
         self.update(show)
-        if show and self.real_time:
+        if show and real_time:
             now = time.monotonic()
-            time.sleep(time_step - (now - start_time))
+            # Tries to sleep enough to make even with real time:
+            sleep_time = time_step - (now - start_time)
+            if sleep_time >= 0:
+                # Sleep even more for slow-motion:
+                time.sleep(sleep_time)
 
     def update(self, show=True):
         ## Update robots:
@@ -447,7 +488,7 @@ class World:
                 robot.draw(self.backend)
 
             self.backend.set_fill(Color(255))
-            self.backend.text("Time: %0.1f" % self.time, 10, self.height - 10)
+            self.backend.text(self.formatted_time(), 10, self.height - 10)
 
             if debug_list:
                 for command, args in debug_list:
