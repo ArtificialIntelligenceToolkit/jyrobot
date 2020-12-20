@@ -13,15 +13,22 @@ import math
 from PIL import Image
 
 from .backends import make_backend
+from .utils import Color
+
+BLACK = Color(0)
 
 
 class Canvas:
     def __init__(self, width, height, scale):
         self.width = round(width)
         self.height = round(height)
+        self.world_width = self.width
+        self.world_height = self.height
         self._scale = 1.0
         # Scale is initially 1.0
-        self.gc = make_backend(self.width, self.height, self._scale)
+        self.gc = make_backend(
+            self.width, self.height, self._scale, self.world_width, self.world_height
+        )
         self.shape = False  # in the middle of a shape?
         self.change_scale(scale)  # will update canvas appropriately
 
@@ -66,25 +73,25 @@ class Canvas:
 
     def strokeStyle(self, color, width):
         if color:
-            self.gc.stroke_style = color.to_hexcode()
+            self.gc.set_stroke_style(color)
         else:
-            self.gc.stroke_style = "#000000"
+            self.gc.set_stroke_style(BLACK)
         self.gc.line_width = width
 
     def stroke(self):
         self.gc.stroke()
 
     def noStroke(self):
-        self.gc.stroke_style = "#000000"
+        self.gc.set_stroke_style(BLACK)
 
     def fill(self, color):
         if color:
-            self.gc.fill_style = color.to_hexcode()
+            self.gc.set_fill_style(color)
         else:
-            self.gc.fill_style = "#000000"
+            self.gc.set_fill_style(BLACK)
 
     def noFill(self):
-        self.gc.fill_style = "#000000"
+        self.gc.set_fill_style(BLACK)
 
     def line(self, x1, y1, x2, y2):
         self.beginShape()
@@ -155,7 +162,7 @@ class Canvas:
     def arc(self, x, y, width, height, startAngle, endAngle):
         prev_stroke_style = self.gc.stroke_style
         #  Draw the pie:
-        self.gc.stroke_style = "#000000"
+        self.gc.set_stroke_style(BLACK)
         self.gc.begin_path()
         self.gc.move_to(x, y)
         self.gc.arc(x, y, width, startAngle, endAngle)

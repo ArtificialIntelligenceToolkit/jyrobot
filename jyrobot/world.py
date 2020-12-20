@@ -112,7 +112,11 @@ class World:
         from .backends import make_backend
 
         self.canvas.gc = make_backend(
-            self.canvas.width, self.canvas.height, self.canvas.scale
+            self.canvas.width,
+            self.canvas.height,
+            self.canvas.scale,
+            self.width,
+            self.height,
         )
 
     def init(self):
