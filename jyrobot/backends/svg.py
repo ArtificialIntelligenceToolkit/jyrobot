@@ -15,6 +15,9 @@ from svgwrite import Drawing
 from ..utils import Color
 from .base import Backend
 
+# First attempt, replicating the low-level SVG badly
+# Second attempt should implement the HIGH-LEVEL API
+
 
 class SVGBackend(Backend):
     def __init__(self, width, height, world_width, world_height):
@@ -25,11 +28,15 @@ class SVGBackend(Backend):
         self.points = []
         self.initialize()
 
+    # Specific to this class:
+
     def initialize(self):
         self.stack.clear()
         dwg = Drawing("canvas.svg", (self.world_width, self.world_height))
         dwg.viewbox(0, 0, self.world_width, self.world_height)
         self.stack.append(dwg)
+
+    # Low-level API:
 
     def set_stroke_style(self, color):
         self.stroke_style = color
@@ -116,9 +123,6 @@ class SVGBackend(Backend):
         style = self.get_style(*styles)
         dwg.add(self.stack[0].path(d=d, style=style))
 
-    def get_image_data(self):
-        pass
-
     def clear_rect(self, x, y, width, height):
         self.initialize()
 
@@ -199,6 +203,9 @@ class SVGBackend(Backend):
                 style=style,
             )
         )
+
+    def get_image_data(self):
+        pass
 
     def put_image_data(self, scaled, x, y):
         pass

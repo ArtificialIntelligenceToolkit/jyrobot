@@ -77,6 +77,7 @@ class World:
     def take_picture(self, index=None, size=100):
         # Make sure it is up to date
         self.force_draw()
+        # TODO: May have to wait a second here because it is async
         picture = self.backend.take_picture()
         if index is not None:
             # get section of picture
@@ -279,8 +280,8 @@ class World:
         clear_output(wait=kwargs.get("wait", True))
         display(*objects)
 
-    def watch(self, **kwargs):
-        self.backend.watch(**kwargs)
+    def watch(self, where="inline", **kwargs):
+        self.backend.watch(where, **kwargs)
         # Two updates to force all robots to see each other
         self.update()
         self.update()

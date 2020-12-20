@@ -11,8 +11,24 @@
 
 from .base import Backend
 
+# Implements all of the needed methods:
+
 
 class DebugBackend(Backend):
+
+    # Canvas API:
+
+    def watch(self, where="inline", **kwargs):
+        print("watch(where=%s, **%s)" % (where, kwargs))
+
+    def flush(self):
+        print("flush()")
+
+    def take_picture(self):
+        print("take_picture()")
+
+    # Low-level API:
+
     def arc(self, x, y, width, startAngle, endAngle):
         print("arc(%r,%r,%r,%r,%r)" % (x, y, width, startAngle, endAngle))
 
