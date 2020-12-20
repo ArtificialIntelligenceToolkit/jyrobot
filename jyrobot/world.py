@@ -395,20 +395,18 @@ class World:
 
     def update(self, show=True):
         ## Update robots:
-        debug = [] if self.debug else None
+        # None, or a list
+        debug_list = [] if self.debug else None
         for robot in self._robots:
-            robot.update(debug)
+            robot.update(debug_list)
         if show:
-            self.draw()
-            if debug is not None:
-                for command, args in debug:
-                    self.backend.do_command(command, *args)
+            self.draw(debug_list)
 
     @throttle(0.1)
-    def draw(self):
-        self.force_draw()
+    def draw(self, debug_list=[]):
+        self.force_draw(debug_list)
 
-    def force_draw(self):
+    def force_draw(self, debug_list=[]):
         if self.backend is None:
             return
 
@@ -450,3 +448,7 @@ class World:
 
             self.backend.set_fill(Color(255))
             self.backend.text("Time: %0.1f" % self.time, 10, self.height - 10)
+
+            if debug_list:
+                for command, args in debug_list:
+                    self.backend.do_command(command, *args)

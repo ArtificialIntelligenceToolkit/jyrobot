@@ -71,8 +71,7 @@ class RangeSensor:
     def step(self, time_step):
         pass
 
-    def update(self, debug):
-        self.debug = []
+    def update(self, debug_list):
         # Get location of sensor (FIXME: doesn't change):
         dist_from_center = self.robot.distance(0, 0, self.position[0], self.position[1])
         dir_from_center = math.atan2(-self.position[0], self.position[1])
@@ -84,8 +83,8 @@ class RangeSensor:
             self.robot.direction + dir_from_center + math.pi / 2,
         )
 
-        if debug is not None:
-            debug.append(("ellipse", (p[0], p[1], 2, 2)))
+        if debug_list is not None:
+            debug_list.append(("draw_ellipse", (p[0], p[1], 2, 2)))
 
         self.setReading(1.0)
         if self.width != 0:
@@ -97,8 +96,10 @@ class RangeSensor:
                     self.max,
                 )
                 if hits:
-                    if debug is not None:
-                        debug.append(("ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
+                    if debug_list is not None:
+                        debug_list.append(
+                            ("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2))
+                        )
                     # Closest hit:
                     if hits[-1].distance < self.getDistance():
                         self.setDistance(hits[-1].distance)
@@ -110,8 +111,8 @@ class RangeSensor:
                 self.max,
             )
             if hits:
-                if debug is not None:
-                    debug.append(("ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
+                if debug_list is not None:
+                    debug_list.append(("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
                 # Closest hit:
                 if hits[-1].distance < self.getDistance():
                     self.setDistance(hits[-1].distance)

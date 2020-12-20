@@ -36,6 +36,7 @@ class Devices:
 
 class Robot:
     def __init__(self, **config):
+        self.debug = False
         self.initialize()
         self.from_json(config)
         self.device = Devices(self)
@@ -76,7 +77,6 @@ class Robot:
         self.height = 0.25
         self.direction = 0  # radians
         self.state = ""
-        self.debug = False
         self.vx = 0.0  # velocity in x direction, CM per second
         self.vy = 0.0  # velocity in y direction, degrees per second
         self.va = 0.0  # turn velocity
@@ -439,13 +439,13 @@ class Robot:
         for device in self._devices:
             device.step(time_step)
 
-    def update(self, debug=None):
+    def update(self, debug_list=None):
         self.init_boundingbox()
 
         # Devices:
         for device in self._devices:
-            device.update(debug)
-        return debug
+            device.update(debug_list)
+        return
 
     def rotate_around(self, x1, y1, length, angle):
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
