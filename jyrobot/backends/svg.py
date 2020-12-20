@@ -8,8 +8,10 @@
 #
 # *************************************
 
+import io
 import math
 
+from PIL import Image
 from svgwrite import Drawing
 
 from ..utils import Color
@@ -20,10 +22,8 @@ from .base import Backend
 
 
 class SVGBackend(Backend):
-    def __init__(self, width, height, world_width, world_height):
-        super().__init__(width, height)
-        self.world_width = world_width
-        self.world_height = world_height
+    def __init__(self, width, height, scale):
+        super().__init__(width, height, scale)
         self.stack = []
         self.points = []
         self.initialize()
@@ -32,9 +32,27 @@ class SVGBackend(Backend):
 
     def initialize(self):
         self.stack.clear()
-        dwg = Drawing("canvas.svg", (self.world_width, self.world_height))
-        dwg.viewbox(0, 0, self.world_width, self.world_height)
+        dwg = Drawing("canvas.svg", (self.width, self.height))
+        dwg.viewbox(0, 0, self.width, self.height)
         self.stack.append(dwg)
+
+    # Overrides:
+
+    def update_dimensions(self, width, height, scale):
+        # No need, SVG handles this
+        pass
+
+    def take_picture(self):
+        try:
+            import cairosvg
+        except ImportError:
+            print("This backend.take_picture() requires cairosvg")
+            return
+
+        bytes = cairosvg.svg2png(self.stack[0].tostring())
+        fp = io.BytesIO(bytes)
+        picture = Image.open(fp)
+        return picture
 
     # Low-level API:
 

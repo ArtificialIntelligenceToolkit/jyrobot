@@ -144,15 +144,7 @@ class Color:
         return (int(self.red), int(self.green), int(self.blue), int(self.alpha))
 
     def rgb(self):
-        if int(self.alpha) == 255:
-            return "rgb(%d,%d,%d)" % (int(self.red), int(self.green), int(self.blue))
-        else:
-            return "rgb(%d,%d,%d,%d)" % (
-                int(self.red),
-                int(self.green),
-                int(self.blue),
-                int(self.alpha),
-            )
+        return "rgb(%d,%d,%d)" % (int(self.red), int(self.green), int(self.blue))
 
     def to_hexcode(self):
         return "#%02X%02X%02X%02X" % self.to_tuple()
