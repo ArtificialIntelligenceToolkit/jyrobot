@@ -14,7 +14,7 @@ from .datasets import get_dataset
 from .devices.cameras import Camera
 from .devices.rangesensors import RangeSensor
 from .hit import Hit
-from .utils import Color, Line, Point
+from .utils import Color, Line, Point, distance
 
 
 class Devices:
@@ -292,9 +292,6 @@ class Robot:
 
         return None
 
-    def distance(self, x1, y1, x2, y2):
-        return math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
-
     def has_image(self):
         return self.get_dataset_image is not None
 
@@ -316,7 +313,7 @@ class Robot:
                 p2 = line.p2
                 pos = self.intersect_hit(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)
                 if pos is not None:
-                    dist = self.distance(pos[0], pos[1], x1, y1)
+                    dist = distance(pos[0], pos[1], x1, y1)
                     height = 1.0 if wall.robot is None else wall.robot.height
                     hits.append(
                         Hit(

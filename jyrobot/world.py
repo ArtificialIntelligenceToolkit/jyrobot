@@ -318,7 +318,7 @@ class World:
         display(*objects)
 
     def watch(self, *args, **kwargs):
-        self.backend.watch(**kwargs)
+        self.backend.watch(*args, **kwargs)
         # Two updates to force all robots to see each other
         self.update()
         self.update()

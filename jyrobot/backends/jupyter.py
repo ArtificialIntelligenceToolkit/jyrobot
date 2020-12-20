@@ -17,8 +17,8 @@ from PIL import Image
 from .base import Backend
 
 
-def get_args(where="panel", clear=True, **kwargs):
-    return (where, clear, kwargs)
+def get_args(where="panel", clear=True):
+    return (where, clear)
 
 
 class JupyterBackend(Canvas, Backend):
@@ -37,8 +37,8 @@ class JupyterBackend(Canvas, Backend):
         return picture
 
     def watch(self, *args, **kwargs):
-        where, clear, kwargs = get_args(*args, **kwargs)
-        layout = kwargs
+        layout = kwargs.pop("layout", {})
+        where, clear = get_args(*args, **kwargs)
         if where in ["panel", "left", "right"]:
             app = JupyterFrontEnd()
             panel = Panel()

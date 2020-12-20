@@ -10,7 +10,7 @@
 
 import math
 
-from ..utils import Color
+from ..utils import Color, distance
 
 
 def arange(start, stop, step):
@@ -30,9 +30,12 @@ class RangeSensor:
 
     def __init__(self, **config):
         self.type = "RangeSensor"
+        self.time = 0.0
         self.robot = None
         self.reading = 1.0
         self.position = [10, 10]
+        self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
+        self.dir_from_center = math.atan2(-self.position[0], self.position[1])
         self.direction = 0  # comes in degrees, save as radians
         self.max = 100
         self.width = 1.0  # radians
@@ -49,6 +52,9 @@ class RangeSensor:
     def from_json(self, config):
         if "position" in config:
             self.position = config["position"]
+            # Get location of sensor, doesn't change once position is set:
+            self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
+            self.dir_from_center = math.atan2(-self.position[0], self.position[1])
         if "direction" in config:
             self.direction = config["direction"] * math.pi / 180  # save as radians
         if "max" in config:
@@ -72,15 +78,14 @@ class RangeSensor:
         pass
 
     def update(self, debug_list):
-        # Get location of sensor (FIXME: doesn't change):
-        dist_from_center = self.robot.distance(0, 0, self.position[0], self.position[1])
-        dir_from_center = math.atan2(-self.position[0], self.position[1])
+        # Update timestamp:
+        self.time = self.robot.world.time
         # This changes:
         p = self.robot.rotate_around(
             self.robot.x,
             self.robot.y,
-            dist_from_center,
-            self.robot.direction + dir_from_center + math.pi / 2,
+            self.dist_from_center,
+            self.robot.direction + self.dir_from_center + math.pi / 2,
         )
 
         if debug_list is not None:

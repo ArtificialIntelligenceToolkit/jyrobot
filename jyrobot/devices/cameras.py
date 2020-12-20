@@ -16,6 +16,7 @@ from ..utils import Color
 class Camera:
     def __init__(self, **config):
         self.type = "Camera"
+        self.time = 0.0
         self.robot = None
         self.cameraShape = [256, 128]
         # 0 = no fade, 1.0 = max fade
@@ -89,6 +90,8 @@ class Camera:
         pass
 
     def _update(self):
+        # Update timestamp:
+        self.time = self.robot.world.time
         for i in range(self.cameraShape[0]):
             angle = i / self.cameraShape[0] * self.angle - self.angle / 2
             self.hits[i] = self.robot.cast_ray(
