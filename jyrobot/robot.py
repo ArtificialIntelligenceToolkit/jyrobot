@@ -64,14 +64,33 @@ class Robot:
             print("  " + ("-" * 25))
 
     def set_color(self, color):
-        self.color = color
-        self.trace_color = Color(self.color.red, self.color.green, self.color.blue, 128)
+        self.color = Color(color)
+        self.trace_color = Color(
+            self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
+        )
+        if self.world:
+            self.world.update()
+
+    def set_pose(self, x=None, y=None, direction=None):
+        """
+        Set the pose of the robot. direction is in degrees.
+        """
+        # Clear the trace
+        self.trace[:] = []
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if direction is not None:
+            self.direction = direction * math.pi / 180
+        if self.world:
+            self.world.update()
 
     def initialize(self):
         self.world = None
         self.name = "Robbie"
         self.keep_trace_forever = False
-        self.set_color(Color("red"))
+        self.set_color("red")
         self.doTrace = True
         self.trace = []
         self.body = []
@@ -157,7 +176,7 @@ class Robot:
             self.height = config["height"]  # ratio, 0 to 1 of height
 
         if "color" in config:
-            self.set_color(Color(config["color"]))
+            self.set_color(config["color"])
 
         if "body" in config:
             self.body[:] = config["body"]
