@@ -448,7 +448,7 @@ class World:
         # Throttle needs to take into account the async update time
         # So as not to overwhelm the system. We give 0.1 time
         # per robot. This can be optimized to reduce the load.
-        self.throttle_period = len(self._robots) * 0.1 + 0.05
+        self.throttle_period = len(self._robots) * 0.05 + 0.05
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
         for robot in self._robots:

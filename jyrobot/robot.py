@@ -63,11 +63,15 @@ class Robot:
                 print("      device[%s or %r]: %r" % (i, device.type, device))
             print("  " + ("-" * 25))
 
+    def set_color(self, color):
+        self.color = color
+        self.trace_color = Color(self.color.red, self.color.green, self.color.blue, 128)
+
     def initialize(self):
         self.world = None
         self.name = "Robbie"
         self.keep_trace_forever = False
-        self.color = Color("red")
+        self.set_color(Color("red"))
         self.doTrace = True
         self.trace = []
         self.body = []
@@ -153,7 +157,7 @@ class Robot:
             self.height = config["height"]  # ratio, 0 to 1 of height
 
         if "color" in config:
-            self.color = Color(config["color"])
+            self.set_color(Color(config["color"]))
 
         if "body" in config:
             self.body[:] = config["body"]
@@ -182,6 +186,8 @@ class Robot:
         if device not in self._devices:
             device.robot = self
             self._devices.append(device)
+            if self.world:
+                self.world.update()
         else:
             print("Can't add the same device to a robot more than once.")
 
@@ -436,7 +442,8 @@ class Robot:
             self.vy = 0
             self.vx = 0
 
-        self.trace.append((Point(self.x, self.y), self.direction))
+        if self.doTrace:
+            self.trace.append((Point(self.x, self.y), self.direction))
 
         # Devices:
         for device in self._devices:
@@ -455,7 +462,7 @@ class Robot:
 
     def draw(self, backend):
         if self.doTrace:
-            backend.strokeStyle(Color(200, 200, 200), 1)
+            backend.strokeStyle(self.trace_color, 1)
             backend.beginShape()
             # The last max_trace_length points:
             for (point, direction) in self.trace[-self.max_trace_length :]:
