@@ -268,7 +268,7 @@ class World:
         self.config["scale"] = self.scale
         self.force_draw()
 
-    def gallery(self, *images):
+    def gallery(self, *images, border_width=1, background_color=(0, 0, 0)):
         """
         Construct a gallery of images
         """
@@ -278,21 +278,24 @@ class World:
             print("world.gallery() requires Pillow, Python Image Library (PIL)")
             return
 
-        gallery_size = math.ceil(math.sqrt(len(images)))
+        gallery_cols = math.ceil(math.sqrt(len(images)))
+        gallery_rows = math.ceil(len(images) / gallery_cols)
+
         size = images[0].size
+        size = size[0] + (border_width * 2), size[1] + (border_width * 2)
 
         gallery_image = Image.new(
             mode="RGBA",
-            size=(int(gallery_size * size[0]), int(gallery_size * size[1])),
-            color=(0, 0, 0, 0),
+            size=(int(gallery_cols * size[0]), int(gallery_rows * size[1])),
+            color=background_color,
         )
 
         for i, image in enumerate(images):
             if image.mode != "RGBA":
                 image = image.convert("RGBA")
             location = (
-                int((i % gallery_size) * size[0]),
-                int((i // gallery_size) * size[1]),
+                int((i % gallery_cols) * size[0]) + border_width,
+                int((i // gallery_cols) * size[1]) + border_width,
             )
             gallery_image.paste(image, location)
         return gallery_image
@@ -312,14 +315,16 @@ class World:
 
             display = print
 
+        wait = kwargs.pop("wait", True)
+
         if Image is not None:
             if (
                 all([isinstance(obj, Image.Image) for obj in objects])
                 and len(objects) > 1
             ):
-                objects = [self.gallery(*objects)]
+                objects = [self.gallery(*objects, **kwargs)]
 
-        clear_output(wait=kwargs.get("wait", True))
+        clear_output(wait=wait)
         display(*objects)
 
     def watch(self, *args, **kwargs):
