@@ -359,10 +359,10 @@ class World:
 
     def add_robot(self, robot):
         if robot not in self._robots:
-            if robot.x == 0:
+            if robot.x == 0 and robot.y == 0:
                 robot.x = round(random.random() * (self.width - 10))
-            if robot.y == 0:
                 robot.y = round(random.random() * (self.height - 10))
+                robot.direction = random.random() * math.pi * 2
             self._robots.append(robot)
             robot.world = self
             # Bounding lines form a wall:
