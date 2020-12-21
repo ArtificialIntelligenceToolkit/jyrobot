@@ -18,7 +18,7 @@ from contextlib import contextmanager
 
 from .backends import make_backend
 from .robot import Robot
-from .utils import Color, Line, Point, json_dump, throttle
+from .utils import Color, Line, Point, json_dump
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -49,9 +49,14 @@ class Robots:
     def __repr__(self):
         return repr(self.world._robots)
 
+    def __len__(self):
+        return len(self.world._robots)
+
 
 class World:
     def __init__(self, **config):
+        self.throttle_period = 0.1
+        self.time_of_last_call = 0
         self.debug = False
         self._robots = []
         self.robot = Robots(self)
@@ -268,7 +273,7 @@ class World:
         self.config["scale"] = self.scale
         self.force_draw()
 
-    def gallery(self, *images, border_width=1, background_color=(0, 0, 0)):
+    def gallery(self, *images, border_width=1, background_color=(255, 255, 255)):
         """
         Construct a gallery of images
         """
@@ -430,16 +435,20 @@ class World:
                         stop = function(self)
                     if stop:
                         break
-            stop_real_time = time.monotonic()
-            stop_time = self.time
-            speed = (stop_time - start_time) / (stop_real_time - start_real_time)
+
+        stop_real_time = time.monotonic()
+        stop_time = self.time
+        speed = (stop_time - start_time) / (stop_real_time - start_real_time)
         print(
             "Simulation stopped at: %s; speed %s x real time"
             % (self.formatted_time(), round(speed, 2))
         )
 
     def step(self, time_step=None, show=True, real_time=True):
-        extra_sleep = 0
+        # Throttle needs to take into account the async update time
+        # So as not to overwhelm the system. We give 0.1 time
+        # per robot. This can be optimized to reduce the load.
+        self.throttle_period = len(self._robots) * 0.1 + 0.05
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
         for robot in self._robots:
@@ -448,13 +457,13 @@ class World:
         self.update(show)
         if show and real_time:  # real_time is ignored if not show
             now = time.monotonic()
-            # Tries to sleep enough to make even with real time:
-            sleep_time = time_step - (now - start_time)
+            sleep_time = self.time_step - (now - start_time)
+            # Tries to sleep enough to make even with real time/throttle time:
+            # If running faster than real time/throttle period, need to wait some
             if sleep_time >= 0:
                 # Sleep even more for slow-motion:
-                time.sleep(sleep_time + extra_sleep)
-            else:
-                extra_sleep += abs(sleep_time)
+                time.sleep(sleep_time)
+            # else it is already running slower than real time
 
     def update(self, show=True):
         ## Update robots:
@@ -465,9 +474,16 @@ class World:
         if show:
             self.draw(debug_list)
 
-    @throttle(0.1)
     def draw(self, debug_list=[]):
-        self.force_draw(debug_list)
+        # Throttle:
+        now = time.monotonic()
+        time_since_last_call = now - self.time_of_last_call
+
+        if time_since_last_call > self.throttle_period:
+            self.time_of_last_call = now
+            # End of throttle code
+
+            self.force_draw(debug_list)
 
     def force_draw(self, debug_list=[]):
         if self.backend is None:
