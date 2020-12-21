@@ -15,6 +15,7 @@ import signal
 import sys
 import time
 from contextlib import contextmanager
+from numbers import Number
 
 from .backends import make_backend
 from .robot import Robot
@@ -420,7 +421,6 @@ class World:
             for step in range(steps):
                 if self.stop:
                     break
-                self.step(time_step, show=show, real_time=real_time)
                 if function is not None:
                     if isinstance(function, (list, tuple)):
                         # Deterministically run robots round-robin:
@@ -435,6 +435,7 @@ class World:
                         stop = function(self)
                     if stop:
                         break
+                self.step(time_step, show=show, real_time=real_time)
 
         stop_real_time = time.monotonic()
         stop_time = self.time
@@ -445,6 +446,13 @@ class World:
         )
 
     def step(self, time_step=None, show=True, real_time=True):
+        if not isinstance(time_step, Number):
+            raise ValueError("Invalid time_step: %r; should be a number" % time_step)
+        if not isinstance(show, bool):
+            raise ValueError("Invalid show: %r; should be a bool" % show)
+        if not isinstance(real_time, bool):
+            raise ValueError("Invalid real_time: %r; should be a bool" % real_time)
+
         # Throttle needs to take into account the async update time
         # So as not to overwhelm the system. We give 0.1 time
         # per robot. This can be optimized to reduce the load.

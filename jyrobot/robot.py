@@ -457,9 +457,10 @@ class Robot:
             self.y = py
             self.direction = pdirection
         else:
+            # Adjust velocity
             self.va = 0
-            self.vy = 0
             self.vx = 0
+            self.vy = 0
 
         if self.doTrace:
             self.trace.append((Point(self.x, self.y), self.direction))
