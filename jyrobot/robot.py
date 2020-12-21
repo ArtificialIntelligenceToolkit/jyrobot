@@ -18,6 +18,11 @@ from .utils import Color, Line, Point, distance
 
 
 class Devices:
+    """
+    A wrapper around device list in order to allow
+    access by index, name, or type.
+    """
+
     def __init__(self, robot):
         self.robot = robot
 
@@ -35,6 +40,10 @@ class Devices:
 
 
 class Robot:
+    """
+    The base robot class.
+    """
+
     def __init__(self, **config):
         self.initialize()
         self.from_json(config)
@@ -55,6 +64,9 @@ class Robot:
             )
 
     def info(self):
+        """
+        Get information on a robot.
+        """
         if len(self._devices) == 0:
             print("  This robot has no devices.")
         else:
@@ -63,6 +75,9 @@ class Robot:
             print("  " + ("-" * 25))
 
     def set_color(self, color):
+        """
+        Set the color of a robot, and its trace.
+        """
         if not isinstance(color, Color):
             self.color = Color(color)
         else:
@@ -89,6 +104,9 @@ class Robot:
             self.world.force_draw()
 
     def initialize(self):
+        """
+        Initialize the robot properties.
+        """
         self.world = None
         self.name = "Robbie"
         self.keep_trace_forever = False
@@ -130,6 +148,9 @@ class Robot:
         self.init_boundingbox()
 
     def from_json(self, config):
+        """
+        Load a robot from a JSON config dict.
+        """
         if "name" in config:
             self.name = config["name"]
 
@@ -199,6 +220,9 @@ class Robot:
                     self.add_device(device)
 
     def del_device(self, device):
+        """
+        Remove a device from a robot.
+        """
         if device in self._devices:
             device.robot = None
             self._devices.remove(device)
@@ -206,6 +230,9 @@ class Robot:
             print("Device is not on robot.")
 
     def add_device(self, device):
+        """
+        Add a device to a robot.
+        """
         if device not in self._devices:
             device.robot = self
             self._devices.append(device)
@@ -215,6 +242,9 @@ class Robot:
             print("Can't add the same device to a robot more than once.")
 
     def to_json(self, robot_list):
+        """
+        Get this robot as a JSON config file.
+        """
         robot_json = {
             "name": self.name,
             "va": self.va,
@@ -241,27 +271,54 @@ class Robot:
         return robot_json
 
     def move(self, translate, rotate):
+        """
+        Set the target translate and rotate velocities.
+
+        Args should be between -1 and 1.
+        """
         # values between -1 and 1
         # compute target velocities
         self.tvx = translate * self.vx_max
         self.tva = rotate * self.va_max
 
     def forward(self, translate):
+        """
+        Set the target translate velocity.
+
+        Arg should be between -1 and 1.
+        """
         # values between -1 and 1
         self.tvx = translate * self.vx_max
 
     def backward(self, translate):
+        """
+        Set the target translate velocity.
+
+        Arg should be between -1 and 1.
+        """
         # values between -1 and 1
         self.tvx = -translate * self.vx_max
 
     def reverse(self):
+        """
+        Flip the target x velocity from negative to
+        positive or from positive to negative.
+        """
         self.tvx = -self.tvx
 
     def turn(self, rotate):
+        """
+        Set the target rotate velocity.
+
+        Arg should be between -1 and 1.
+        """
         # values between -1 and 1
         self.tva = rotate * self.va_max
 
     def stop(self):
+        """
+        Set the target velocities to zeros.
+        """
         self.tvx = 0.0
         self.tvy = 0.0
         self.tva = 0.0
@@ -294,6 +351,9 @@ class Robot:
             return None
 
     def intersect_hit(self, p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y):
+        """
+        Compute the intersection between two lines.
+        """
         # http:##stackoverflow.com/questions/20677795/find-the-point-of-intersecting-lines
         L1 = self.coefs(p1x, p1y, p2x, p2y)
         L2 = self.coefs(p3x, p3y, p4x, p4y)
@@ -322,12 +382,22 @@ class Robot:
         return None
 
     def has_image(self):
+        """
+        Does this robot have an associated 3D set of images from
+        a dataset?
+        """
         return self.get_dataset_image is not None
 
     def get_image(self, degrees):
+        """
+        Return the 3D image in the proper angle.
+        """
         return self.get_dataset_image(self.image_data[1], degrees)
 
     def cast_ray(self, x1, y1, a, maxRange):
+        """
+        Cast a ray into this world and see what it hits.
+        """
         # walls and robots
         hits = []
         x2 = math.sin(a) * maxRange + x1
@@ -433,6 +503,10 @@ class Robot:
         return min(max(tv - v, -dv), dv)  # keep in limit
 
     def step(self, time_step):
+        """
+        Have the robot make one step in time. Check to see if it hits
+        any obstacles.
+        """
         # proposed acceleration:
         va = self.va + self._deltav(
             self.tva, self.va, self.va_max, self.va_ramp, time_step
@@ -510,6 +584,9 @@ class Robot:
             device.step(time_step)
 
     def update(self, debug_list=None):
+        """
+        Update the robot, and devices.
+        """
         self.init_boundingbox()
         if debug_list is not None:
             debug_list.append(("strokeStyle", (Color(255), 1)))
@@ -567,9 +644,15 @@ class Robot:
         return
 
     def rotate_around(self, x1, y1, length, angle):
+        """
+        Swing a line around a point.
+        """
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
 
     def draw(self, backend):
+        """
+        Draw the robot.
+        """
         if self.doTrace:
             backend.strokeStyle(self.trace_color, 1)
             backend.beginShape()

@@ -14,6 +14,10 @@ from ..utils import Color
 
 
 class Camera:
+    """
+    A camera device.
+    """
+
     def __init__(self, **config):
         self.type = "Camera"
         self.time = 0.0

@@ -25,6 +25,10 @@ DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
 
 class Wall:
+    """
+    Class representing obstacles in the world.
+    """
+
     def __init__(self, color, robot, *lines):
         self.color = color
         self.robot = robot
@@ -35,6 +39,10 @@ class Wall:
 
 
 class Robots:
+    """
+    Wrapper for accessing robots by names, or index.
+    """
+
     def __init__(self, world):
         self.world = world
 
@@ -55,7 +63,15 @@ class Robots:
 
 
 class World:
+    """
+    The Jyrobot simulator world.
+    """
+
     def __init__(self, **config):
+        """
+        Takes a world JSON config dict (as **) or
+        any keyword from the config.
+        """
         self.throttle_period = 0.1
         self.time_of_last_call = 0
         self.debug = False
@@ -85,6 +101,9 @@ class World:
         return "%02d:%02d:%04.1f" % (hours, minutes, seconds)
 
     def take_picture(self, index=None, size=100):
+        """
+        Take a picture of the world, or of a robot.
+        """
         # Make sure it is up to date
         self.update()
         self.draw()
@@ -114,6 +133,9 @@ class World:
             return picture
 
     def info(self):
+        """
+        Get info about this world, and all of its robots.
+        """
         if self.filename:
             print("This world was loaded from %r" % self.filename)
         if len(self._robots) == 0:
@@ -126,10 +148,19 @@ class World:
                 robot.info()
 
     def switch_backend(self, backend):
+        """
+        Switch graphic backends. Valid choices are:
+            * "jupyter"
+            * "svg"
+            * "debug"
+        """
         self.backend = make_backend(self.width, self.height, self.scale)
         self.backend.update_dimensions(self.width, self.height, self.scale)
 
     def init(self):
+        """
+        Sets the default values.
+        """
         self.filename = None
         self.seed = 0
         self.width = 500
@@ -150,15 +181,25 @@ class World:
         self._robots = []
 
     def reset(self):
+        """
+        Reloads the config from initialization, or from
+        last save.
+        """
         self.init()
         self.from_json(self.config)
         self.force_draw()
 
     def set_seed(self, seed):
+        """
+        Set the random seed.
+        """
         random.seed(seed)
         self.seed = seed
 
     def from_json(self, config):
+        """
+        Load a json config file.
+        """
         self.config = config
         if "seed" not in config or config["seed"] == 0:
             seed = random.randint(0, sys.maxsize)
@@ -207,9 +248,15 @@ class World:
         self.backend.update_dimensions(self.width, self.height, self.scale)
 
     def clear_boundary_walls(self):
+        """
+        Remove any boundary walls.
+        """
         self.walls[:] = [wall for wall in self.walls if len(wall.lines) > 1]
 
     def add_boundary_walls(self):
+        """
+        Add boundary walls around world.
+        """
         if self.boundary_wall:
             p1 = Point(0, 0)
             p2 = Point(0, self.height)
@@ -226,6 +273,9 @@ class World:
             )
 
     def to_json(self):
+        """
+        Get the world as a JSON dict.
+        """
         config = {
             "seed": self.seed,
             "width": int(self.width),
@@ -253,6 +303,10 @@ class World:
         return config
 
     def save(self):
+        """
+        Save the current state of the world as the config, and
+        save it back to disc if it was loaded from disk.
+        """
         # First, save internally.
         self.config = self.to_json()
         if self.filename is not None and os.path.exists(self.filename):
@@ -262,12 +316,18 @@ class World:
             print("Saved in memory. Use world.save_as('filename') to save to disk.")
 
     def save_as(self, filename):
+        """
+        Save the world config JSON as a new file.
+        """
         # First, save internally.
         self.config = self.to_json()
         with open(filename, "w") as fp:
             json_dump(self.to_json(), fp, sort_keys=True, indent=4)
 
     def set_scale(self, scale):
+        """
+        Change the scale of the rendered world.
+        """
         self.scale = scale
         self.backend.update_dimensions(self.width, self.height, self.scale)
         # Save with config
@@ -307,6 +367,9 @@ class World:
         return gallery_image
 
     def display(self, *objects, **kwargs):
+        """
+        Display the objects in a notebook, jupyter lab, or regular python.
+        """
         try:
             from PIL import Image
         except ImportError:
@@ -334,6 +397,9 @@ class World:
         display(*objects)
 
     def watch(self, *args, **kwargs):
+        """
+        Create a live view to the simulator.
+        """
         self.backend.watch(*args, **kwargs)
         # Two updates to force all robots to see each other
         self.update()
@@ -341,6 +407,9 @@ class World:
         self.force_draw()
 
     def add_wall(self, color, x1, y1, x2, y2):
+        """
+        Add a box of walls.
+        """
         p1 = Point(x1, y1)
         p2 = Point(x2, y1)
         p3 = Point(x2, y2)
@@ -354,6 +423,9 @@ class World:
         self.force_draw()
 
     def del_robot(self, robot):
+        """
+        Removed a robot from the world.
+        """
         for wall in list(self.walls):
             if wall.robot is robot:
                 self.walls.remove(wall)
@@ -364,6 +436,9 @@ class World:
         self.force_draw()
 
     def add_robot(self, robot):
+        """
+        Add a new robot to the world.
+        """
         if robot not in self._robots:
             if robot.x == 0 and robot.y == 0:
                 radius = max(robot.boundingbox) * 1.5
@@ -381,6 +456,9 @@ class World:
             print("Can't add the same robot to a world more than once.")
 
     def signal_handler(self, *args, **kwargs):
+        """
+        Handler for Control+C.
+        """
         self.stop = True
 
     @contextmanager
@@ -397,18 +475,42 @@ class World:
             signal.signal(signal.SIGINT, DEFAULT_HANDLER)
 
     def run(self, function=None, time_step=None, show=True, real_time=True):
+        """
+        Run the simulator until one of the control functions returns True
+        or Control+C is pressed.
+
+        Args:
+            function - (optional) either a single function that takes the
+                world, or a list of functions (or None) that each take
+                a robot. If any function returns True, then simulation will
+                stop.
+
+        """
         time_step = time_step if time_step is not None else self.time_step
         self.steps(sys.maxsize, function, time_step, show, real_time)
 
     def seconds(
         self, seconds=5.0, function=None, time_step=None, show=True, real_time=True
     ):
+        """
+        Run the simulator for N seconds, or until one of the control
+        functions returns True or Control+C is pressed.
+
+        Args:
+            function - (optional) either a single function that takes the
+                world, or a list of functions (or None) that each take
+                a robot. If any function returns True, then simulation will
+                stop.
+        """
         time_step = time_step if time_step is not None else self.time_step
         count = round(seconds / time_step)
         self.steps(count, function, time_step, show, real_time)
 
     def steps(self, steps=1, function=None, time_step=None, show=True, real_time=True):
         """
+        Run the simulator for N steps, or until one of the control
+        functions returns True or Control+C is pressed.
+
         Args:
             function - (optional) either a single function that takes the
                 world, or a list of functions (or None) that each take
@@ -447,6 +549,11 @@ class World:
         )
 
     def step(self, time_step=None, show=True, real_time=True):
+        """
+        Run the simulator for 1 step.
+
+        Args:
+        """
         if not isinstance(time_step, Number):
             raise ValueError("Invalid time_step: %r; should be a number" % time_step)
         if not isinstance(show, bool):
@@ -475,6 +582,10 @@ class World:
             # else it is already running slower than real time
 
     def update(self, show=True):
+        """
+        Update the world, robots, and devices. Optionally, draw the
+        world.
+        """
         ## Update robots:
         # None, or a list
         debug_list = [] if self.debug else None
@@ -484,6 +595,9 @@ class World:
             self.draw(debug_list)
 
     def draw(self, debug_list=[]):
+        """
+        Draw the world. This function is throttled
+        """
         # Throttle:
         now = time.monotonic()
         time_since_last_call = now - self.time_of_last_call
@@ -495,6 +609,9 @@ class World:
             self.force_draw(debug_list)
 
     def force_draw(self, debug_list=[]):
+        """
+        Force a redraw of the world.
+        """
         if self.backend is None:
             return
 
