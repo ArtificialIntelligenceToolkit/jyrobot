@@ -160,8 +160,20 @@ class Point:
         self.x = x
         self.y = y
 
+    def __getitem__(self, item):
+        if item == 0:
+            return self.x
+        elif item == 1:
+            return self.y
+
+    def __len__(self):
+        return 2
+
     def __repr__(self):
         return "Point(%s,%s)" % (self.x, self.y)
+
+    def copy(self):
+        return Point(self.x, self.y)
 
 
 class Line:

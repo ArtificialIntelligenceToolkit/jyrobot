@@ -269,7 +269,7 @@ class World:
 
     def set_scale(self, scale):
         self.scale = scale
-        self.backend.change_scale(self.scale)
+        self.backend.update_dimensions(self.width, self.height, self.scale)
         # Save with config
         self.config["scale"] = self.scale
         self.force_draw()
@@ -366,8 +366,9 @@ class World:
     def add_robot(self, robot):
         if robot not in self._robots:
             if robot.x == 0 and robot.y == 0:
-                robot.x = round(random.random() * (self.width - 10))
-                robot.y = round(random.random() * (self.height - 10))
+                radius = max(robot.boundingbox) * 1.5
+                robot.x = round(radius + random.random() * (self.width - 2 * radius))
+                robot.y = round(radius + random.random() * (self.height - 2 * radius))
                 robot.direction = random.random() * math.pi * 2
             self._robots.append(robot)
             robot.world = self

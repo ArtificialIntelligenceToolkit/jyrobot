@@ -36,7 +36,6 @@ class Devices:
 
 class Robot:
     def __init__(self, **config):
-        self.debug = False
         self.initialize()
         self.from_json(config)
         self.device = Devices(self)
@@ -64,7 +63,10 @@ class Robot:
             print("  " + ("-" * 25))
 
     def set_color(self, color):
-        self.color = Color(color)
+        if not isinstance(color, Color):
+            self.color = Color(color)
+        else:
+            self.color = color
         self.trace_color = Color(
             self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
         )
@@ -124,6 +126,7 @@ class Robot:
         self.state = ""
         self.image_data = []
         self.get_dataset_image = None
+        self.boundingbox = []
         self.init_boundingbox()
 
     def from_json(self, config):
@@ -180,6 +183,7 @@ class Robot:
 
         if "body" in config:
             self.body[:] = config["body"]
+            self.init_boundingbox()
 
         if "devices" in config:
             for deviceConfig in config["devices"]:
@@ -351,17 +355,55 @@ class Robot:
         return hits
 
     def init_boundingbox(self):
-        px = self.x
-        py = self.y
-        pdirection = self.direction
-        # FIXME: uses 10 rather than body bounding
-        p1 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 0 * math.pi / 2)
-        p2 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 1 * math.pi / 2)
-        p3 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 2 * math.pi / 2)
-        p4 = self.rotate_around(px, py, 10, pdirection + math.pi / 4 + 3 * math.pi / 2)
-        self.update_boundingbox(p1, p2, p3, p4)
+        # First, find min/max points around robot (assumes box):
+        min_x = float("inf")
+        max_x = float("-inf")
+        min_y = float("inf")
+        max_y = float("-inf")
+        for point in self.body:
+            min_x = min(min_x, point[0])
+            min_y = min(min_y, point[1])
+            max_x = max(max_x, point[0])
+            max_y = max(max_y, point[1])
+
+        if (
+            min_x == float("inf")
+            or min_y == float("inf")
+            or max_x == float("-inf")
+            or max_y == float("-inf")
+        ):
+            return
+
+        self.boundingbox = [min_x, min_y, max_x, max_y]
+        ps = self.compute_boundingbox(self.x, self.y, self.direction)
+        self.update_boundingbox(*ps)
+
+    def compute_boundingbox(self, px, py, pdirection):
+        # Compute position in real world with respect to x, y, direction:
+        min_x, min_y, max_x, max_y = self.boundingbox
+        ps = []
+        for x, y in [
+            (min_x, max_y),  # 4
+            (min_x, min_y),  # 1
+            (max_x, min_y),  # 2
+            (max_x, max_y),  # 3
+        ]:
+            dist = distance(0, 0, x, y)
+            angle = math.atan2(-x, y)
+            p = self.rotate_around(px, py, dist, pdirection + angle + math.pi / 2)
+            ps.append(p)
+        return ps
+
+    def restore_boundingbox(self):
+        self.update_boundingbox(*self.last_boundingbox)
 
     def update_boundingbox(self, p1, p2, p3, p4):
+        self.last_boundingbox = [
+            self.bounding_lines[0].p1.copy(),  # p1
+            self.bounding_lines[0].p2.copy(),  # p2
+            self.bounding_lines[1].p2.copy(),  # p3
+            self.bounding_lines[2].p2.copy(),  # p4
+        ]
         self.bounding_lines[0].p1.x = p1[0]
         self.bounding_lines[0].p1.y = p1[1]
         self.bounding_lines[0].p2.x = p2[0]
@@ -415,14 +457,11 @@ class Robot:
         )
         px = self.x + tvx
         py = self.y + tvy
+
         # check to see if collision
         # bounding box:
-        # FIXME: use actual bounding box points:
-        p1 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 0 * offset)
-        p2 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 1 * offset)
-        p3 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 2 * offset)
-        p4 = self.rotate_around(px, py, 10, pdirection + offset / 2 + 3 * offset)
-
+        p1, p2, p3, p4 = self.compute_boundingbox(px, py, pdirection)
+        # Set wall bounding boxes for collision detection:
         self.update_boundingbox(p1, p2, p3, p4)
 
         self.stalled = False
@@ -457,7 +496,8 @@ class Robot:
             self.y = py
             self.direction = pdirection
         else:
-            # Adjust velocity
+            self.restore_boundingbox()
+            # Adjust actual velocity
             self.va = 0
             self.vx = 0
             self.vy = 0
@@ -471,6 +511,55 @@ class Robot:
 
     def update(self, debug_list=None):
         self.init_boundingbox()
+        if debug_list is not None:
+            debug_list.append(("strokeStyle", (Color(255), 1)))
+            debug_list.append(
+                (
+                    "draw_line",
+                    (
+                        self.bounding_lines[0].p1.x,
+                        self.bounding_lines[0].p1.y,
+                        self.bounding_lines[0].p2.x,
+                        self.bounding_lines[0].p2.y,
+                    ),
+                )
+            )
+
+            debug_list.append(
+                (
+                    "draw_line",
+                    (
+                        self.bounding_lines[1].p1.x,
+                        self.bounding_lines[1].p1.y,
+                        self.bounding_lines[1].p2.x,
+                        self.bounding_lines[1].p2.y,
+                    ),
+                )
+            )
+
+            debug_list.append(
+                (
+                    "draw_line",
+                    (
+                        self.bounding_lines[2].p1.x,
+                        self.bounding_lines[2].p1.y,
+                        self.bounding_lines[2].p2.x,
+                        self.bounding_lines[2].p2.y,
+                    ),
+                )
+            )
+
+            debug_list.append(
+                (
+                    "draw_line",
+                    (
+                        self.bounding_lines[3].p1.x,
+                        self.bounding_lines[3].p1.y,
+                        self.bounding_lines[3].p2.x,
+                        self.bounding_lines[3].p2.y,
+                    ),
+                )
+            )
 
         # Devices:
         for device in self._devices:
@@ -490,36 +579,6 @@ class Robot:
             if not self.keep_trace_forever:
                 self.trace = self.trace[-self.max_trace_length :]
             backend.make_stroke()
-
-        if self.debug:
-            backend.strokeStyle(Color(255), 1)
-            backend.draw_line(
-                self.bounding_lines[0].p1.x,
-                self.bounding_lines[0].p1.y,
-                self.bounding_lines[0].p2.x,
-                self.bounding_lines[0].p2.y,
-            )
-
-            backend.draw_line(
-                self.bounding_lines[1].p1.x,
-                self.bounding_lines[1].p1.y,
-                self.bounding_lines[1].p2.x,
-                self.bounding_lines[1].p2.y,
-            )
-
-            backend.draw_line(
-                self.bounding_lines[2].p1.x,
-                self.bounding_lines[2].p1.y,
-                self.bounding_lines[2].p2.x,
-                self.bounding_lines[2].p2.y,
-            )
-
-            backend.draw_line(
-                self.bounding_lines[3].p1.x,
-                self.bounding_lines[3].p1.y,
-                self.bounding_lines[3].p2.x,
-                self.bounding_lines[3].p2.y,
-            )
 
         backend.pushMatrix()
         backend.translate(self.x, self.y)
