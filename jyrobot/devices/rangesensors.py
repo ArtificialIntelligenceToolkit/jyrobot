@@ -92,7 +92,7 @@ class RangeSensor:
         if debug_list is not None:
             debug_list.append(("draw_ellipse", (p[0], p[1], 2, 2)))
 
-        self.setReading(1.0)
+        self.set_reading(1.0)
         if self.width != 0:
             for incr in arange(-self.width / 2, self.width / 2, self.width / 2):
                 hits = self.robot.cast_ray(
@@ -107,8 +107,8 @@ class RangeSensor:
                             ("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2))
                         )
                     # Closest hit:
-                    if hits[-1].distance < self.getDistance():
-                        self.setDistance(hits[-1].distance)
+                    if hits[-1].distance < self.get_distance():
+                        self.set_distance(hits[-1].distance)
         else:
             hits = self.robot.cast_ray(
                 p[0],
@@ -120,14 +120,14 @@ class RangeSensor:
                 if debug_list is not None:
                     debug_list.append(("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
                 # Closest hit:
-                if hits[-1].distance < self.getDistance():
-                    self.setDistance(hits[-1].distance)
+                if hits[-1].distance < self.get_distance():
+                    self.set_distance(hits[-1].distance)
 
     def draw(self, backend):
         backend.set_fill(Color(128, 0, 128, 64))
-        dist = self.getDistance()
+        dist = self.get_distance()
         if self.width > 0:
-            if self.getReading() < 1.0:
+            if self.get_reading() < 1.0:
                 backend.strokeStyle(Color(255), 1)
             else:
                 backend.strokeStyle(Color(0), 1)
@@ -141,7 +141,7 @@ class RangeSensor:
                 self.direction + self.width / 2,
             )
         else:
-            if self.getReading() < 1.0:
+            if self.get_reading() < 1.0:
                 backend.strokeStyle(Color(255), 1)
             else:
                 backend.strokeStyle(Color(128, 0, 128, 64), 1)
@@ -150,16 +150,16 @@ class RangeSensor:
                 self.position[0], self.position[1], dist + self.position[0], 0
             )
 
-    def getDistance(self):
+    def get_distance(self):
         return self.distance
 
-    def getReading(self):
+    def get_reading(self):
         return self.reading
 
-    def setDistance(self, distance):
+    def set_distance(self, distance):
         self.distance = distance
         self.reading = distance / self.max
 
-    def setReading(self, reading):
+    def set_reading(self, reading):
         self.reading = reading
         self.distance = reading * self.max
