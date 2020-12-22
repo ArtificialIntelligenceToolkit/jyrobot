@@ -93,7 +93,7 @@ class Robot:
             self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
         )
         if self.world:
-            self.world.force_draw()
+            self.world.draw()
 
     def set_pose(self, x=None, y=None, direction=None):
         """
@@ -108,7 +108,7 @@ class Robot:
         if direction is not None:
             self.direction = direction * math.pi / 180
         if self.world:
-            self.world.force_draw()
+            self.world.draw()
 
     def initialize(self):
         """
@@ -116,6 +116,7 @@ class Robot:
         """
         self.world = None
         self.name = "Robbie"
+        self.state = {}
         self.keep_trace_forever = False
         self.set_color("red")
         self.doTrace = True
@@ -161,6 +162,9 @@ class Robot:
         """
         if "name" in config:
             self.name = config["name"]
+
+        if "state" in config:
+            self.state = config["state"]
 
         if "va" in config:
             self.va = config["va"]
@@ -245,7 +249,7 @@ class Robot:
             device.robot = self
             self._devices.append(device)
             if self.world:
-                self.world.force_draw()
+                self.world.draw()
         else:
             print("Can't add the same device to a robot more than once.")
 
@@ -255,6 +259,7 @@ class Robot:
         """
         robot_json = {
             "name": self.name,
+            "state": self.state,
             "va": self.va,
             "vx": self.vx,
             "vy": self.vy,
