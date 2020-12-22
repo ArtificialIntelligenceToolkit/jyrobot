@@ -20,6 +20,67 @@ def distance(x1, y1, x2, y2):
     return math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 
 
+def distance_point_to_line_3d(point, line_start, line_end):
+    """
+    Compute distance and location to closest point
+    on a line segment in 3D.
+    """
+
+    def dot(v, w):
+        x, y, z = v
+        X, Y, Z = w
+        return x * X + y * Y + z * Z
+
+    def length(v):
+        x, y, z = v
+        return math.sqrt(x * x + y * y + z * z)
+
+    def vector(b, e):
+        x, y, z = b
+        X, Y, Z = e
+        return (X - x, Y - y, Z - z)
+
+    def unit(v):
+        x, y, z = v
+        mag = length(v)
+        return (x / mag, y / mag, z / mag)
+
+    def distance(p0, p1):
+        return length(vector(p0, p1))
+
+    def scale(v, sc):
+        x, y, z = v
+        return (x * sc, y * sc, z * sc)
+
+    def add(v, w):
+        x, y, z = v
+        X, Y, Z = w
+        return (x + X, y + Y, z + Z)
+
+    line_vec = vector(line_start, line_end)
+    point_vec = vector(line_start, point)
+    line_len = length(line_vec)
+    line_unitvec = unit(line_vec)
+    point_vec_scaled = scale(point_vec, 1.0 / line_len)
+    t = dot(line_unitvec, point_vec_scaled)
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+    nearest = scale(line_vec, t)
+    dist = distance(nearest, point_vec)
+    nearest = add(nearest, line_start)
+    return (dist, nearest)
+
+
+def distance_point_to_line(point, line_start, line_end):
+    return distance_point_to_line_3d(
+        (point[0], point[1], 0),
+        (line_start[0], line_start[1], 0),
+        (line_end[0], line_end[1], 0),
+    )
+
+
 def json_dump(config, fp, sort_keys=True, indent=4):
     dumps(fp, config, sort_keys=sort_keys, indent=indent)
 
