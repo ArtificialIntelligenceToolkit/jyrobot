@@ -20,7 +20,8 @@ from numbers import Number
 
 from .backends import make_backend
 from .robot import Robot
-from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump
+from .utils import distance  # noqa
+from .utils import Color, Line, Point, distance_point_to_line, json_dump
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -304,14 +305,8 @@ class World:
             if len(wall.lines) == 4 and wall.robot is None:
                 w = {
                     "color": str(wall.color),
-                    "p1": {
-                        "x": wall.lines[0].p1.x,
-                        "y": wall.lines[0].p1.y,
-                    },
-                    "p2": {
-                        "x": wall.lines[2].p1.x,
-                        "y": wall.lines[2].p1.y,
-                    },
+                    "p1": {"x": wall.lines[0].p1.x, "y": wall.lines[0].p1.y,},
+                    "p2": {"x": wall.lines[2].p1.x, "y": wall.lines[2].p1.y,},
                 }
                 config["walls"].append(w)
 
