@@ -9,6 +9,7 @@
 # *************************************
 
 import math
+import re
 
 from .datasets import get_dataset
 from .devices.cameras import Camera
@@ -30,8 +31,28 @@ class Robot:
         if isinstance(item, int):
             return self._devices[item]
         elif isinstance(item, str):
+            type_map = {}  # mapping of base to count
+            search_groups = re.match(r"(.*)-(\d*)", item)
+            if search_groups:
+                search_type = search_groups[1].lower()
+                search_index = int(search_groups[2])
+            else:
+                search_type = item
+                search_index = 1
             for device in self._devices:
-                if item.lower() == device.type.lower():
+                # update type_map
+                device_type = device.type.lower()
+                device_index = None
+                if "-" in device_type:
+                    device_type, device_index = device_type.rsplit("-", 1)
+                    device_index = int(device_index)
+                if device_type not in type_map:
+                    type_map[device_type] = 1
+                else:
+                    type_map[device_type] += 1
+                if device_index is None:
+                    device_index = type_map[device_type]
+                if search_type == device_type and search_index == device_index:
                     return device
         return None
 

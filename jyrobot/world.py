@@ -11,6 +11,7 @@
 import math
 import os
 import random
+import re
 import signal
 import sys
 import time
@@ -65,9 +66,30 @@ class World:
         if isinstance(item, int):
             return self._robots[item]
         elif isinstance(item, str):
+            name_map = {}  # mapping of base to count
+            search_groups = re.match(r"(.*)-(\d*)", item)
+            if search_groups:
+                search_name = search_groups[1].lower()
+                search_index = int(search_groups[2])
+            else:
+                search_name = item
+                search_index = 1
             for robot in self._robots:
-                if item.lower() == robot.name.lower():
+                # update name_map
+                robot_name = robot.name.lower()
+                robot_index = None
+                if "-" in robot_name:
+                    robot_name, robot_index = robot_name.rsplit("-", 1)
+                    robot_index = int(robot_index)
+                if robot_name not in name_map:
+                    name_map[robot_name] = 1
+                else:
+                    name_map[robot_name] += 1
+                if robot_index is None:
+                    robot_index = name_map[robot_name]
+                if search_name == robot_name and search_index == robot_index:
                     return robot
+
         return None
 
     def __len__(self):
