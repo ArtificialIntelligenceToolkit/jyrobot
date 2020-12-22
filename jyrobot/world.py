@@ -27,7 +27,8 @@ DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
 class Wall:
     """
-    Class representing obstacles in the world.
+    Class representing obstacles in the world. If the bounding box of
+    a robot, then robot will be that robot, else None.
     """
 
     def __init__(self, color, robot, *lines):
