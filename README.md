@@ -1,5 +1,7 @@
 # jyrobot
 
+[![PyPI version](https://badge.fury.io/py/jyrobot.svg)](https://badge.fury.io/py/jyrobot)
+
 A lightweight Python robot simulator for Jupyter Lab, Notebooks,
 and other environments.
 
