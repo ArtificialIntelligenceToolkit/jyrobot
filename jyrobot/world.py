@@ -72,7 +72,7 @@ class World:
                 search_name = search_groups[1].lower()
                 search_index = int(search_groups[2])
             else:
-                search_name = item
+                search_name = item.lower()
                 search_index = 1
             for robot in self._robots:
                 # update name_map
