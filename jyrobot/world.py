@@ -20,7 +20,7 @@ from numbers import Number
 
 from .backends import make_backend
 from .robot import Robot
-from .utils import Color, Line, Point, distance, json_dump
+from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -433,8 +433,7 @@ class World:
             Color(color), None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1)
         )
         self.walls.append(wall)
-        self.update(show=False)
-        self.force_draw()
+        self.draw()
 
     def del_robot(self, robot):
         """
@@ -449,8 +448,7 @@ class World:
         if robot in self._robots:
             robot.world = None
             self._robots.remove(robot)
-        self.update(show=False)
-        self.force_draw()
+        self.draw()
 
     def add_robot_randomly(self, robot):
         """
@@ -465,12 +463,16 @@ class World:
                 robot.radius + random.random() * (self.height - 2 * robot.radius)
             )
             for other in self:
-                if (
-                    distance(robot.x, robot.y, other.x, other.y)
-                    < robot.radius + other.radius
-                ):
+                if distance(px, py, other.x, other.y) < robot.radius + other.radius:
                     too_close = True
                     break
+
+            for wall in self.walls:
+                for line in wall.lines:
+                    dist, location = distance_point_to_line((px, py), line.p1, line.p2)
+                    if dist < robot.radius:
+                        too_close = True
+                        break
             if not too_close:
                 return px, py, pa
 
@@ -488,8 +490,7 @@ class World:
             # Bounding lines form a wall:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
-            self.update(show=False)
-            self.force_draw()
+            self.draw()
         else:
             print("Can't add the same robot to a world more than once.")
 
