@@ -70,14 +70,29 @@ For the core operations, you will need to install just jyrobot:
 pip install jyrobot
 ```
 
-For just image processing on top of of the core, you can install:
+For just image processing on top of of the core, you will need:
 
-```shell
-pip install "jyrobot[pictures]"
+* Pillow - Python Image Library (PIL)
+
+For the full set of options, you will need:
+
+* Pillow - Python Image Library (PIL)
+* ipywidgets
+* ipylab
+* ipycanvas
+* IPython
+
+You can install those with conda or via pip.
+
+To use the Jupyter enhancements, you'll also need the browser-based
+extensions. You can install those with:
+
+```
+jupyter labextension install @jupyter-widgets/jupyterlab-manager ipycanvas ipylab
 ```
 
-For the full set of options, you can install all needed dependencies with:
+If not in a conda environment, then you will also need to:
 
-```shell
-pip install "jyrobot[jupyter]"
+```
+jupyter nbextension enable --py widgetsnbextension
 ```
