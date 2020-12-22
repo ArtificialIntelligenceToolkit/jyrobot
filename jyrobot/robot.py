@@ -739,8 +739,7 @@ SCRIBBLER_CONFIG = {
         [-4.17, 5.0],
     ],
     "color": "#FF0000FF",
-    "x": 0,
-    "y": 0,
+    "name": "Scribbie",
 }
 
 
