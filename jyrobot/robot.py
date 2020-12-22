@@ -37,7 +37,7 @@ class Robot:
                 search_type = search_groups[1].lower()
                 search_index = int(search_groups[2])
             else:
-                search_type = item
+                search_type = item.lower()
                 search_index = 1
             for device in self._devices:
                 # update type_map
