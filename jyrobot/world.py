@@ -205,6 +205,7 @@ class World:
         """
         random.seed(seed)
         self.seed = seed
+        self.config["seed"] = seed
 
     def from_json(self, config):
         """
@@ -216,7 +217,7 @@ class World:
             print("Random seed initialized to:", seed)
         else:
             seed = config["seed"]
-            print("Reusing random seed:", self.seed)
+            print("Reusing random seed:", seed)
         self.set_seed(seed)
 
         if "filename" in config:
