@@ -73,6 +73,7 @@ class World:
         any keyword from the config.
         """
         self.throttle_period = 0.1
+        self.dynamic_throttle = True
         self.time_of_last_call = 0
         self.debug = False
         self._robots = []
@@ -319,10 +320,14 @@ class World:
         """
         Save the world config JSON as a new file.
         """
+        if not filename.endswith(".json"):
+            filename = filename + ".json"
         # First, save internally.
         self.config = self.to_json()
         with open(filename, "w") as fp:
             json_dump(self.to_json(), fp, sort_keys=True, indent=4)
+        self.config["filename"] = filename
+        # Now you can use save():
 
     def set_scale(self, scale):
         """
@@ -426,6 +431,9 @@ class World:
         """
         Removed a robot from the world.
         """
+        if not isinstance(robot, Robot):
+            # Then look it up by index/name/type:
+            robot = self.robot[robot]
         for wall in list(self.walls):
             if wall.robot is robot:
                 self.walls.remove(wall)
@@ -564,7 +572,10 @@ class World:
         # Throttle needs to take into account the async update time
         # So as not to overwhelm the system. We give 0.1 time
         # per robot. This can be optimized to reduce the load.
-        self.throttle_period = len(self._robots) * 0.05 + 0.05
+
+        if self.dynamic_throttle:
+            self.throttle_period = len(self._robots) * 0.05 + 0.05
+
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
         for robot in self._robots:

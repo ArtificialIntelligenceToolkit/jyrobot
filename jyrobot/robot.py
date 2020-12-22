@@ -654,14 +654,15 @@ class Robot:
         Draw the robot.
         """
         if self.doTrace:
-            backend.strokeStyle(self.trace_color, 1)
-            backend.beginShape()
-            # The last max_trace_length points:
-            for (point, direction) in self.trace[-self.max_trace_length :]:
-                backend.vertex(point.x, point.y)
+            backend.draw_lines(
+                [
+                    (point[0], point[1])
+                    for (point, direction) in self.trace[-self.max_trace_length :]
+                ],
+                stroke_style=self.trace_color,
+            )
             if not self.keep_trace_forever:
                 self.trace = self.trace[-self.max_trace_length :]
-            backend.make_stroke()
 
         backend.pushMatrix()
         backend.translate(self.x, self.y)

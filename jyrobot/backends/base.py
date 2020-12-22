@@ -67,6 +67,14 @@ class Backend:
 
     # HIGH-LEVEL Drawing API
 
+    def draw_lines(self, points, stroke_style=None):
+        if stroke_style:
+            self.strokeStyle(stroke_style, 1)
+        self.beginShape()
+        for point in points:
+            self.vertex(point[0], point[1])
+        self.make_stroke()
+
     def set_stroke_style(self, color):
         self.stroke_style = color.to_hexcode()
 

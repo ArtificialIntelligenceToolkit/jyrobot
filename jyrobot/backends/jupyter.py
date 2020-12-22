@@ -8,6 +8,7 @@
 #
 # *************************************
 
+import numpy as np
 from ipycanvas import Canvas
 from ipylab import JupyterFrontEnd, Panel
 from IPython.display import display
@@ -80,3 +81,11 @@ class JupyterBackend(Canvas, Backend):
                 setattr(box.layout, keyword, defaults[keyword])
             box.children = [self]
             display(box)
+
+    # High Level-API overloads:
+
+    def draw_lines(self, points, stroke_style=None):
+        if stroke_style:
+            self.strokeStyle(stroke_style, 1)
+        data = np.array(points)
+        self.stroke_lines(data)
