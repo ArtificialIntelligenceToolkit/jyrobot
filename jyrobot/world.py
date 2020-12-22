@@ -51,6 +51,7 @@ class World:
         Takes a world JSON config dict (as **) or
         any keyword from the config.
         """
+        self.time_decimal_places = 1
         self.throttle_period = 0.1
         self.dynamic_throttle = True
         self.time_of_last_call = 0
@@ -615,6 +616,7 @@ class World:
         for robot in self._robots:
             robot.step(time_step)
         self.time += time_step
+        self.time = round(self.time, self.time_decimal_places)
         self.update(show)
         if show and real_time:  # real_time is ignored if not show
             now = time.monotonic()
