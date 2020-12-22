@@ -304,8 +304,14 @@ class World:
             if len(wall.lines) == 4 and wall.robot is None:
                 w = {
                     "color": str(wall.color),
-                    "p1": {"x": wall.lines[0].p1.x, "y": wall.lines[0].p1.y,},
-                    "p2": {"x": wall.lines[2].p1.x, "y": wall.lines[2].p1.y,},
+                    "p1": {
+                        "x": wall.lines[0].p1.x,
+                        "y": wall.lines[0].p1.y,
+                    },
+                    "p2": {
+                        "x": wall.lines[2].p1.x,
+                        "y": wall.lines[2].p1.y,
+                    },
                 }
                 config["walls"].append(w)
 
@@ -392,7 +398,7 @@ class World:
             Image = None
 
         try:
-            from IPython.display import display, clear_output
+            from IPython.display import clear_output, display
         except ImportError:
 
             def clear_output(wait=None):
