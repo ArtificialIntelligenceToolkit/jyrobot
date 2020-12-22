@@ -235,6 +235,8 @@ class Robot:
         """
         Remove a device from a robot.
         """
+        if isinstance(device, (str, int)):
+            device = self[device]
         if device in self._devices:
             device.robot = None
             self._devices.remove(device)
