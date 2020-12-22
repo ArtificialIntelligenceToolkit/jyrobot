@@ -119,7 +119,7 @@ class Robot:
         self.state = {}
         self.keep_trace_forever = False
         self.set_color("red")
-        self.doTrace = True
+        self.do_trace = True
         self.trace = []
         self.body = []
         self.max_trace_length = int(1 / 0.1 * 10)  # 10 seconds
@@ -594,7 +594,7 @@ class Robot:
             self.vx = 0
             self.vy = 0
 
-        if self.doTrace:
+        if self.do_trace:
             self.trace.append((Point(self.x, self.y), self.direction))
 
         # Devices:
@@ -671,7 +671,7 @@ class Robot:
         """
         Draw the robot.
         """
-        if self.doTrace:
+        if self.do_trace:
             backend.draw_lines(
                 [
                     (point[0], point[1])
