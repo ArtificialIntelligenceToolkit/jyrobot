@@ -29,7 +29,7 @@ class RangeSensor:
     """
 
     def __init__(self, **config):
-        self.type = "RangeSensor"
+        self.type = "ir"
         self.time = 0.0
         self.robot = None
         self.reading = 1.0
@@ -61,12 +61,13 @@ class RangeSensor:
             self.max = config["max"]
         if "width" in config:
             self.width = config["width"] * math.pi / 180  # save as radians
-
+            if self.width == 0:
+                self.type = "laser"
         self.distance = self.reading * self.max
 
     def to_json(self):
         config = {
-            "type": self.type,
+            "class": self.__class__.__name,
             "position": self.position,
             "direction": self.direction * 180 / math.pi,  # save as degrees
             "max": self.max,

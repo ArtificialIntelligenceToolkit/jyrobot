@@ -19,7 +19,7 @@ class Camera:
     """
 
     def __init__(self, **config):
-        self.type = "Camera"
+        self.type = "camera"
         self.time = 0.0
         self.robot = None
         self.cameraShape = [256, 128]
@@ -57,7 +57,7 @@ class Camera:
 
     def to_json(self):
         return {
-            "type": self.type,
+            "class": self.__class__.__name__,
             "width": self.cameraShape[0],
             "height": self.cameraShape[1],
             "colorsFadeWithDistance": self.colorsFadeWithDistance,

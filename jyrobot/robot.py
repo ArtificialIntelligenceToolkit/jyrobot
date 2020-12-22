@@ -196,12 +196,12 @@ class Robot:
         if "devices" in config:
             for deviceConfig in config["devices"]:
                 device = None
-                if deviceConfig["type"] == "Camera":
+                if deviceConfig["class"] == "Camera":
                     device = Camera(**deviceConfig)
-                elif deviceConfig["type"] == "RangeSensor":
+                elif deviceConfig["class"] == "RangeSensor":
                     device = RangeSensor(**deviceConfig)
                 else:
-                    print("Unknown device type:", deviceConfig["type"])
+                    print("Unknown device class:", deviceConfig["class"])
 
                 if device:
                     self.add_device(device)
