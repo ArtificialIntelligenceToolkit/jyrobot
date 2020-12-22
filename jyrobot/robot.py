@@ -17,28 +17,6 @@ from .hit import Hit
 from .utils import Color, Line, Point, distance
 
 
-class Devices:
-    """
-    A wrapper around device list in order to allow
-    access by index, name, or type.
-    """
-
-    def __init__(self, robot):
-        self.robot = robot
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self.robot._devices[item]
-        elif isinstance(item, str):
-            for device in self.robot._devices:
-                if item.lower() == device.type.lower():
-                    return device
-        return None
-
-    def __repr__(self):
-        return repr(self.robot._devices)
-
-
 class Robot:
     """
     The base robot class.
@@ -47,7 +25,15 @@ class Robot:
     def __init__(self, **config):
         self.initialize()
         self.from_json(config)
-        self.device = Devices(self)
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self._devices[item]
+        elif isinstance(item, str):
+            for device in self._devices:
+                if item.lower() == device.type.lower():
+                    return device
+        return None
 
     def __repr__(self):
         if self.world is None:
@@ -114,7 +100,7 @@ class Robot:
         self.doTrace = True
         self.trace = []
         self.body = []
-        self.max_trace_length = 1000
+        self.max_trace_length = int(1 / 0.1 * 10)  # 10 seconds
         self.x = 0  # cm
         self.y = 0  # cm
         self.height = 0.25
@@ -145,6 +131,7 @@ class Robot:
         self.image_data = []
         self.get_dataset_image = None
         self.boundingbox = []
+        self.radius = 0.0
         self.init_boundingbox()
 
     def from_json(self, config):
@@ -430,11 +417,13 @@ class Robot:
         max_x = float("-inf")
         min_y = float("inf")
         max_y = float("-inf")
+        max_dist = float("-inf")
         for point in self.body:
             min_x = min(min_x, point[0])
             min_y = min(min_y, point[1])
             max_x = max(max_x, point[0])
             max_y = max(max_y, point[1])
+            max_dist = max(max_dist, distance(0, 0, point[0], point[1]))
 
         if (
             min_x == float("inf")
@@ -445,6 +434,7 @@ class Robot:
             return
 
         self.boundingbox = [min_x, min_y, max_x, max_y]
+        self.radius = max_dist
         ps = self.compute_boundingbox(self.x, self.y, self.direction)
         self.update_boundingbox(*ps)
 

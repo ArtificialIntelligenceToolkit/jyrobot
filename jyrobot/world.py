@@ -19,7 +19,7 @@ from numbers import Number
 
 from .backends import make_backend
 from .robot import Robot
-from .utils import Color, Line, Point, json_dump
+from .utils import Color, Line, Point, distance, json_dump
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -38,30 +38,6 @@ class Wall:
         return "Wall(%r, %r, %r)" % (self.color, self.robot, self.lines)
 
 
-class Robots:
-    """
-    Wrapper for accessing robots by names, or index.
-    """
-
-    def __init__(self, world):
-        self.world = world
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self.world._robots[item]
-        elif isinstance(item, str):
-            for robot in self.world._robots:
-                if item.lower() == robot.name.lower():
-                    return robot
-        return None
-
-    def __repr__(self):
-        return repr(self.world._robots)
-
-    def __len__(self):
-        return len(self.world._robots)
-
-
 class World:
     """
     The Jyrobot simulator world.
@@ -77,7 +53,6 @@ class World:
         self.time_of_last_call = 0
         self.debug = False
         self._robots = []
-        self.robot = Robots(self)
         self.backend = None
         self.config = config.copy()
         self.init()  # default values
@@ -85,6 +60,18 @@ class World:
         self.update()
         self.update()
         self.force_draw()
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self._robots[item]
+        elif isinstance(item, str):
+            for robot in self._robots:
+                if item.lower() == robot.name.lower():
+                    return robot
+        return None
+
+    def __len__(self):
+        return len(self._robots)
 
     def __repr__(self):
         return "<World width=%r, height=%r>" % (self.width, self.height)
@@ -118,7 +105,7 @@ class World:
             return
 
         if index is not None:
-            robot = self.robot[index]
+            robot = self[index]
             if robot:
                 start_x = round(max(robot.x * self.scale - size / 2, 0))
                 start_y = round(max(robot.y * self.scale - size / 2, 0))
@@ -433,7 +420,7 @@ class World:
         """
         if not isinstance(robot, Robot):
             # Then look it up by index/name/type:
-            robot = self.robot[robot]
+            robot = self[robot]
         for wall in list(self.walls):
             if wall.robot is robot:
                 self.walls.remove(wall)
@@ -443,16 +430,37 @@ class World:
         self.update(show=False)
         self.force_draw()
 
+    def add_robot_randomly(self, robot):
+        """
+        Add a robot to the world in a random position.
+        """
+        # TODO: avoid walls too
+        pa = random.random() * math.pi * 2
+        for i in range(100):
+            too_close = False
+            px = round(robot.radius + random.random() * (self.width - 2 * robot.radius))
+            py = round(
+                robot.radius + random.random() * (self.height - 2 * robot.radius)
+            )
+            for other in self:
+                if (
+                    distance(robot.x, robot.y, other.x, other.y)
+                    < robot.radius + other.radius
+                ):
+                    too_close = True
+                    break
+            if not too_close:
+                return px, py, pa
+
+        raise Exception("Couldn't find a place for robot after 100 tries; giving up")
+
     def add_robot(self, robot):
         """
         Add a new robot to the world.
         """
         if robot not in self._robots:
             if robot.x == 0 and robot.y == 0:
-                radius = max(robot.boundingbox) * 1.5
-                robot.x = round(radius + random.random() * (self.width - 2 * radius))
-                robot.y = round(radius + random.random() * (self.height - 2 * radius))
-                robot.direction = random.random() * math.pi * 2
+                robot.x, robot.y, robot.direction = self.add_robot_randomly(robot)
             self._robots.append(robot)
             robot.world = self
             # Bounding lines form a wall:
