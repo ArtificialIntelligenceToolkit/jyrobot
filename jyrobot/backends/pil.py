@@ -64,8 +64,10 @@ class PILBackend(Backend):
     def get_color(self, color):
         if isinstance(color, Color):
             return color.to_tuple()
-        else:
+        elif color != "":
             return color
+        else:
+            return None
 
     def get_style(self, style):
         if style == "fill":
@@ -103,7 +105,7 @@ class PILBackend(Backend):
         )
 
     def clear(self):
-        self.fill_style = "white"
+        # self.fill_style = "white"
         self.draw_rect(0, 0, self.width, self.height)
 
     def text(self, t, x, y):
@@ -123,9 +125,14 @@ class PILBackend(Backend):
 
     def draw_rect(self, x, y, width, height):
         p1x, p1y = self.p(x, y)
-        p2x, p2y = self.p(x + width, y + height)
-        self.draw.rectangle(
-            (p1x, p1y, p2x, p2y), fill=self.get_style("fill"), width=self.line_width
+        p2x, p2y = self.p(x + width, y)
+        p3x, p3y = self.p(x + width, y + height)
+        p4x, p4y = self.p(x, y + height)
+
+        self.draw.polygon(
+            (p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y),
+            fill=self.get_style("fill"),
+            outline=self.get_style("outline"),
         )
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
@@ -145,7 +152,7 @@ class PILBackend(Backend):
             (p1x, p1y, p2x, p2y),
             startAngle,
             endAngle,
-            fill=self.fill_style,
+            fill=self.get_style("fill"),
             width=self.line_width,
         )
 

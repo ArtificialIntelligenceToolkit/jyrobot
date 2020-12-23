@@ -700,14 +700,11 @@ class Robot:
 
         backend.endShape()
         backend.noStroke()
+        # FIXME: draw all of this from JSON!!!
         # Draw wheels:
         backend.set_fill(Color(0))
         backend.draw_rect(-3.33, -7.67, 6.33, 1.67)
         backend.draw_rect(-3.33, 6.0, 6.33, 1.67)
-        # hole:
-        backend.set_fill(Color(0, 64, 0))
-        backend.strokeStyle(None, 0)
-        backend.draw_ellipse(0, 0, 1.67, 1.67)
 
         for device in self._devices:
             device.draw(backend)
