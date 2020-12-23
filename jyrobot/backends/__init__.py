@@ -12,7 +12,7 @@ import os
 
 BACKEND = os.environ.get("JYROBOT_BACKEND", "jupyter")
 
-VALID_BACKENDS = ["jupyter", "svg", "debug"]
+VALID_BACKENDS = ["jupyter", "svg", "debug", "pil"]
 
 
 def switch_backend(backend=None):
@@ -42,6 +42,10 @@ def make_backend(width, height, scale):
         from .svg import SVGBackend
 
         return SVGBackend(width, height, scale)
+    elif BACKEND == "pil":
+        from .pil import PILBackend
+
+        return PILBackend(width, height, scale)
     elif BACKEND == "debug":
         from .debug import DebugBackend
 

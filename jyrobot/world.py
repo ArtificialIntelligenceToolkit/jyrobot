@@ -53,7 +53,6 @@ class World:
         """
         self.time_decimal_places = 1
         self.throttle_period = 0.1
-        self.dynamic_throttle = True
         self.time_of_last_call = 0
         self.debug = False
         self._robots = []
@@ -61,9 +60,9 @@ class World:
         self.config = config.copy()
         self.init()  # default values
         self.reset()  # from config
-        self.update()
-        self.update()
-        self.force_draw()
+        self.update(show=False)
+        self.update(show=False)
+        self.draw()  # force
 
     def __getitem__(self, item):
         if isinstance(item, int):
@@ -118,8 +117,11 @@ class World:
         Take a picture of the world, or of a robot.
         """
         # Make sure it is up to date
-        self.update()
-        self.draw()
+        self.update(show=False)
+        self.draw()  # force
+        if self.backend.is_async():
+            # wait for backend to updatea
+            time.sleep(self.throttle_period)
         try:
             picture = self.backend.take_picture()
         except RuntimeError:
@@ -187,6 +189,7 @@ class World:
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
         self.walls = []
+        self.complexity = 0
         if len(self._robots) > 0:
             print("Removing robots from world...")
             for robot in self._robots:
@@ -200,7 +203,8 @@ class World:
         """
         self.init()
         self.from_json(self.config)
-        self.force_draw()
+        self.update(show=False)
+        self.draw()  # force
 
     def set_seed(self, seed):
         """
@@ -266,6 +270,7 @@ class World:
         Remove any boundary walls.
         """
         self.walls[:] = [wall for wall in self.walls if len(wall.lines) > 1]
+        self.complexity = self.compute_complexity()
 
     def add_boundary_walls(self):
         """
@@ -285,6 +290,7 @@ class World:
                     Wall(self.boundary_wall_color, None, Line(p4, p1)),
                 ]
             )
+            self.complexity = self.compute_complexity()
 
     def to_json(self):
         """
@@ -350,7 +356,8 @@ class World:
         self.backend.update_dimensions(self.width, self.height, self.scale)
         # Save with config
         self.config["scale"] = self.scale
-        self.force_draw()
+        self.update(show=False)
+        self.draw()  # force
 
     def gallery(self, *images, border_width=1, background_color=(255, 255, 255)):
         """
@@ -420,9 +427,9 @@ class World:
         """
         self.backend.watch(*args, **kwargs)
         # Two updates to force all robots to see each other
-        self.update()
-        self.update()
-        self.force_draw()
+        self.update(show=False)
+        self.update(show=False)
+        self.draw()  # force
 
     def add_wall(self, color, x1, y1, x2, y2):
         """
@@ -437,7 +444,8 @@ class World:
             Color(color), None, Line(p1, p2), Line(p2, p3), Line(p3, p4), Line(p4, p1)
         )
         self.walls.append(wall)
-        self.draw()
+        self.complexity = self.compute_complexity()
+        self.update(show=True)
 
     def del_robot(self, robot):
         """
@@ -452,7 +460,8 @@ class World:
         if robot in self._robots:
             robot.world = None
             self._robots.remove(robot)
-        self.draw()
+        self.complexity = self.compute_complexity()
+        self.update(show=True)
 
     def add_robot_randomly(self, robot):
         """
@@ -494,7 +503,8 @@ class World:
             # Bounding lines form a wall:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
-            self.draw()
+            self.complexity = self.compute_complexity()
+            self.update(show=True)
         else:
             print("Can't add the same robot to a world more than once.")
 
@@ -590,6 +600,12 @@ class World:
             "Simulation stopped at: %s; speed %s x real time"
             % (self.formatted_time(), round(speed, 2))
         )
+        self.update(show=False)  # get updates
+        self.draw()  # force to update any displays
+
+    def compute_complexity(self):
+        # Proxy for how much drawing
+        return sum([len(wall.lines) for wall in self.walls])
 
     def step(self, time_step=None, show=True, real_time=True):
         """
@@ -608,8 +624,8 @@ class World:
         # So as not to overwhelm the system. We give 0.1 time
         # per robot. This can be optimized to reduce the load.
 
-        if self.dynamic_throttle:
-            self.throttle_period = len(self._robots) * 0.05 + 0.05
+        if self.backend.is_async():
+            self.throttle_period = self.backend.get_dynamic_throttle(self)
 
         time_step = time_step if time_step is not None else self.time_step
         start_time = time.monotonic()
@@ -639,9 +655,9 @@ class World:
         for robot in self._robots:
             robot.update(debug_list)
         if show:
-            self.draw(debug_list)
+            self.request_draw(debug_list)
 
-    def draw(self, debug_list=[]):
+    def request_draw(self, debug_list=None):
         """
         Draw the world. This function is throttled
         """
@@ -653,9 +669,9 @@ class World:
             self.time_of_last_call = now
             # End of throttle code
 
-            self.force_draw(debug_list)
+            self.draw(debug_list)  # force
 
-    def force_draw(self, debug_list=[]):
+    def draw(self, debug_list=None):
         """
         Force a redraw of the world.
         """

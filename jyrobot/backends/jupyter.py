@@ -10,77 +10,39 @@
 
 import numpy as np
 from ipycanvas import Canvas
-from ipylab import JupyterFrontEnd, Panel
-from IPython.display import display
-from ipywidgets import Box
-from PIL import Image
 
 from .base import Backend
 
 
-def get_args(where="panel", clear=True):
-    return (where, clear)
-
-
 class JupyterBackend(Canvas, Backend):
     """
-    Widget and a Jyrobot backend.
+    Canvas Widget and a Jyrobot backend.
     """
+
+    # jyrobot API:
+
+    def is_async(self):
+        # Does the backend take time to update the drawing?
+        return True
+
+    def get_dynamic_throttle(self, world):
+        # A proxy to figure out how much to throttle
+        return world.complexity * 0.01
 
     def take_picture(self):
         """
         returns PIL.Image
         """
+        from PIL import Image
+
         # self.image_data gives a PNG bytes
         # self.get_image_data() gives numpy array
         array = self.get_image_data()
         picture = Image.fromarray(array, "RGBA")
         return picture
 
-    def watch(self, *args, **kwargs):
-        layout = kwargs.pop("layout", {})
-        where, clear = get_args(*args, **kwargs)
-        if where in ["panel", "left", "right"]:
-            app = JupyterFrontEnd()
-            panel = Panel()
-
-            if clear:
-                for widget in list(app.shell.widgets.values()):
-                    if hasattr(widget, "title") and widget.title.label.startswith(
-                        "Jyrobot"
-                    ):
-                        widget.close()
-
-            if where == "panel":
-                # Close all Jyro widgets
-                defaults = {"width": "100%", "height": "auto"}
-                defaults.update(layout)
-                box = Box()
-                for keyword in defaults:
-                    setattr(box.layout, keyword, defaults[keyword])
-                    box.children = [self]
-
-                panel.children = [box]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "main", {"mode": "split-right"})
-            elif where == "left":
-                panel.children = [self]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "left", {"rank": 10000})
-                app.shell.expand_left()
-            elif where == "right":
-                panel.children = [self]
-                panel.title.label = "Jyrobot Simulator"
-                app.shell.add(panel, "right", {"rank": 0})
-                app.shell.expand_right()
-        else:  # "inline", or something else
-            defaults = {"max_width": "600px"}
-            defaults.update(layout)
-            box = Box()
-            for keyword in defaults:
-                setattr(box.layout, keyword, defaults[keyword])
-            box.children = [self]
-            display(box)
+    def get_widget(self):
+        return self
 
     # High Level-API overloads:
 

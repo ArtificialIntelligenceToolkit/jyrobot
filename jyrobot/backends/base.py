@@ -29,6 +29,71 @@ class Backend:
         self._scale = scale
         self.caching = False
         self.orig_caching = False
+        self.initialize()
+
+    def initialize(self):
+        pass
+
+    def watch(self, *wheres, **kwargs):
+        from ipylab import JupyterFrontEnd, Panel
+        from IPython.display import display
+        from ipywidgets import Box
+
+        clear = kwargs.pop("clear", True)
+        layout = kwargs
+        for where in wheres:
+            if where in ["panel", "left", "right"]:
+                app = JupyterFrontEnd()
+                panel = Panel()
+
+                if clear:
+                    for widget in list(app.shell.widgets.values()):
+                        if hasattr(widget, "title") and widget.title.label.startswith(
+                            "Jyrobot"
+                        ):
+                            widget.close()
+
+                if where == "panel":
+                    # Close all Jyro widgets
+                    defaults = {"width": "100%", "height": "auto"}
+                    defaults.update(layout)
+                    box = Box()
+                    for keyword in defaults:
+                        setattr(box.layout, keyword, defaults[keyword])
+                        box.children = [self.get_widget()]
+
+                    panel.children = [box]
+                    panel.title.label = "Jyrobot Simulator"
+                    app.shell.add(panel, "main", {"mode": "split-right"})
+                elif where == "left":
+                    panel.children = [self.get_widget()]
+                    panel.title.label = "Jyrobot Simulator"
+                    app.shell.add(panel, "left", {"rank": 10000})
+                    app.shell.expand_left()
+                elif where == "right":
+                    panel.children = [self.get_widget()]
+                    panel.title.label = "Jyrobot Simulator"
+                    app.shell.add(panel, "right", {"rank": 0})
+                    app.shell.expand_right()
+            else:  # "inline", or something else
+                defaults = {"max_width": "600px"}
+                defaults.update(layout)
+                box = Box()
+                for keyword in defaults:
+                    setattr(box.layout, keyword, defaults[keyword])
+                box.children = [self.get_widget()]
+                display(box)
+
+    # jyrobot API:
+
+    def is_async(self):
+        # Does the backend take time to update the drawing?
+        return False
+
+    def get_dynamic_throttle(self, world):
+        # If async, then return time needed to
+        # draw world and return it
+        return self.throttle_period
 
     # Canvas API
 
@@ -56,8 +121,8 @@ class Backend:
 
     # Need to implement in subclasses:
 
-    def watch(self, *args, **kwargs):
-        raise NotImplementedError("backend.watch")
+    def get_widget(self):
+        raise NotImplementedError("backend.get_widget")
 
     def flush(self):
         raise NotImplementedError("backend.flush")

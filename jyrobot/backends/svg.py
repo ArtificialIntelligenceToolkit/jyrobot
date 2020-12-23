@@ -22,16 +22,11 @@ from .base import Backend
 
 
 class SVGBackend(Backend):
-    def __init__(self, width, height, scale):
-        super().__init__(width, height, scale)
-        self.stack = []
-        self.points = []
-        self.initialize()
-
     # Specific to this class:
 
     def initialize(self):
-        self.stack.clear()
+        self.stack = []
+        self.points = []
         dwg = Drawing("canvas.svg", (self.width, self.height))
         dwg.viewbox(0, 0, self.width, self.height)
         self.stack.append(dwg)

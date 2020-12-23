@@ -93,7 +93,7 @@ class Robot:
             self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
         )
         if self.world:
-            self.world.draw()
+            self.world.update(show=True)
 
     def set_pose(self, x=None, y=None, direction=None):
         """
@@ -108,7 +108,7 @@ class Robot:
         if direction is not None:
             self.direction = direction * math.pi / 180
         if self.world:
-            self.world.draw()
+            self.world.update(show=True)
 
     def initialize(self):
         """
@@ -251,7 +251,7 @@ class Robot:
             device.robot = self
             self._devices.append(device)
             if self.world:
-                self.world.draw()
+                self.world.update(show=True)
         else:
             print("Can't add the same device to a robot more than once.")
 

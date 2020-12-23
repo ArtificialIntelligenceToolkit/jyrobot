@@ -78,7 +78,7 @@ class RangeSensor:
     def step(self, time_step):
         pass
 
-    def update(self, debug_list):
+    def update(self, debug_list=None):
         # Update timestamp:
         self.time = self.robot.world.time
         # This changes:
