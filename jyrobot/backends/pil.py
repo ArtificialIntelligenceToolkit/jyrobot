@@ -8,11 +8,12 @@
 #
 # *************************************
 
+import io
 import math
 
 from PIL import Image, ImageDraw
 
-from ..utils import distance
+from ..utils import Color, distance
 from .base import Backend
 
 
@@ -21,6 +22,7 @@ class PILBackend(Backend):
 
     def initialize(self):
         self.matrix = []
+        self.widget = None
         self.image = Image.new(
             "RGBA", size=(int(self.width * self._scale), int(self.height * self._scale))
         )
@@ -34,11 +36,22 @@ class PILBackend(Backend):
 
     # Canvas API:
 
+    def to_png(self):
+        fp = io.BytesIO()
+        self.image.save(fp, format="png")
+        return fp.getvalue()
+
     def get_widget(self):
-        # FIXME: what to do here?
         from ipywidgets import Image
 
-        return Image(value=self.image)
+        if self.widget is None:
+            self.widget = Image(value=self.to_png())
+
+        return self.widget
+
+    def update(self):
+        if self.widget:
+            self.widget.value = self.to_png()
 
     def flush(self):
         pass
@@ -47,6 +60,18 @@ class PILBackend(Backend):
         return self.image
 
     # High-level API:
+
+    def get_color(self, color):
+        if isinstance(color, Color):
+            return color.to_tuple()
+        else:
+            return color
+
+    def get_style(self, style):
+        if style == "fill":
+            return self.get_color(self.fill_style)
+        elif style == "stroke":
+            return self.get_color(self.stroke_style)
 
     def p(self, x, y):
         for matrix in self.matrix:
@@ -64,16 +89,17 @@ class PILBackend(Backend):
 
     def draw_lines(self, points, stroke_style=None):
         self.stroke_style = stroke_style
-        for i in range(0, len(points), 2):
-            self.draw_line(
-                points[i][0], points[i][0], points[i + 1][0], points[i + 1][1]
-            )
+        for i in range(len(points)):
+            if i < len(points) - 2:
+                self.draw_line(
+                    points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]
+                )
 
     def draw_line(self, x1, y1, x2, y2):
         p1x, p1y = self.p(x1, y1)
         p2x, p2y = self.p(x2, y2)
         self.draw.line(
-            (p1x, p1y, p2x, p2y), fill=self.stroke_style or None, width=self.line_width
+            (p1x, p1y, p2x, p2y), fill=self.get_style("stroke"), width=self.line_width
         )
 
     def clear(self):
@@ -81,7 +107,7 @@ class PILBackend(Backend):
         self.draw_rect(0, 0, self.width, self.height)
 
     def text(self, t, x, y):
-        self.draw.text(self.p(x, y), t, fill=self.fill_style or None)
+        self.draw.text(self.p(x, y), t, fill=self.get_style("fill"))
 
     def pushMatrix(self):
         self.matrix.append([])
@@ -99,7 +125,7 @@ class PILBackend(Backend):
         p1x, p1y = self.p(x, y)
         p2x, p2y = self.p(x + width, y + height)
         self.draw.rectangle(
-            (p1x, p1y, p2x, p2y), fill=self.fill_style or None, width=self.line_width
+            (p1x, p1y, p2x, p2y), fill=self.get_style("fill"), width=self.line_width
         )
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
@@ -107,8 +133,8 @@ class PILBackend(Backend):
         p2x, p2y = self.p(x + radiusX, y + radiusY)
         self.draw.ellipse(
             (p1x, p1y, p2x, p2y),
-            fill=self.fill_style or None,
-            outline=self.stroke_style or None,
+            fill=self.get_style("fill"),
+            outline=self.get_style("stroke"),
             width=self.line_width,
         )
 
@@ -128,7 +154,7 @@ class PILBackend(Backend):
 
     def endShape(self):
         self.draw.polygon(
-            self.points, fill=self.fill_style or None, outline=self.stroke_style or None
+            self.points, fill=self.get_style("fill"), outline=self.get_style("stroke")
         )
 
     def vertex(self, x, y):

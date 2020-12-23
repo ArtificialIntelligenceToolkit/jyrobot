@@ -34,6 +34,10 @@ class Backend:
     def initialize(self):
         pass
 
+    def update(self):
+        # tell widget to update
+        pass
+
     def watch(self, *wheres, **kwargs):
         from ipylab import JupyterFrontEnd, Panel
         from IPython.display import display
@@ -133,12 +137,7 @@ class Backend:
     # HIGH-LEVEL Drawing API
 
     def draw_lines(self, points, stroke_style=None):
-        if stroke_style:
-            self.strokeStyle(stroke_style, 1)
-        self.beginShape()
-        for point in points:
-            self.vertex(point[0], point[1])
-        self.make_stroke()
+        self.draw_line()
 
     def set_stroke_style(self, color):
         self.stroke_style = color.to_hexcode()

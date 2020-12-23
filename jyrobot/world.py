@@ -720,3 +720,5 @@ class World:
             if debug_list:
                 for command, args in debug_list:
                     self.backend.do_command(command, *args)
+
+        self.backend.update()
