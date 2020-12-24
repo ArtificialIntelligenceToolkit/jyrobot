@@ -127,7 +127,6 @@ class Robot:
         self.y = 0  # cm
         self.height = 0.25
         self.direction = 0  # radians
-        self.state = ""
         self.vx = 0.0  # velocity in x direction, CM per second
         self.vy = 0.0  # velocity in y direction, degrees per second
         self.va = 0.0  # turn velocity
@@ -141,7 +140,6 @@ class Robot:
         self.va_max = math.pi * 0.90  # RADIANS/SEC
         self.vy_max = 2.0  # CM/SEC
         self.stalled = False
-        self.state = ""
         self.bounding_lines = [
             Line(Point(0, 0), Point(0, 0)),
             Line(Point(0, 0), Point(0, 0)),
@@ -149,7 +147,7 @@ class Robot:
             Line(Point(0, 0), Point(0, 0)),
         ]
         self._devices = []
-        self.state = ""
+        self.state = {}
         self.image_data = []
         self.get_dataset_image = None
         self.boundingbox = []
@@ -446,12 +444,15 @@ class Robot:
         min_y = float("inf")
         max_y = float("-inf")
         max_dist = float("-inf")
-        for point in self.body:
-            min_x = min(min_x, point[0])
-            min_y = min(min_y, point[1])
-            max_x = max(max_x, point[0])
-            max_y = max(max_y, point[1])
-            max_dist = max(max_dist, distance(0, 0, point[0], point[1]))
+
+        if len(self.body) > 0 and self.body[0][0] == "polygon":
+            # "polygon", color, points
+            for point in self.body[0][2]:
+                min_x = min(min_x, point[0])
+                min_y = min(min_y, point[1])
+                max_x = max(max_x, point[0])
+                max_y = max(max_y, point[1])
+                max_dist = max(max_dist, distance(0, 0, point[0], point[1]))
 
         if (
             min_x == float("inf")
@@ -687,24 +688,28 @@ class Robot:
         backend.rotate(self.direction)
 
         # body:
-        if self.stalled:
-            backend.set_fill(Color(128, 128, 128))
-            backend.strokeStyle(Color(255), 1)
-        else:
-            backend.set_fill(self.color)
-            backend.noStroke()
 
-        backend.beginShape()
-        for i in range(len(self.body)):
-            backend.vertex(self.body[i][0], self.body[i][1])
+        for shape in self.body:
+            shape_name, color, args = shape
 
-        backend.endShape()
-        backend.noStroke()
-        # FIXME: draw all of this from JSON!!!
-        # Draw wheels:
-        backend.set_fill(Color(0))
-        backend.draw_rect(-3.33, -7.67, 6.33, 1.67)
-        backend.draw_rect(-3.33, 6.0, 6.33, 1.67)
+            if self.stalled:
+                backend.set_fill(Color(128, 128, 128))
+                backend.strokeStyle(Color(255), 1)
+            elif color is None:
+                backend.set_fill(self.color)
+                backend.noStroke()
+            else:
+                backend.set_fill(Color(color))
+                backend.noStroke()
+
+            if shape_name == "polygon":
+                backend.beginShape()
+                for x, y in args:
+                    backend.vertex(x, y)
+                backend.endShape()
+                backend.noStroke()
+            elif shape_name == "rectangle":
+                backend.draw_rect(*args)
 
         for device in self._devices:
             device.draw(backend)
@@ -714,26 +719,34 @@ class Robot:
 
 SCRIBBLER_CONFIG = {
     "body": [
-        [4.17, 5.0],
-        [4.17, 6.67],
-        [5.83, 5.83],
-        [5.83, 5.0],
-        [7.5, 5.0],
-        [7.5, -5.0],
-        [5.83, -5.0],
-        [5.83, -5.83],
-        [4.17, -6.67],
-        [4.17, -5.0],
-        [-4.17, -5.0],
-        [-4.17, -6.67],
-        [-5.83, -5.83],
-        [-6.67, -5.0],
-        [-7.5, -4.17],
-        [-7.5, 4.17],
-        [-6.67, 5.0],
-        [-5.83, 5.83],
-        [-4.17, 6.67],
-        [-4.17, 5.0],
+        [
+            "polygon",
+            None,
+            [
+                [4.17, 5],
+                [4.17, 6.67],
+                [5.83, 5.83],
+                [5.83, 5],
+                [7.5, 5],
+                [7.5, -5],
+                [5.83, -5],
+                [5.83, -5.83],
+                [4.17, -6.67],
+                [4.17, -5],
+                [-4.17, -5],
+                [-4.17, -6.67],
+                [-5.83, -5.83],
+                [-6.67, -5],
+                [-7.5, -4.17],
+                [-7.5, 4.17],
+                [-6.67, 5],
+                [-5.83, 5.83],
+                [-4.17, 6.67],
+                [-4.17, 5],
+            ],
+        ],
+        ["rectangle", "black", [-3.33, -7.67, 6.33, 1.67]],
+        ["rectangle", "black", [-3.33, 6, 6.33, 1.67]],
     ],
     "color": "#FF0000FF",
     "name": "Scribbie",
