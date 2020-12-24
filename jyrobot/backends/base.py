@@ -46,6 +46,8 @@ class Backend:
 
         clear = kwargs.pop("clear", True)
         layout = kwargs
+        if wheres == []:
+            wheres = ["panel"]
         for where in wheres:
             if where in ["panel", "left", "right"]:
                 app = JupyterFrontEnd()
