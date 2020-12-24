@@ -162,25 +162,35 @@ class PILBackend(Backend):
         )
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
-        p1x, p1y = self.p(x - radiusX, y - radiusY)
-        p2x, p2y = self.p(x + radiusX, y + radiusY)
-        self.draw.ellipse(
-            (p1x, p1y, p2x, p2y),
+        p1x, p1y = self.p(x, y)
+        p2x, p2y = self.p(x + radiusX * 2, y)
+        p3x, p3y = self.p(x + radiusX * 2, y + radiusY * 2)
+        p4x, p4y = self.p(x, y + radiusY * 2)
+
+        self.draw.polygon(
+            (p1x, p1y, p2x, p3y, p3x, p3y, p4x, p4y),
             fill=self.get_style("fill"),
             outline=self.get_style("stroke"),
-            width=self.line_width,
+#            width=self.line_width,
         )
 
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
-        p1x, p1y = self.p(x - width, y - height)
-        p2x, p2y = self.p(x + width, y + height)
-        self.draw.arc(
-            (p1x, p1y, p2x, p2y),
-            startAngle,
-            endAngle,
-            fill=self.get_style("fill"),
-            width=self.line_width,
-        )
+        #p1x, p1y = self.p(x, y)
+        #p2x, p2y = self.p(x + width,
+        #                  y + height)
+
+        self.draw_line(x, y, x + width, y)
+        
+        #self.draw_ellipse(x, y, width/2, height/2)
+        #self.draw_rect(x, y, width/2, height/2)
+        
+        #self.draw.arc(
+        #    (p1x, p1y, p2x, p2y),
+        #    startAngle * 180/math.pi,
+        #    endAngle * 180/math.pi,
+        #    fill=self.get_style("fill"),
+        #    width=self.line_width,
+        #)
 
     def beginShape(self):
         self.points = []
