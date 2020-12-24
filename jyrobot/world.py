@@ -634,15 +634,25 @@ class World:
         self.time += time_step
         self.time = round(self.time, self.time_decimal_places)
         self.update(show)
-        if show and real_time:  # real_time is ignored if not show
+        if show:
             now = time.monotonic()
-            sleep_time = self.time_step - (now - start_time)
-            # Tries to sleep enough to make even with real time/throttle time:
-            # If running faster than real time/throttle period, need to wait some
-            if sleep_time >= 0:
-                # Sleep even more for slow-motion:
-                time.sleep(sleep_time)
-            # else it is already running slower than real time
+            time_passed = now - start_time
+            if real_time:  # real_time is ignored if not show
+                sleep_time = self.time_step - time_passed
+                # Tries to sleep enough to make even with real time/throttle time:
+                # If running faster than real time/throttle period, need to wait some
+                if sleep_time >= 0:
+                    # Sleep even more for slow-motion:
+                    time.sleep(sleep_time)
+                # else it is already running slower than real time
+            elif not self.backend.is_async():
+                # Goal is to keep time_passed less than % of throttle period:
+                if time_passed > self.throttle_period * 0.40:
+                    self.throttle_period += time_step
+                    print(
+                        "WARNING: increasing throttle period to %r"
+                        % self.throttle_period
+                    )
 
     def update(self, show=True):
         """

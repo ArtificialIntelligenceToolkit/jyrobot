@@ -27,7 +27,7 @@ class JupyterBackend(Canvas, Backend):
 
     def get_dynamic_throttle(self, world):
         # A proxy to figure out how much to throttle
-        return world.complexity * 0.01
+        return world.complexity * 0.005
 
     def take_picture(self):
         """

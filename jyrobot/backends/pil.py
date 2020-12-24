@@ -128,6 +128,10 @@ class PILBackend(Backend):
         self.draw_rect(0, 0, self.width, self.height)
 
     def text(self, t, x, y):
+        self.draw.text(self.p(x - 1, y - 1), t, fill="black", font=self.font)
+        self.draw.text(self.p(x - 1, y + 1), t, fill="black", font=self.font)
+        self.draw.text(self.p(x + 1, y + 1), t, fill="black", font=self.font)
+        self.draw.text(self.p(x + 1, y - 1), t, fill="black", font=self.font)
         self.draw.text(self.p(x, y), t, fill=self.get_style("fill"), font=self.font)
 
     def pushMatrix(self):
