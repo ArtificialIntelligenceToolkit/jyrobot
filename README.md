@@ -28,12 +28,12 @@ import random
 
 world = jyrobot.load("two-scribblers")
 
-for robot in world.robot:
+for robot in world:
     # Give each robot a desired speed:
     robot.forward(1)
 
 def control(world):
-    for robot in world.robot:
+    for robot in world:
         if robot.stalled:
 	    # If stuck, just reverse:
             robot.reverse()
@@ -81,10 +81,15 @@ For the full set of options, you will need:
 * Pillow - Python Image Library (PIL)
 * ipywidgets
 * ipylab
-* ipycanvas
 * IPython
 
-You can install those with conda or via pip.
+There are three different backends:
+
+* "canvas" - requires `ipycanvas`
+* "svg" - requires `svgwrite` and `cairosvg` (for backend.take_picture())
+* "pil" - requires `Pillow` (Python Image Library, PIL)
+
+You can install all of the above with conda or pip.
 
 To use the Jupyter enhancements, you'll also need the browser-based
 extensions. You can install those with:
