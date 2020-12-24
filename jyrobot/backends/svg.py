@@ -40,7 +40,7 @@ class SVGBackend(Backend):
     def flush(self):
         pass
 
-    def watch(self, **kwargs):
+    def watch(self, *args, **kwargs):
         print("This backend does not implement watch(). Use take_picture() instead.")
 
     def take_picture(self):

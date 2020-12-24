@@ -11,20 +11,38 @@
 import io
 import math
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from ..utils import Color, distance
 from .base import Backend
+
+DEFAULT_FONT_NAMES = (
+    "arial.ttf",
+    "Arial.ttf",
+    "NotoSans-Regular.ttf",
+    "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf",
+    "/System/Library/Fonts/SFNSDisplay.ttf",
+    "/Library/Fonts/Arial.ttf",
+)
 
 
 class PILBackend(Backend):
     # Specific to this class:
 
-    def initialize(self):
+    def initialize(self, **kwargs):
         self.matrix = []
         self.widget = None
+        self.font_size = kwargs.get("font_size", 24)
+        self.format = kwargs.get("format", "jpeg")  # or "png", "gif", "jpeg"
+        self.font = None
+        for font_string_name in DEFAULT_FONT_NAMES:
+            try:
+                self.font = ImageFont.truetype(font_string_name, self.font_size)
+                break
+            except OSError:
+                continue
         self.image = Image.new(
-            "RGBA", size=(int(self.width * self._scale), int(self.height * self._scale))
+            "RGB", size=(int(self.width * self._scale), int(self.height * self._scale))
         )
         self.draw = ImageDraw.Draw(self.image)
 
@@ -38,7 +56,7 @@ class PILBackend(Backend):
 
     def to_png(self):
         fp = io.BytesIO()
-        self.image.save(fp, format="png")
+        self.image.save(fp, format=self.format)
         return fp.getvalue()
 
     def get_widget(self):
@@ -46,6 +64,7 @@ class PILBackend(Backend):
 
         if self.widget is None:
             self.widget = Image(value=self.to_png())
+            self.widget.layout.margin = "auto"
 
         return self.widget
 
@@ -109,7 +128,7 @@ class PILBackend(Backend):
         self.draw_rect(0, 0, self.width, self.height)
 
     def text(self, t, x, y):
-        self.draw.text(self.p(x, y), t, fill=self.get_style("fill"))
+        self.draw.text(self.p(x, y), t, fill=self.get_style("fill"), font=self.font)
 
     def pushMatrix(self):
         self.matrix.append([])

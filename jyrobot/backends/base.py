@@ -23,15 +23,15 @@ class Backend:
     stroke_style = ""
     fill_style = ""
 
-    def __init__(self, width, height, scale):
+    def __init__(self, width, height, scale, **kwargs):
         self.width = width
         self.height = height
         self._scale = scale
         self.caching = False
         self.orig_caching = False
-        self.initialize()
+        self.initialize(**kwargs)
 
-    def initialize(self):
+    def initialize(self, **kwargs):
         pass
 
     def update(self):
@@ -137,7 +137,13 @@ class Backend:
     # HIGH-LEVEL Drawing API
 
     def draw_lines(self, points, stroke_style=None):
-        self.draw_line()
+        if stroke_style is not None:
+            self.set_stroke_style(stroke_style)
+        for i in range(len(points)):
+            if i < len(points) - 2:
+                self.draw_line(
+                    points[i][0], points[i][1], points[i + 1][0], points[i + 1][1]
+                )
 
     def set_stroke_style(self, color):
         self.stroke_style = color.to_hexcode()
