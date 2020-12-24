@@ -10,14 +10,19 @@
 
 import numpy as np
 from ipycanvas import Canvas
+from ipywidgets import Layout
 
 from .base import Backend
 
 
-class JupyterBackend(Canvas, Backend):
+class CanvasBackend(Canvas, Backend):
     """
     Canvas Widget and a Jyrobot backend.
     """
+
+    def __init__(self, *args, **kwargs):
+        kwargs["layout"] = Layout(width="100%", height="auto")
+        Canvas.__init__(self, *args, **kwargs)
 
     # jyrobot API:
 

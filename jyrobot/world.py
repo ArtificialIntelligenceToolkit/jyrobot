@@ -51,6 +51,9 @@ class World:
         Takes a world JSON config dict (as **) or
         any keyword from the config.
         """
+        # For faster-than real time display with synchronous backends,
+        # keep processing time below this percentage of throttle_period:
+        self.show_throttle_percentage = 0.40
         self.time_decimal_places = 1
         self.throttle_period = 0.1
         self.time_of_last_call = 0
@@ -60,7 +63,7 @@ class World:
         self.config = config.copy()
         self.init()  # default values
         self.reset()  # from config
- 
+
     def __getitem__(self, item):
         if isinstance(item, int):
             return self._robots[item]
@@ -200,7 +203,7 @@ class World:
         """
         self.init()
         self.from_json(self.config)
-        self.update(show=False) # twice to allow robots to see each other
+        self.update(show=False)  # twice to allow robots to see each other
         self.update(show=False)
         self.draw()  # force
 
@@ -645,12 +648,8 @@ class World:
                 # else it is already running slower than real time
             elif not self.backend.is_async():
                 # Goal is to keep time_passed less than % of throttle period:
-                if time_passed > self.throttle_period * 0.40:
+                if time_passed > self.throttle_period * self.show_throttle_percentage:
                     self.throttle_period += time_step
-                    print(
-                        "WARNING: increasing throttle period to %r"
-                        % self.throttle_period
-                    )
 
     def update(self, show=True):
         """
@@ -729,4 +728,4 @@ class World:
                 for command, args in debug_list:
                     self.backend.do_command(command, *args)
 
-        self.backend.update()
+        self.backend.update_watchers()

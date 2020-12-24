@@ -32,10 +32,12 @@ class PILBackend(Backend):
     def __init__(self, *args, **kwargs):
         self.widget = None
         super().__init__(*args, **kwargs)
-    
+
     def initialize(self, **kwargs):
         self.matrix = []
+        self.kwargs = kwargs
         self.font_size = kwargs.get("font_size", 24)
+        self.mode = kwargs.get("mode", "RGB")
         self.format = kwargs.get("format", "jpeg")  # or "png", "gif", "jpeg"
         self.font = None
         for font_string_name in DEFAULT_FONT_NAMES:
@@ -44,16 +46,25 @@ class PILBackend(Backend):
                 break
             except OSError:
                 continue
+
+        if self.mode == "RGBA" and self.format == "jpeg":
+            print("WARNING: mode='RGBA' is not compatible with format='jpeg'")
+            print("WARNING: switching mode to 'RGB'")
+            self.mode = "RGB"
+            kwargs["mode"] = "RGB"
+
         self.image = Image.new(
-            "RGB", size=(int(self.width * self._scale), int(self.height * self._scale))
+            self.mode,
+            size=(int(self.width * self._scale), int(self.height * self._scale)),
         )
         self.draw = ImageDraw.Draw(self.image)
 
     def update_dimensions(self, width, height, scale):
-        self.width = width
-        self.height = height
-        self._scale = scale
-        self.initialize()
+        if width != self.width or height != self.height or self._scale != scale:
+            self.width = width
+            self.height = height
+            self._scale = scale
+            self.initialize(**self.kwargs)
 
     # Canvas API:
 
@@ -71,7 +82,7 @@ class PILBackend(Backend):
 
         return self.widget
 
-    def update(self):
+    def update_watchers(self):
         if self.widget:
             self.widget.value = self.to_png()
 
@@ -171,26 +182,26 @@ class PILBackend(Backend):
             (p1x, p1y, p2x, p3y, p3x, p3y, p4x, p4y),
             fill=self.get_style("fill"),
             outline=self.get_style("stroke"),
-#            width=self.line_width,
+            #            width=self.line_width,
         )
 
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
-        #p1x, p1y = self.p(x, y)
-        #p2x, p2y = self.p(x + width,
+        # p1x, p1y = self.p(x, y)
+        # p2x, p2y = self.p(x + width,
         #                  y + height)
 
         self.draw_line(x, y, x + width, y)
-        
-        #self.draw_ellipse(x, y, width/2, height/2)
-        #self.draw_rect(x, y, width/2, height/2)
-        
-        #self.draw.arc(
+
+        # self.draw_ellipse(x, y, width/2, height/2)
+        # self.draw_rect(x, y, width/2, height/2)
+
+        # self.draw.arc(
         #    (p1x, p1y, p2x, p2y),
         #    startAngle * 180/math.pi,
         #    endAngle * 180/math.pi,
         #    fill=self.get_style("fill"),
         #    width=self.line_width,
-        #)
+        # )
 
     def beginShape(self):
         self.points = []

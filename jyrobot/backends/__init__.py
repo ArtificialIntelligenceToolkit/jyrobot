@@ -8,12 +8,23 @@
 #
 # *************************************
 
+import ast
 import os
 
-BACKEND = os.environ.get("JYROBOT_BACKEND", "pil")
+BACKEND = "canvas"
 ARGS = {}
+VALID_BACKENDS = ["canvas", "svg", "debug", "pil"]
 
-VALID_BACKENDS = ["jupyter", "svg", "debug", "pil"]
+
+def setup_backend():
+    global BACKEND, ARGS
+
+    BACKEND = os.environ.get("JYROBOT_BACKEND", BACKEND)
+    if ":" in BACKEND:
+        BACKEND, ARGS = BACKEND.split(":", 1)
+        ARGS = ast.literal_eval(ARGS)
+    else:
+        ARGS = {}
 
 
 def switch_backend(backend=None, **kwargs):
@@ -29,16 +40,13 @@ def switch_backend(backend=None, **kwargs):
 
 
 def make_backend(width, height, scale):
-    if BACKEND == "jupyter":
-        from ipywidgets import Layout
-        from .jupyter import JupyterBackend
+    if BACKEND == "canvas":
+        from .canvas import CanvasBackend
 
-        layout = Layout(width="100%", height="auto")
-        return JupyterBackend(
+        return CanvasBackend(
             width=round(width * scale),
             height=round(height * scale),
             sync_image_data=True,
-            layout=layout,
             **ARGS
         )
     elif BACKEND == "svg":

@@ -13,7 +13,7 @@ import json
 import os
 
 from ._version import __version__  # noqa: F401
-from .backends import switch_backend  # noqa: F401
+from .backends import setup_backend, switch_backend  # noqa: F401
 from .devices import Camera, RangeSensor  # noqa: F401
 from .robot import Robot, Scribbler  # noqa: F401
 from .world import World
@@ -21,6 +21,8 @@ from .world import World
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 PATHS = ["./", os.path.join(HERE, "worlds")]
+
+setup_backend()  # checks os.environ
 
 
 def load(filename=None):
