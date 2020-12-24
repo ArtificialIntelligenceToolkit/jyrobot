@@ -25,6 +25,10 @@ class SVGBackend(Backend):
     # Specific to this class:
 
     def initialize(self):
+        self.widget = None
+        self.reset()
+
+    def reset(self):
         self.stack = []
         self.points = []
         dwg = Drawing("canvas.svg", (self.width, self.height))
@@ -33,15 +37,24 @@ class SVGBackend(Backend):
 
     # Overrides:
 
+    def get_widget(self):
+        from ipywidgets import HTML
+
+        if self.widget is None:
+            self.widget = HTML(value=self.stack[0]._repr_svg_(),)
+
+        return self.widget
+
+    def update_watchers(self):
+        widget = self.get_widget()
+        widget.value = self.stack[0]._repr_svg_()
+
     def update_dimensions(self, width, height, scale):
         # No need, SVG handles this
         pass
 
     def flush(self):
         pass
-
-    def watch(self, *args, **kwargs):
-        print("This backend does not implement watch(). Use take_picture() instead.")
 
     def take_picture(self):
         try:
@@ -143,7 +156,7 @@ class SVGBackend(Backend):
         dwg.add(self.stack[0].path(d=d, style=style))
 
     def clear_rect(self, x, y, width, height):
-        self.initialize()
+        self.reset()
 
     def fill_text(self, text, x, y):
         style = self.get_style("fill")
