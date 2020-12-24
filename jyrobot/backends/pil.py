@@ -29,9 +29,12 @@ DEFAULT_FONT_NAMES = (
 class PILBackend(Backend):
     # Specific to this class:
 
+    def __init__(self, *args, **kwargs):
+        self.widget = None
+        super().__init__(*args, **kwargs)
+    
     def initialize(self, **kwargs):
         self.matrix = []
-        self.widget = None
         self.font_size = kwargs.get("font_size", 24)
         self.format = kwargs.get("format", "jpeg")  # or "png", "gif", "jpeg"
         self.font = None

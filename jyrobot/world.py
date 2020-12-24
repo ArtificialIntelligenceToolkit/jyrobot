@@ -60,10 +60,7 @@ class World:
         self.config = config.copy()
         self.init()  # default values
         self.reset()  # from config
-        self.update(show=False)
-        self.update(show=False)
-        self.draw()  # force
-
+ 
     def __getitem__(self, item):
         if isinstance(item, int):
             return self._robots[item]
@@ -203,6 +200,7 @@ class World:
         """
         self.init()
         self.from_json(self.config)
+        self.update(show=False) # twice to allow robots to see each other
         self.update(show=False)
         self.draw()  # force
 
