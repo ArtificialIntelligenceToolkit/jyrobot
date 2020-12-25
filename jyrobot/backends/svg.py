@@ -63,9 +63,12 @@ class SVGBackend(Backend):
             print("This backend.take_picture() requires cairosvg")
             return
 
-        bytes = cairosvg.svg2png(self.stack[0].tostring())
+        bytes = cairosvg.svg2png(self.stack[0].tostring(),
+                                 scale=self._scale)
         fp = io.BytesIO(bytes)
         picture = Image.open(fp)
+        if picture.mode == "RGB":
+            picture = picture.convert("RGBA")
         return picture
 
     # Low-level API:
