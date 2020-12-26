@@ -100,6 +100,9 @@ class PILBackend(Backend):
         else:
             return None
 
+    def get_line_width(self):
+        return round(self.line_width * self._scale)
+        
     def get_style(self, style):
         if style == "fill":
             return self.get_color(self.fill_style)
@@ -145,7 +148,7 @@ class PILBackend(Backend):
         self.draw.line(
             (p1x, p1y, p2x, p2y),
             fill=self.get_style("stroke"),
-            width=self.line_width
+            width=self.get_line_width()
         )
 
     def clear(self):
@@ -225,7 +228,7 @@ class PILBackend(Backend):
 
         self.draw.line(points[1:],
                        fill=self.get_style("stroke"),
-                       width=self.line_width * 3)
+                       width=self.get_line_width())
 
     def beginShape(self):
         self.points = []

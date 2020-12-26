@@ -160,6 +160,9 @@ class Robot:
         if "state" in config:
             self.state = config["state"]
 
+        if "do_trace" in config:
+            self.do_trace = config["do_trace"]
+
         if "va" in config:
             self.va = config["va"]
         if "vx" in config:
@@ -274,6 +277,7 @@ class Robot:
             "color": str(self.color),
             "body": self.body,
             "devices": [device.to_json() for device in self._devices],
+            "do_trace": self.do_trace,
         }
         return robot_json
 
@@ -285,8 +289,8 @@ class Robot:
         """
         # values between -1 and 1
         # compute target velocities
-        self.tvx = translate * self.vx_max
-        self.tva = rotate * self.va_max
+        self.tvx = round(translate * self.vx_max, 1)
+        self.tva = round(rotate * self.va_max, 1)
 
     def forward(self, translate):
         """
@@ -295,7 +299,7 @@ class Robot:
         Arg should be between -1 and 1.
         """
         # values between -1 and 1
-        self.tvx = translate * self.vx_max
+        self.tvx = round(translate * self.vx_max, 1)
 
     def backward(self, translate):
         """
@@ -304,7 +308,7 @@ class Robot:
         Arg should be between -1 and 1.
         """
         # values between -1 and 1
-        self.tvx = -translate * self.vx_max
+        self.tvx = round(-translate * self.vx_max, 1)
 
     def reverse(self):
         """
