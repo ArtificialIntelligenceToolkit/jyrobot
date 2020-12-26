@@ -92,8 +92,6 @@ class Robot:
         self.trace_color = Color(
             self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
         )
-        if self.world:
-            self.world.update() # will request a draw
 
     def set_pose(self, x=None, y=None, direction=None):
         """
@@ -107,8 +105,6 @@ class Robot:
             self.y = y
         if direction is not None:
             self.direction = direction * math.pi / 180
-        if self.world:
-            self.world.update() # will request a draw
 
     def initialize(self):
         """
@@ -248,8 +244,6 @@ class Robot:
         if device not in self._devices:
             device.robot = self
             self._devices.append(device)
-            if self.world:
-                self.world.update() # will request a draw
         else:
             print("Can't add the same device to a robot more than once.")
 

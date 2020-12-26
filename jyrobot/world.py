@@ -118,11 +118,6 @@ class World:
         Take a picture of the world, or of a robot.
         """
         # Make sure it is up to date
-        self.update(show=False)
-        self.draw()  # force
-        if self.backend.is_async():
-            # wait for backend to updatea
-            time.sleep(self.throttle_period)
         try:
             picture = self.backend.take_picture()
         except RuntimeError:
@@ -447,7 +442,6 @@ class World:
         )
         self.walls.append(wall)
         self.complexity = self.compute_complexity()
-        self.update(show=True)
 
     def del_robot(self, robot):
         """
@@ -463,7 +457,6 @@ class World:
             robot.world = None
             self._robots.remove(robot)
         self.complexity = self.compute_complexity()
-        self.update(show=True)
 
     def add_robot_randomly(self, robot):
         """
@@ -506,7 +499,6 @@ class World:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
-            self.update(show=True)
         else:
             print("Can't add the same robot to a world more than once.")
 
@@ -722,8 +714,12 @@ class World:
             for robot in self._robots:
                 robot.draw(self.backend)
 
+            pos_x, pos_y = 10, self.height - 10
+                
+            self.backend.set_fill(Color(0))
+            self.backend.draw_rect(pos_x, pos_y - 10, 58, 11)
             self.backend.set_fill(Color(255))
-            self.backend.text(self.formatted_time(), 10, self.height - 10)
+            self.backend.text(self.formatted_time(), pos_x, pos_y)
 
             if self.debug_list:
                 for command, args in self.debug_list:

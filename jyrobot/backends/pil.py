@@ -36,16 +36,16 @@ class PILBackend(Backend):
     def initialize(self, **kwargs):
         self.matrix = []
         self.kwargs = kwargs
-        self.font_size = kwargs.get("font_size", 24)
-        self.mode = kwargs.get("mode", "RGB") # "RGBA" or "RGB"
-        self.format = kwargs.get("format", "jpeg")  # "png", "gif", or "jpeg" # png,gif doesn't do opacity?!
         self.font = None
+        self.font_size = kwargs.get("font_size", int(12 * self._scale))
         for font_string_name in DEFAULT_FONT_NAMES:
             try:
                 self.font = ImageFont.truetype(font_string_name, self.font_size)
                 break
             except OSError:
                 continue
+        self.mode = kwargs.get("mode", "RGB") # "RGBA" or "RGB"
+        self.format = kwargs.get("format", "jpeg")  # "png", "gif", or "jpeg" # png,gif doesn't do opacity?!
 
         if self.mode == "RGBA" and self.format == "jpeg":
             self.mode = "RGB"
@@ -153,11 +153,14 @@ class PILBackend(Backend):
         self.draw_rect(0, 0, self.width, self.height)
 
     def text(self, t, x, y):
-        self.draw.text(self.p(x - 1, y - 1), t, fill="black", font=self.font)
-        self.draw.text(self.p(x - 1, y + 1), t, fill="black", font=self.font)
-        self.draw.text(self.p(x + 1, y + 1), t, fill="black", font=self.font)
-        self.draw.text(self.p(x + 1, y - 1), t, fill="black", font=self.font)
-        self.draw.text(self.p(x, y), t, fill=self.get_style("fill"), font=self.font)
+        x, y = self.p(x, y)
+
+        if self.font:
+            text_width, text_height = self.draw.textsize(t, self.font)
+        else:
+            text_width, text_height = 0, 0
+
+        self.draw.text((x, y - text_height), t, fill=self.get_style("fill"), font=self.font)
 
     def pushMatrix(self):
         self.matrix.append([])
