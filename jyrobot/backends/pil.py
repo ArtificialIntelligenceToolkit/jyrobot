@@ -37,8 +37,8 @@ class PILBackend(Backend):
         self.matrix = []
         self.kwargs = kwargs
         self.font_size = kwargs.get("font_size", 24)
-        self.mode = kwargs.get("mode", "RGB")
-        self.format = kwargs.get("format", "jpeg")  # or "png", "gif", "jpeg"
+        self.mode = kwargs.get("mode", "RGB") # "RGBA" or "RGB"
+        self.format = kwargs.get("format", "jpeg")  # "png", "gif", or "jpeg" # png,gif doesn't do opacity?!
         self.font = None
         for font_string_name in DEFAULT_FONT_NAMES:
             try:
@@ -48,8 +48,6 @@ class PILBackend(Backend):
                 continue
 
         if self.mode == "RGBA" and self.format == "jpeg":
-            print("WARNING: mode='RGBA' is not compatible with format='jpeg'")
-            print("WARNING: switching mode to 'RGB'")
             self.mode = "RGB"
             kwargs["mode"] = "RGB"
 
@@ -57,7 +55,7 @@ class PILBackend(Backend):
             self.mode,
             size=(int(self.width * self._scale), int(self.height * self._scale)),
         )
-        self.draw = ImageDraw.Draw(self.image)
+        self.draw = ImageDraw.Draw(self.image, "RGBA")
 
     def update_dimensions(self, width, height, scale):
         if width != self.width or height != self.height or self._scale != scale:
@@ -109,6 +107,7 @@ class PILBackend(Backend):
             return self.get_color(self.stroke_style)
 
     def p(self, x, y):
+        # Transform a point
         for matrix in self.matrix:
             for transform in reversed(matrix):
                 if transform[0] == "translate":
@@ -121,6 +120,16 @@ class PILBackend(Backend):
                     x = dist * math.cos(angle2 + angle + math.pi / 2)
                     y = dist * math.sin(angle2 + angle + math.pi / 2)
         return x * self._scale, y * self._scale
+
+    def r(self, angle):
+        # Transform an angle
+        for matrix in self.matrix:
+            for transform in reversed(matrix):
+                if transform[0] == "translate":
+                    pass
+                elif transform[0] == "rotate":
+                    angle += transform[1]
+        return angle
 
     def draw_lines(self, points, stroke_style=None):
         self.stroke_style = stroke_style
@@ -173,35 +182,41 @@ class PILBackend(Backend):
         )
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
-        p1x, p1y = self.p(x, y)
-        p2x, p2y = self.p(x + radiusX * 2, y)
-        p3x, p3y = self.p(x + radiusX * 2, y + radiusY * 2)
-        p4x, p4y = self.p(x, y + radiusY * 2)
+        # Given as center and radius
+        p1x, p1y = self.p(x - radiusX * 2,
+                          y - radiusY * 2)
+        p2x, p2y = self.p(x + radiusX * 2,
+                          y + radiusY * 2)
 
-        self.draw.polygon(
-            (p1x, p1y, p2x, p3y, p3x, p3y, p4x, p4y),
+        minx = min(p1x, p2x)
+        miny = min(p1y, p2y)
+        maxx = max(p1x, p2x)
+        maxy = max(p1y, p2y)
+
+        # PIL ellipse is a bounding box:
+        self.draw.ellipse(
+            (minx, miny, maxx, maxy),
             fill=self.get_style("fill"),
             outline=self.get_style("stroke"),
-            #            width=self.line_width,
         )
 
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
-        # p1x, p1y = self.p(x, y)
-        # p2x, p2y = self.p(x + width,
-        #                  y + height)
+        # Given as center and radius
+        # PIL
+        #self.draw_rect(x, y-5, 20, 10) # GOOD!
 
-        self.draw_line(x, y, x + width, y)
+        #self.draw_rect(x, y-width/2, height, width) # GOOD!
 
-        # self.draw_ellipse(x, y, width/2, height/2)
-        # self.draw_rect(x, y, width/2, height/2)
-
-        # self.draw.arc(
-        #    (p1x, p1y, p2x, p2y),
-        #    startAngle * 180/math.pi,
-        #    endAngle * 180/math.pi,
-        #    fill=self.get_style("fill"),
-        #    width=self.line_width,
-        # )
+        points = [
+            self.p(x, y),
+            self.p(x + height, y-width/2),
+            self.p(x + height, y+width/2),
+        ]
+        
+        self.draw.polygon(
+            points,
+            fill=self.get_style("fill"),
+        )
 
     def beginShape(self):
         self.points = []

@@ -11,7 +11,7 @@
 import ast
 import os
 
-BACKEND = "canvas"
+BACKEND = "pil" # or any valid backends
 ARGS = {}
 VALID_BACKENDS = ["canvas", "svg", "debug", "pil"]
 

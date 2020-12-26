@@ -58,6 +58,7 @@ class World:
         self.throttle_period = 0.1
         self.time_of_last_call = 0
         self.debug = False
+        self.debug_list = []
         self._robots = []
         self.backend = None
         self.config = config.copy()
@@ -658,13 +659,13 @@ class World:
         """
         ## Update robots:
         # None, or a list
-        debug_list = [] if self.debug else None
+        self.debug_list = [] if self.debug else None
         for robot in self._robots:
-            robot.update(debug_list)
+            robot.update(self.debug_list)
         if show:
-            self.request_draw(debug_list)
+            self.request_draw()
 
-    def request_draw(self, debug_list=None):
+    def request_draw(self):
         """
         Draw the world. This function is throttled
         """
@@ -676,9 +677,9 @@ class World:
             self.time_of_last_call = now
             # End of throttle code
 
-            self.draw(debug_list)  # force
+            self.draw()  # force
 
-    def draw(self, debug_list=None):
+    def draw(self):
         """
         Force a redraw of the world.
         """
@@ -724,8 +725,8 @@ class World:
             self.backend.set_fill(Color(255))
             self.backend.text(self.formatted_time(), 10, self.height - 10)
 
-            if debug_list:
-                for command, args in debug_list:
+            if self.debug_list:
+                for command, args in self.debug_list:
                     self.backend.do_command(command, *args)
 
         self.backend.update_watchers()
