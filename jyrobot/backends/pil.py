@@ -143,7 +143,9 @@ class PILBackend(Backend):
         p1x, p1y = self.p(x1, y1)
         p2x, p2y = self.p(x2, y2)
         self.draw.line(
-            (p1x, p1y, p2x, p2y), fill=self.get_style("stroke"), width=self.line_width
+            (p1x, p1y, p2x, p2y),
+            fill=self.get_style("stroke"),
+            width=self.line_width
         )
 
     def clear(self):
@@ -217,6 +219,10 @@ class PILBackend(Backend):
             points,
             fill=self.get_style("fill"),
         )
+
+        self.draw.line(points[1:],
+                       fill=self.get_style("stroke"),
+                       width=self.line_width * 3)
 
     def beginShape(self):
         self.points = []
