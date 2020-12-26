@@ -217,7 +217,7 @@ class World:
         """
         self.config = config
         if "seed" not in config or config["seed"] == 0:
-            seed = random.randint(0, sys.maxsize)
+            seed = random.randint(0, 9999999)
             print("Random seed initialized to:", seed)
         else:
             seed = config["seed"]
