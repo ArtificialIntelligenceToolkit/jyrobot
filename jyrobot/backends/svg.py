@@ -45,9 +45,9 @@ class SVGBackend(Backend):
 
         return self.widget
 
-    def update_watchers(self):
-        widget = self.get_widget()
-        widget.value = self.stack[0]._repr_svg_()
+    def draw_watcher(self):
+        if self.widget:
+            self.widget.value = self.stack[0]._repr_svg_()
 
     def update_dimensions(self, width, height, scale):
         # No need, SVG handles this

@@ -35,8 +35,16 @@ class Backend:
     def initialize(self, **kwargs):
         pass
 
-    def update_watchers(self):
+    def update_watcher(self):
         # tell widget to update, if necessary
+        pass
+
+    def draw_watcher(self):
+        # draw the widget, if necessary
+        pass
+
+    def reset_watcher(self):
+        # reset the widget, if necessary
         pass
 
     def watch(self, *wheres, **kwargs):

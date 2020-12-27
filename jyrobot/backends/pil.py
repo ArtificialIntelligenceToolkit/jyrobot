@@ -80,7 +80,7 @@ class PILBackend(Backend):
 
         return self.widget
 
-    def update_watchers(self):
+    def draw_watcher(self):
         if self.widget:
             self.widget.value = self.to_png()
 

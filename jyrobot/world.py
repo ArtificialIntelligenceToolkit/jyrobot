@@ -197,6 +197,7 @@ class World:
         Reloads the config from initialization, or from
         last save.
         """
+        self.reset_watchers()
         self.init()
         self.from_json(self.config)
         self.update(show=False)  # twice to allow robots to see each other
@@ -428,6 +429,24 @@ class World:
         self.update(show=False)
         self.draw()  # force
 
+    def draw_watchers(self):
+        if self.backend is not None:
+            self.backend.draw_watcher()
+        for robot in self:
+            robot.draw_watchers()
+
+    def reset_watchers(self):
+        if self.backend is not None:
+            self.backend.reset_watcher()
+        for robot in self:
+            robot.reset_watchers()
+
+    def update_watchers(self):
+        if self.backend is not None:
+            self.backend.update_watcher()
+        for robot in self:
+            robot.update_watchers()
+
     def add_wall(self, color, x1, y1, x2, y2):
         """
         Add a box of walls.
@@ -628,6 +647,7 @@ class World:
         self.time += time_step
         self.time = round(self.time, self.time_decimal_places)
         self.update(show)
+        self.update_watchers()
         if show:
             now = time.monotonic()
             time_passed = now - start_time
@@ -725,4 +745,4 @@ class World:
                 for command, args in self.debug_list:
                     self.backend.do_command(command, *args)
 
-        self.backend.update_watchers()
+        self.draw_watchers()

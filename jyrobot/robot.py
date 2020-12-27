@@ -24,6 +24,7 @@ class Robot:
     """
 
     def __init__(self, **config):
+        self.watchers = []
         self.initialize()
         self.from_json(config)
 
@@ -80,6 +81,33 @@ class Robot:
             for i, device in enumerate(self._devices):
                 print("      device[%s or %r]: %r" % (i, device.type, device))
             print("  " + ("-" * 25))
+
+    def watch(self, x_str, y_str):
+        from .watchers import Watcher
+        from ipylab import Panel, JupyterFrontEnd
+
+        w = Watcher(self, x_str, y_str)
+
+        panel = Panel()
+        panel.title.label = "Jyrobot Watcher"
+        panel.children = [w.widget]
+
+        app = JupyterFrontEnd()
+        app.shell.add(panel, "main", {"mode": "split-right"})
+
+        self.watchers.append(w)
+
+    def update_watchers(self):
+        for watcher in self.watchers:
+            watcher.update()
+
+    def draw_watchers(self):
+        for watcher in self.watchers:
+            watcher.draw()
+
+    def reset_watchers(self):
+        for watcher in self.watchers:
+            watcher.reset()
 
     def set_color(self, color):
         """
