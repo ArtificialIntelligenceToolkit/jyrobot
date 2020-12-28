@@ -44,8 +44,11 @@ class PILBackend(Backend):
                 break
             except OSError:
                 continue
-        self.mode = kwargs.get("mode", "RGB") # "RGBA" or "RGB"
-        self.format = kwargs.get("format", "jpeg")  # "png", "gif", or "jpeg" # png,gif doesn't do opacity?!
+
+        self.mode = kwargs.get("mode", "RGB")  # "RGBA" or "RGB"
+        self.format = kwargs.get(
+            "format", "jpeg"
+        )  # "png", "gif", or "jpeg" # png,gif doesn't do opacity?!
 
         if self.mode == "RGBA" and self.format == "jpeg":
             self.mode = "RGB"
@@ -56,6 +59,13 @@ class PILBackend(Backend):
             size=(int(self.width * self._scale), int(self.height * self._scale)),
         )
         self.draw = ImageDraw.Draw(self.image, "RGBA")
+        if self.font:
+            text_width, text_height = self.draw.textsize("0", self.font)
+            self.char_width = text_width / self._scale
+            self.char_height = text_height / self._scale
+        else:
+            self.char_width = 5.8
+            self.char_height = 10
 
     def update_dimensions(self, width, height, scale):
         if width != self.width or height != self.height or self._scale != scale:
@@ -102,7 +112,7 @@ class PILBackend(Backend):
 
     def get_line_width(self):
         return round(self.line_width * self._scale)
-        
+
     def get_style(self, style):
         if style == "fill":
             return self.get_color(self.fill_style)
@@ -148,7 +158,7 @@ class PILBackend(Backend):
         self.draw.line(
             (p1x, p1y, p2x, p2y),
             fill=self.get_style("stroke"),
-            width=self.get_line_width()
+            width=self.get_line_width(),
         )
 
     def clear(self):
@@ -157,13 +167,7 @@ class PILBackend(Backend):
 
     def text(self, t, x, y):
         x, y = self.p(x, y)
-
-        if self.font:
-            text_width, text_height = self.draw.textsize(t, self.font)
-        else:
-            text_width, text_height = 0, 0
-
-        self.draw.text((x, y - text_height), t, fill=self.get_style("fill"), font=self.font)
+        self.draw.text((x, y), t, fill=self.get_style("fill"), font=self.font)
 
     def pushMatrix(self):
         self.matrix.append([])
@@ -191,10 +195,8 @@ class PILBackend(Backend):
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
         # Given as center and radius
-        p1x, p1y = self.p(x - radiusX * 2,
-                          y - radiusY * 2)
-        p2x, p2y = self.p(x + radiusX * 2,
-                          y + radiusY * 2)
+        p1x, p1y = self.p(x - radiusX * 2, y - radiusY * 2)
+        p2x, p2y = self.p(x + radiusX * 2, y + radiusY * 2)
 
         minx = min(p1x, p2x)
         miny = min(p1y, p2y)
@@ -211,24 +213,23 @@ class PILBackend(Backend):
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
         # Given as center and radius
         # PIL
-        #self.draw_rect(x, y-5, 20, 10) # GOOD!
+        # self.draw_rect(x, y-5, 20, 10) # GOOD!
 
-        #self.draw_rect(x, y-width/2, height, width) # GOOD!
+        # self.draw_rect(x, y-width/2, height, width) # GOOD!
 
         points = [
             self.p(x, y),
-            self.p(x + height, y-width/2),
-            self.p(x + height, y+width/2),
+            self.p(x + height, y - width / 2),
+            self.p(x + height, y + width / 2),
         ]
-        
+
         self.draw.polygon(
-            points,
-            fill=self.get_style("fill"),
+            points, fill=self.get_style("fill"),
         )
 
-        self.draw.line(points[1:],
-                       fill=self.get_style("stroke"),
-                       width=self.get_line_width())
+        self.draw.line(
+            points[1:], fill=self.get_style("stroke"), width=self.get_line_width()
+        )
 
     def beginShape(self):
         self.points = []

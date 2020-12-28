@@ -30,6 +30,8 @@ class Backend:
         self._scale = scale
         self.caching = False
         self.orig_caching = False
+        self.char_width = 5.8
+        self.char_height = 10
         self.initialize(**kwargs)
 
     def initialize(self, **kwargs):

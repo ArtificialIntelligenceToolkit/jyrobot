@@ -26,6 +26,8 @@ class SVGBackend(Backend):
 
     def initialize(self):
         self.widget = None
+        self.char_width = 6.8
+        self.char_height = 11
         self.reset()
 
     def reset(self):
@@ -63,8 +65,7 @@ class SVGBackend(Backend):
             print("This backend.take_picture() requires cairosvg")
             return
 
-        bytes = cairosvg.svg2png(self.stack[0].tostring(),
-                                 scale=self._scale)
+        bytes = cairosvg.svg2png(self.stack[0].tostring(), scale=self._scale)
         fp = io.BytesIO(bytes)
         picture = Image.open(fp)
         if picture.mode == "RGB":
@@ -160,6 +161,9 @@ class SVGBackend(Backend):
 
     def clear_rect(self, x, y, width, height):
         self.reset()
+
+    def text(self, text, x, y):
+        self.fill_text(text, x, y + self.char_height)
 
     def fill_text(self, text, x, y):
         style = self.get_style("fill")

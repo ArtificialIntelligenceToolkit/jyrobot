@@ -22,6 +22,8 @@ class CanvasBackend(Canvas, Backend):
 
     def __init__(self, *args, **kwargs):
         kwargs["layout"] = Layout(width="100%", height="auto")
+        self.char_width = 4.8
+        self.char_height = 10
         Canvas.__init__(self, *args, **kwargs)
 
     # jyrobot API:
@@ -56,3 +58,6 @@ class CanvasBackend(Canvas, Backend):
             self.strokeStyle(stroke_style, 1)
         data = np.array(points)
         self.stroke_lines(data)
+
+    def text(self, t, x, y):
+        self.fill_text(t, x, y + self.char_height - 1)

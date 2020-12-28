@@ -756,12 +756,21 @@ class World:
             for robot in self._robots:
                 robot.draw(self.backend)
 
-            pos_x, pos_y = 10, self.height - 10
+            text = self.formatted_time()
+            pos_x, pos_y = (
+                self.backend.char_height,
+                self.height - self.backend.char_height * 2,
+            )
 
             self.backend.set_fill(Color(0))
-            self.backend.draw_rect(pos_x, pos_y - 10, 58, 11)
+            self.backend.draw_rect(
+                pos_x,
+                pos_y,
+                self.backend.char_width * len(text),
+                self.backend.char_height + 1,
+            )
             self.backend.set_fill(Color(255))
-            self.backend.text(self.formatted_time(), pos_x, pos_y)
+            self.backend.text(text, pos_x, pos_y)
 
             if self.debug_list:
                 for command, args in self.debug_list:
