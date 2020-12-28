@@ -13,9 +13,9 @@ import os
 import random
 import re
 import signal
-import sys
 import time
 from contextlib import contextmanager
+from itertools import count
 from numbers import Number
 
 from .backends import make_backend
@@ -555,7 +555,7 @@ class World:
 
         """
         time_step = time_step if time_step is not None else self.time_step
-        self.steps(sys.maxsize, function, time_step, show, real_time)
+        self.steps(float("inf"), function, time_step, show, real_time)
 
     def seconds(
         self, seconds=5.0, function=None, time_step=None, show=True, real_time=True
@@ -571,8 +571,8 @@ class World:
                 stop.
         """
         time_step = time_step if time_step is not None else self.time_step
-        count = round(seconds / time_step)
-        self.steps(count, function, time_step, show, real_time)
+        steps = round(seconds / time_step)
+        self.steps(steps, function, time_step, show, real_time)
 
     def _step(self, range):
         try:
@@ -580,7 +580,7 @@ class World:
             import tqdm.notebook
         except ImportError:
             tqdm = None
-        
+
         if self.step_display is None or tqdm is None:
             return range
         elif self.step_display == "tqdm":
@@ -602,10 +602,14 @@ class World:
                 stop.
         """
         time_step = time_step if time_step is not None else self.time_step
+        if steps == float("inf"):
+            step_iter = count()
+        else:
+            step_iter = range(steps)
         with self.no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
-            for step in self._step(range(steps)):
+            for step in self._step(step_iter):
                 if self.stop:
                     break
                 if function is not None:
@@ -753,7 +757,7 @@ class World:
                 robot.draw(self.backend)
 
             pos_x, pos_y = 10, self.height - 10
-                
+
             self.backend.set_fill(Color(0))
             self.backend.draw_rect(pos_x, pos_y - 10, 58, 11)
             self.backend.set_fill(Color(255))
