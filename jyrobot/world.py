@@ -57,6 +57,7 @@ class World:
         self.time_decimal_places = 1
         self.throttle_period = 0.1
         self.time_of_last_call = 0
+        self.step_display = "tqdm"
         self.debug = False
         self.debug_list = []
         self._robots = []
@@ -423,6 +424,7 @@ class World:
         """
         Create a live view to the simulator.
         """
+        self.step_display = "notebook"
         self.backend.watch(*args, **kwargs)
         # Two updates to force all robots to see each other
         self.update(show=False)
@@ -572,6 +574,22 @@ class World:
         count = round(seconds / time_step)
         self.steps(count, function, time_step, show, real_time)
 
+    def _step(self, range):
+        try:
+            import tqdm
+            import tqdm.notebook
+        except ImportError:
+            tqdm = None
+        
+        if self.step_display is None or tqdm is None:
+            return range
+        elif self.step_display == "tqdm":
+            return tqdm.tqdm(range)
+        elif self.step_display == "notebook":
+            return tqdm.notebook.tqdm(range)
+        else:
+            return range
+
     def steps(self, steps=1, function=None, time_step=None, show=True, real_time=True):
         """
         Run the simulator for N steps, or until one of the control
@@ -587,7 +605,7 @@ class World:
         with self.no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
-            for step in range(steps):
+            for step in self._step(range(steps)):
                 if self.stop:
                     break
                 if function is not None:
