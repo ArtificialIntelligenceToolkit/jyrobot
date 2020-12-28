@@ -10,14 +10,7 @@
 
 import math
 
-from ..utils import Color, distance
-
-
-def arange(start, stop, step):
-    current = start
-    while current <= stop:
-        yield current
-        current += step
+from ..utils import Color, arange, distance
 
 
 class RangeSensor:

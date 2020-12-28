@@ -13,7 +13,7 @@ import math
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ..utils import Color, distance
+from ..utils import Color, arange, distance
 from .base import Backend
 
 DEFAULT_FONT_NAMES = (
@@ -211,17 +211,14 @@ class PILBackend(Backend):
         )
 
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
-        # Given as center and radius
-        # PIL
-        # self.draw_rect(x, y-5, 20, 10) # GOOD!
+        points = [self.p(x, y)]
 
-        # self.draw_rect(x, y-width/2, height, width) # GOOD!
-
-        points = [
-            self.p(x, y),
-            self.p(x + height, y - width / 2),
-            self.p(x + height, y + width / 2),
-        ]
+        for angle in arange(startAngle, endAngle, (endAngle - startAngle) / 5):
+            point = (
+                x + height * math.cos(angle),
+                y + width * math.sin(angle),
+            )
+            points.append(self.p(point[0], point[1]))
 
         self.draw.polygon(
             points, fill=self.get_style("fill"),
