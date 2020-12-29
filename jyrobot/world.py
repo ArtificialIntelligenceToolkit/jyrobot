@@ -20,8 +20,7 @@ from numbers import Number
 
 from .backends import make_backend
 from .robot import Robot
-from .utils import distance  # noqa
-from .utils import Color, Line, Point, distance_point_to_line, json_dump
+from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -358,67 +357,36 @@ class World:
         self.update(show=False)
         self.draw()  # force
 
-    def gallery(self, *images, border_width=1, background_color=(255, 255, 255)):
-        """
-        Construct a gallery of images
-        """
-        try:
-            from PIL import Image
-        except ImportError:
-            print("world.gallery() requires Pillow, Python Image Library (PIL)")
-            return
+    def playback(self, wheres=[]):
+        from .widgets import Player
 
-        gallery_cols = math.ceil(math.sqrt(len(images)))
-        gallery_rows = math.ceil(len(images) / gallery_cols)
+        # FIXME: robot.recording needs to be set
 
-        size = images[0].size
-        size = size[0] + (border_width * 2), size[1] + (border_width * 2)
+        def goto(index):
+            # place robots where they go
+            for robot in self:
+                if index < len(robot.trace):
+                    point, a = robot.trace[index]
+                    robot._set_pose(point.x, point.y, a)
+            # FIXME: need to get image without updating
+            # FIXME: show trace correctly
+            # canvas/wacther
+            self.update(show=True)
+            picture = self.take_picture()
+            # replace robots
+            index = 0
+            for robot in self:
+                if index < len(robot.trace):
+                    point, a = robot.trace[index]
+                    robot._set_pose(point.x, point.y, a)
+            self.update(show=True)
+            return picture
 
-        gallery_image = Image.new(
-            mode="RGBA",
-            size=(int(gallery_cols * size[0]), int(gallery_rows * size[1])),
-            color=background_color,
-        )
+        player = Player("Index:", goto, int(self.time / self.time_step))
 
-        for i, image in enumerate(images):
-            if image.mode != "RGBA":
-                image = image.convert("RGBA")
-            location = (
-                int((i % gallery_cols) * size[0]) + border_width,
-                int((i // gallery_cols) * size[1]) + border_width,
-            )
-            gallery_image.paste(image, location)
-        return gallery_image
-
-    def display(self, *objects, **kwargs):
-        """
-        Display the objects in a notebook, jupyter lab, or regular python.
-        """
-        try:
-            from PIL import Image
-        except ImportError:
-            Image = None
-
-        try:
-            from IPython.display import clear_output, display
-        except ImportError:
-
-            def clear_output(wait=None):
-                pass
-
-            display = print
-
-        wait = kwargs.pop("wait", True)
-
-        if Image is not None:
-            if (
-                all([isinstance(obj, Image.Image) for obj in objects])
-                and len(objects) > 1
-            ):
-                objects = [self.gallery(*objects, **kwargs)]
-
-        clear_output(wait=wait)
-        display(*objects)
+        # FIXME: allow to work with jyrobot.display
+        # display(player, title="Jyrobot Playback", wheres=wheres)
+        return player
 
     def watch(self, *args, **kwargs):
         """
@@ -483,7 +451,6 @@ class World:
         """
         Add a robot to the world in a random position.
         """
-        # TODO: avoid walls too
         pa = random.random() * math.pi * 2
         for i in range(100):
             too_close = False
@@ -542,7 +509,14 @@ class World:
         finally:
             signal.signal(signal.SIGINT, DEFAULT_HANDLER)
 
-    def run(self, function=None, time_step=None, show=True, real_time=True):
+    def run(
+        self,
+        function=None,
+        time_step=None,
+        show=True,
+        real_time=True,
+        show_progress=True,
+    ):
         """
         Run the simulator until one of the control functions returns True
         or Control+C is pressed.
@@ -552,36 +526,53 @@ class World:
                 world, or a list of functions (or None) that each take
                 a robot. If any function returns True, then simulation will
                 stop.
-
+            time_step - (optional) time unit to advance the world
+            show - (optional) update the watchers
+            real_time - (optional) run simulation in real time
+            show_progress - (optional) show progress bar
         """
         time_step = time_step if time_step is not None else self.time_step
-        self.steps(float("inf"), function, time_step, show, real_time)
+        self.steps(float("inf"), function, time_step, show, real_time, show_progress)
 
     def seconds(
-        self, seconds=5.0, function=None, time_step=None, show=True, real_time=True
+        self,
+        seconds=5.0,
+        function=None,
+        time_step=None,
+        show=True,
+        real_time=True,
+        show_progress=True,
     ):
         """
         Run the simulator for N seconds, or until one of the control
         functions returns True or Control+C is pressed.
 
         Args:
+            seconds - (optional) how many simulation seconds to run
             function - (optional) either a single function that takes the
                 world, or a list of functions (or None) that each take
                 a robot. If any function returns True, then simulation will
                 stop.
+            time_step - (optional) time unit to advance the world
+            show - (optional) update the watchers
+            real_time - (optional) run simulation in real time
+            show_progress - (optional) show progress bar
         """
         time_step = time_step if time_step is not None else self.time_step
         steps = round(seconds / time_step)
-        self.steps(steps, function, time_step, show, real_time)
+        self.steps(steps, function, time_step, show, real_time, show_progress)
 
-    def _step(self, range):
+    def _progress(self, range, show_progress=True):
+        """
+        Wrap a range/iter in a progress bar (or not).
+        """
         try:
             import tqdm
             import tqdm.notebook
         except ImportError:
             tqdm = None
 
-        if self.step_display is None or tqdm is None:
+        if self.step_display is None or tqdm is None or show_progress is False:
             return range
         elif self.step_display == "tqdm":
             return tqdm.tqdm(range)
@@ -590,16 +581,29 @@ class World:
         else:
             return range
 
-    def steps(self, steps=1, function=None, time_step=None, show=True, real_time=True):
+    def steps(
+        self,
+        steps=1,
+        function=None,
+        time_step=None,
+        show=True,
+        real_time=True,
+        show_progress=True,
+    ):
         """
         Run the simulator for N steps, or until one of the control
         functions returns True or Control+C is pressed.
 
         Args:
+            steps - (optional) either a finite number, or infinity
             function - (optional) either a single function that takes the
                 world, or a list of functions (or None) that each take
                 a robot. If any function returns True, then simulation will
                 stop.
+            time_step - (optional) time unit to advance the world
+            show - (optional) update the watchers
+            real_time - (optional) run simulation in real time
+            show_progress - (optional) show progress bar
         """
         time_step = time_step if time_step is not None else self.time_step
         if steps == float("inf"):
@@ -609,7 +613,7 @@ class World:
         with self.no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
-            for step in self._step(step_iter):
+            for step in self._progress(step_iter, show_progress):
                 if self.stop:
                     break
                 if function is not None:

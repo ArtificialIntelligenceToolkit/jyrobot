@@ -8,35 +8,7 @@
 #
 # *************************************
 
-import ast
-import os
-
-BACKEND = "pil" # or any valid backends
-ARGS = {}
-VALID_BACKENDS = ["canvas", "svg", "debug", "pil"]
-
-
-def setup_backend():
-    global BACKEND, ARGS
-
-    BACKEND = os.environ.get("JYROBOT_BACKEND", BACKEND)
-    if ":" in BACKEND:
-        BACKEND, ARGS = BACKEND.split(":", 1)
-        ARGS = ast.literal_eval(ARGS)
-    else:
-        ARGS = {}
-
-
-def switch_backend(backend=None, **kwargs):
-    global BACKEND, ARGS
-
-    if backend is None:
-        return VALID_BACKENDS
-    elif backend in VALID_BACKENDS:
-        BACKEND = backend
-        ARGS = kwargs
-    else:
-        raise ValueError("unknown backend type: %r" % backend)
+from ..config import ARGS, BACKEND
 
 
 def make_backend(width, height, scale):

@@ -8,12 +8,86 @@
 #
 # *************************************
 
+import glob
+import io
+import json
 import math
+import os
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from functools import wraps
 
 from .color_data import COLORS
+from .config import PATHS
+
+
+def load_world(filename=None):
+    from .world import World
+
+    if filename is None:
+        print("Searching for jyrobot config files...")
+        for path in PATHS:
+            files = sorted(glob.glob(os.path.join(path, "*.json")))
+            print("Directory:", path)
+            if len(files) > 0:
+                for filename in files:
+                    basename = os.path.splitext(os.path.basename(filename))[0]
+                    print("    %r" % basename)
+            else:
+                print("    no files found")
+    else:
+        if not filename.endswith(".json"):
+            filename += ".json"
+        for path in PATHS:
+            path_filename = os.path.join(path, filename)
+            if os.path.exists(path_filename):
+                with open(path_filename) as fp:
+                    contents = fp.read()
+                    config = json.loads(contents)
+                    config["filename"] = path_filename
+                    world = World(**config)
+                    return world
+        print("No such world found: %r" % filename)
+    return None
+
+
+def image_to_png(image):
+    with io.BytesIO() as fp:
+        image.save(fp, format="png")
+        return fp.getvalue()
+
+
+def gallery(*images, border_width=1, background_color=(255, 255, 255)):
+    """
+    Construct a gallery of images
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        print("gallery() requires Pillow, Python Image Library (PIL)")
+        return
+
+    gallery_cols = math.ceil(math.sqrt(len(images)))
+    gallery_rows = math.ceil(len(images) / gallery_cols)
+
+    size = images[0].size
+    size = size[0] + (border_width * 2), size[1] + (border_width * 2)
+
+    gallery_image = Image.new(
+        mode="RGBA",
+        size=(int(gallery_cols * size[0]), int(gallery_rows * size[1])),
+        color=background_color,
+    )
+
+    for i, image in enumerate(images):
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
+        location = (
+            int((i % gallery_cols) * size[0]) + border_width,
+            int((i // gallery_cols) * size[1]) + border_width,
+        )
+        gallery_image.paste(image, location)
+    return gallery_image
 
 
 def arange(start, stop, step):

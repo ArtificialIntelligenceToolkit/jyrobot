@@ -14,6 +14,7 @@ import re
 from .datasets import get_dataset
 from .devices.cameras import Camera
 from .devices.rangesensors import RangeSensor
+from .display import display
 from .hit import Hit
 from .utils import Color, Line, Point, distance
 
@@ -82,29 +83,29 @@ class Robot:
                 print("      device[%s or %r]: %r" % (i, device.type, device))
             print("  " + ("-" * 25))
 
-    def watch(
+    def plot(
         self,
         function,
         x_label="x",
         y_label="y",
-        where=None,
+        wheres=[],
         clear=True,
         layout=None,
         title="Jyrobot Plot",
     ):
-        from .watchers import Watcher
+        from .plots import Plot
 
-        w = Watcher(self, function, x_label, y_label)
+        plot = Plot(self, function, x_label, y_label)
 
-        if where is None:
-            where = ["panel"]
-        if layout is None:
-            layout = {}
-
-        self.world.backend.watch_widget(
-            w.widget, where, clear=clear, layout=layout, title=title, use_box=False
+        display(
+            plot.widget,
+            wheres=wheres,
+            clear=clear,
+            layout=layout,
+            title=title,
+            use_box=False,
         )
-        self.watchers.append(w)
+        self.watchers.append(plot)
 
     def update_watchers(self):
         for watcher in self.watchers:
@@ -136,12 +137,20 @@ class Robot:
         """
         # Clear the trace
         self.trace[:] = []
+        if direction is not None:
+            direction = direction * math.pi / 180
+        self._set_pose(x, y, direction)
+
+    def _set_pose(self, x=None, y=None, direction=None):
+        """
+        Set the pose of the robot. direction is in radians.
+        """
         if x is not None:
             self.x = x
         if y is not None:
             self.y = y
         if direction is not None:
-            self.direction = direction * math.pi / 180
+            self.direction = direction
 
     def initialize(self):
         """
@@ -150,7 +159,7 @@ class Robot:
         self.world = None
         self.name = "Robbie"
         self.state = {}
-        self.keep_trace_forever = False
+        self.recording = False
         self.set_color("red")
         self.do_trace = True
         self.trace = []
@@ -630,7 +639,7 @@ class Robot:
             self.vx = 0
             self.vy = 0
 
-        if self.do_trace:
+        if self.do_trace or self.recording:
             self.trace.append((Point(self.x, self.y), self.direction))
 
         # Devices:
@@ -715,8 +724,9 @@ class Robot:
                 ],
                 stroke_style=self.trace_color,
             )
-            if not self.keep_trace_forever:
-                self.trace = self.trace[-self.max_trace_length :]
+
+        if not self.recording:
+            self.trace = self.trace[-self.max_trace_length :]
 
         backend.pushMatrix()
         backend.translate(self.x, self.y)

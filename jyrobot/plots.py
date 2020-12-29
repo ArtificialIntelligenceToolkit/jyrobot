@@ -11,10 +11,10 @@
 from bqplot import Axis, Figure, LinearScale, Lines
 
 
-class Watcher:
+class Plot:
     def __init__(self, robot, function, x_label="x", y_label="y", title=None):
         """
-        Function takes a robot, returns (x,y)
+        Function takes a robot, and returns (x,y) point.
         """
         self.robot = robot
         self.x_label = x_label

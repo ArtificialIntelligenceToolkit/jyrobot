@@ -15,10 +15,10 @@ from ..utils import Color, arange, distance
 
 class RangeSensor:
     """
-       A range sensor that reads "reading" when
-       no obstacle has been detected. "reading" is
-       a ratio of distance/max, and "distance" is
-       the reading in CM.
+    A range sensor that reads "reading" when
+    no obstacle has been detected. "reading" is
+    a ratio of distance/max, and "distance" is
+    the reading in CM.
     """
 
     def __init__(self, **config):
