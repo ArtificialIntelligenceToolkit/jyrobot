@@ -1,44 +1,50 @@
-from ipylab import JupyterFrontEnd, Panel
-from bqplot import (
-    LinearScale, Bars, Lines, Axis, Figure
-)
+# -*- coding: utf-8 -*-
+# *************************************
+# jyrobot: Python robot simulator
+#
+# Copyright (c) 2020 Calysto Developers
+#
+# https://github.com/Calysto/jyrobot
+#
+# *************************************
+
+from bqplot import Axis, Figure, LinearScale, Lines
+
 
 class Watcher:
-    def __init__(self, robot, x_str, y_str):
+    def __init__(self, robot, function, x_label="x", y_label="y", title=None):
+        """
+        Function takes a robot, returns (x,y)
+        """
         self.robot = robot
-        self.x_str = x_str
-        self.y_str = y_str
+        self.x_label = x_label
+        self.y_label = y_label
+        self.function = function
         self.x_values = []
         self.y_values = []
+        self.title = title if title is not None else "%s vs. %s" % (x_label, y_label)
 
         x_sc = LinearScale()
         y_sc = LinearScale()
 
-        line = Lines(x=[], y=[], scales={'x': x_sc, 'y': y_sc},
-                     stroke_width=3, colors=['red'])
+        line = Lines(
+            x=[], y=[], scales={"x": x_sc, "y": y_sc}, stroke_width=3, colors=["red"]
+        )
 
-        ax_x = Axis(scale=x_sc, label=x_str)
-        ax_y = Axis(scale=y_sc, orientation='vertical', label=y_str)
+        ax_x = Axis(scale=x_sc, label=x_label)
+        ax_y = Axis(scale=y_sc, orientation="vertical", label=y_label)
 
-        self.widget = Figure(marks=[line], axes=[ax_x, ax_y], title="%s vs. %s" % (x_str, y_str))
+        self.widget = Figure(marks=[line], axes=[ax_x, ax_y], title=self.title)
 
     def draw(self):
-        import numpy as np
-
         with self.widget.marks[0].hold_sync():
-            self.widget.marks[0].x = np.array(self.x_values)
-            self.widget.marks[0].y = np.array(self.y_values)
+            self.widget.marks[0].x = self.x_values
+            self.widget.marks[0].y = self.y_values
 
     def update(self):
-        if self.x_str.startswith("["):
-            self.x_values.append(eval("self.robot" + self.x_str))
-        else:
-            self.x_values.append(eval("self.robot." + self.x_str))
-
-        if self.y_str.startswith("["):
-            self.y_values.append(eval("self.robot" + self.y_str))
-        else:
-            self.y_values.append(eval("self.robot." + self.y_str))
+        x, y = self.function(self.robot)
+        self.x_values.append(x)
+        self.y_values.append(y)
 
     def reset(self):
         self.x_values = []

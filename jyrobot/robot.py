@@ -82,19 +82,28 @@ class Robot:
                 print("      device[%s or %r]: %r" % (i, device.type, device))
             print("  " + ("-" * 25))
 
-    def watch(self, x_str, y_str):
+    def watch(
+        self,
+        function,
+        x_label="x",
+        y_label="y",
+        where=None,
+        clear=True,
+        layout=None,
+        title="Jyrobot Plot",
+    ):
         from .watchers import Watcher
-        from ipylab import Panel, JupyterFrontEnd
 
-        w = Watcher(self, x_str, y_str)
+        w = Watcher(self, function, x_label, y_label)
 
-        panel = Panel()
-        panel.title.label = "Jyrobot Watcher"
-        panel.children = [w.widget]
+        if where is None:
+            where = ["panel"]
+        if layout is None:
+            layout = {}
 
-        app = JupyterFrontEnd()
-        app.shell.add(panel, "main", {"mode": "split-right"})
-
+        self.world.backend.watch_widget(
+            w.widget, where, clear=clear, layout=layout, title=title, use_box=False
+        )
         self.watchers.append(w)
 
     def update_watchers(self):

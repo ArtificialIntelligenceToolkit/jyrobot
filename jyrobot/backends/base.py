@@ -49,47 +49,56 @@ class Backend:
         # reset the widget, if necessary
         pass
 
-    def watch(self, *wheres, **kwargs):
+    def watch_widget(
+        self,
+        widget,
+        wheres,
+        clear=True,
+        layout=None,
+        title="Jyrobot Simulator",
+        use_box=True,
+    ):
         from ipylab import JupyterFrontEnd, Panel
         from IPython.display import display
         from ipywidgets import Box
 
-        clear = kwargs.pop("clear", True)
-        layout = kwargs
-        if wheres == []:
-            wheres = ["panel"]
         for where in wheres:
             if where in ["panel", "left", "right"]:
                 app = JupyterFrontEnd()
                 panel = Panel()
 
                 if clear:
-                    for widget in list(app.shell.widgets.values()):
-                        if hasattr(widget, "title") and widget.title.label.startswith(
-                            "Jyrobot"
+                    for w in list(app.shell.widgets.values()):
+                        if (
+                            hasattr(w, "title")
+                            and hasattr(w.title, "label")
+                            and w.title.label == title
                         ):
-                            widget.close()
+                            w.close()
 
                 if where == "panel":
                     # Close all Jyro widgets
-                    defaults = {"width": "100%", "height": "auto"}
-                    defaults.update(layout)
-                    box = Box()
-                    for keyword in defaults:
-                        setattr(box.layout, keyword, defaults[keyword])
-                        box.children = [self.get_widget()]
+                    if use_box:
+                        defaults = {"width": "100%", "height": "auto"}
+                        defaults.update(layout)
+                        box = Box()
+                        for keyword in defaults:
+                            setattr(box.layout, keyword, defaults[keyword])
+                            box.children = [widget]
 
-                    panel.children = [box]
-                    panel.title.label = "Jyrobot Simulator"
+                        panel.children = [box]
+                    else:
+                        panel.children = [widget]
+                    panel.title.label = title
                     app.shell.add(panel, "main", {"mode": "split-right"})
                 elif where == "left":
-                    panel.children = [self.get_widget()]
-                    panel.title.label = "Jyrobot Simulator"
+                    panel.children = [widget]
+                    panel.title.label = title
                     app.shell.add(panel, "left", {"rank": 10000})
                     app.shell.expand_left()
                 elif where == "right":
-                    panel.children = [self.get_widget()]
-                    panel.title.label = "Jyrobot Simulator"
+                    panel.children = [widget]
+                    panel.title.label = title
                     app.shell.add(panel, "right", {"rank": 0})
                     app.shell.expand_right()
             else:  # "inline", or something else
@@ -98,8 +107,18 @@ class Backend:
                 box = Box()
                 for keyword in defaults:
                     setattr(box.layout, keyword, defaults[keyword])
-                box.children = [self.get_widget()]
+                box.children = [widget]
                 display(box)
+
+    def watch(self, *where, **kwargs):
+        clear = kwargs.pop("clear", True)
+        title = kwargs.pop("title", "Jyrobot Simulator")
+        layout = kwargs
+        if where == []:
+            where = ["panel"]
+        self.watch_widget(
+            self.get_widget(), where, clear=clear, layout=layout, title=title
+        )
 
     # jyrobot API:
 
