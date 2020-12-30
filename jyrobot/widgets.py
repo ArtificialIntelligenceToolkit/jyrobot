@@ -10,6 +10,7 @@
 
 import threading
 import time
+import logging
 
 from IPython.display import display
 from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox
@@ -46,48 +47,56 @@ class _Player(threading.Thread):
 
 class Recorder:
     def __init__(self, world, play_rate=0.1):
-        self.poses = []
+        self.states = []
         self.orig_world = world
         # Copy of the world for creating playback:
         self.world = World(**world.to_json())
         self.widget = Player("Time:", self.goto, 0, play_rate)
 
     def draw(self):
-        self.widget.update_length(len(self.poses))
+        self.widget.update_length(len(self.states))
 
     def update(self):
-        # Record the poses from the real world:
-        poses = []
+        # Record the states from the real world:
+        states = []
         for robot in self.orig_world:
-            poses.append((robot.x, robot.y, robot.direction))
-        self.poses.append(poses)
+            states.append((robot.x, robot.y, robot.direction, robot.vx, robot.vy, robot.va, robot.stalled))
+        self.states.append(states)
 
     def reset(self):
-        self.poses = []
+        self.states = []
 
     def get_trace(self, robot_index, current_index, max_length):
         # return as [Point(x,y), direction]
         start_index = max(current_index - max_length, 0)
         return [
             (Point(x, y), a)
-            for (x, y, a) in self.poses[robot_index][start_index : current_index + 1]
+            for (x, y, a, vx, vy, va, stalled) in [state[robot_index] for state in self.states[start_index : current_index + 1]]
         ]
 
     def goto(self, time):
         index = round(time / 0.1)
         # place robots where they go in copy:
-        if len(self.poses) == 0:
-            for i, robot in enumerate(self.orig_world):
-                x, y, a = robot.x, robot.y, robot.direction
+        if len(self.states) == 0:
+            for i, orig_robot in enumerate(self.orig_world):
+                x, y, a, vx, vy, va, stalled = orig_robot.x, orig_robot.y, orig_robot.direction, orig_robot.vx, orig_robot.vy, orig_robot.va, orig_robot.stalled
                 self.world[i]._set_pose(x, y, a)
-                if robot.do_trace:
-                    robot.trace = self.get_trace(i, index, robot.max_trace_length)
-        else:
-            index = max(min(len(self.poses) - 1, index), 0)
-            for i, pose in enumerate(self.poses[index]):
-                x, y, a = pose
-                self.world[i]._set_pose(x, y, a)
+                self.world[i].vx = vx
+                self.world[i].vy = vy
+                self.world[i].va = va
+                self.world[i].stalled = stalled
                 self.world[i].trace[:] = []
+        else:
+            index = max(min(len(self.states) - 1, index), 0)
+            for i, state in enumerate(self.states[index]):
+                x, y, a, vx, vy, va, stalled = state
+                self.world[i]._set_pose(x, y, a)
+                self.world[i].vx = vx
+                self.world[i].vy = vy
+                self.world[i].va = va
+                self.world[i].stalled = stalled
+                if self.world[i].do_trace:
+                    self.world[i].trace = self.get_trace(i, index, self.world[i].max_trace_length)
         self.world.time = time
         self.world.update()
         picture = self.world.take_picture()
