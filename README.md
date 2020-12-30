@@ -80,14 +80,14 @@ For the full set of options, you will need:
 
 * Pillow - Python Image Library (PIL)
 * ipywidgets
-* ipylab
 * IPython
+* bqplot
 
 There are three different backends:
 
-* "canvas" - requires `ipycanvas`
-* "svg" - requires `svgwrite` and `cairosvg` (for backend.take_picture())
-* "pil" - requires `Pillow` (Python Image Library, PIL)
+* "pil" - requires `Pillow` (Python Image Library, PIL), the default; best tested
+* "canvas" - requires `ipycanvas` and `numpy`; some issues
+* "svg" - requires `svgwrite` and `cairosvg` (for backend.take_picture()); some issues
 
 You can install all of the above with conda or pip.
 
@@ -95,7 +95,7 @@ To use the Jupyter enhancements, you'll also need the browser-based
 extensions. You can install those with:
 
 ```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager ipycanvas ipylab
+jupyter labextension install @jupyter-widgets/jupyterlab-manager ipycanvas bqplot
 ```
 
 If not in a conda environment, then you will also need to:
