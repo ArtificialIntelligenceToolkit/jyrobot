@@ -12,17 +12,17 @@ from bqplot import Axis, Figure, LinearScale, Lines
 
 
 class Plot:
-    def __init__(self, robot, function, x_label="x", y_label="y", title=None):
+    def __init__(self, obj, function, x_label="x", y_label="y", title=None):
         """
-        Function takes a robot, and returns (x,y) point.
+        Function takes an object, and returns (x,y) point.
         """
-        self.robot = robot
+        self.obj = obj
         self.x_label = x_label
         self.y_label = y_label
         self.function = function
         self.x_values = []
         self.y_values = []
-        self.title = title if title is not None else "%s vs. %s" % (x_label, y_label)
+        self.title = title
 
         x_sc = LinearScale()
         y_sc = LinearScale()
@@ -42,7 +42,7 @@ class Plot:
             self.widget.marks[0].y = self.y_values
 
     def update(self):
-        x, y = self.function(self.robot)
+        x, y = self.function(self.obj)
         self.x_values.append(x)
         self.y_values.append(y)
 

@@ -12,7 +12,9 @@ import threading
 import time
 
 from IPython.display import display
-from ipywidgets import Button, HBox, IntSlider, IntText, Label, Layout, Output, VBox
+from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox
+
+from .world import World
 
 
 class _Player(threading.Thread):
@@ -41,8 +43,43 @@ class _Player(threading.Thread):
         self.can_run.set()
 
 
+class Recorder:
+    def __init__(self, world, play_rate=0.1):
+        self.poses = []
+        self.world = world
+        # Copy of the world for creating playback:
+        self.world_copy = World(**world.to_json())
+        self.widget = Player("Time:", self.goto, 0, play_rate)
+
+    def draw(self):
+        self.widget.update_length(len(self.poses))
+
+    def update(self):
+        # Record the poses from the real world:
+        poses = []
+        for robot in self.world:
+            poses.append((robot.x, robot.y, robot.direction))
+        self.poses.append(poses)
+
+    def reset(self):
+        self.poses = []
+
+    def goto(self, time):
+        index = round(time / 0.1)
+        # place robots where they go in copy:
+        if index < len(self.poses):
+            for i, pose in enumerate(self.poses[index]):
+                x, y, a = pose
+                self.world_copy[i]._set_pose(x, y, a)
+        self.world_copy.time = time
+        self.world_copy.update()
+        # FIXME: show trace correctly in copy
+        picture = self.world_copy.take_picture()
+        return picture
+
+
 class Player(VBox):
-    def __init__(self, title, function, length, play_rate=0.5):
+    def __init__(self, title, function, length, play_rate=0.1):
         """
         function - takes a slider value and returns displayables
         """
@@ -52,37 +89,43 @@ class Player(VBox):
         self.function = function
         self.length = length
         self.output = Output()
-        self.position_text = IntText(value=0, layout=Layout(width="100%"))
+        self.position_text = FloatText(value=0.0, layout=Layout(width="100%"))
         self.total_text = Label(
-            value="of %s" % self.length, layout=Layout(width="100px")
+            value="of %s" % round(self.length * 0.1, 1), layout=Layout(width="100px")
         )
         controls = self.make_controls()
         super().__init__([controls, self.output])
 
     def update_length(self, length):
         self.length = length
-        self.total_text.value = "of %s" % self.length
-        self.control_slider.max = max(self.length - 1, 0)
+        self.total_text.value = "of %s" % round(self.length * 0.1, 1)
+        self.control_slider.max = round(max(self.length * 0.1 - 0.1, 0), 1)
 
     def goto(self, position):
         #### Position it:
         if position == "begin":
-            self.control_slider.value = 0
+            self.control_slider.value = 0.0
         elif position == "end":
-            self.control_slider.value = self.length - 1
+            self.control_slider.value = round(self.length * 0.1 - 0.1, 1)
         elif position == "prev":
-            if self.control_slider.value - 1 < 0:
-                self.control_slider.value = self.length - 1  # wrap around
+            if self.control_slider.value - 0.1 < 0:
+                self.control_slider.value = round(
+                    self.length * 0.1 - 0.1, 1
+                )  # wrap around
             else:
-                self.control_slider.value = max(self.control_slider.value - 1, 0)
+                self.control_slider.value = round(
+                    max(self.control_slider.value - 0.1, 0), 1
+                )
         elif position == "next":
-            if self.control_slider.value + 1 > self.length - 1:
+            if round(self.control_slider.value + 0.1, 1) > round(
+                self.length * 0.1 - 0.1, 1
+            ):
                 self.control_slider.value = 0  # wrap around
             else:
-                self.control_slider.value = min(
-                    self.control_slider.value + 1, self.length - 1
+                self.control_slider.value = round(
+                    min(self.control_slider.value + 0.1, self.length * 0.1 - 0.1), 1
                 )
-        self.position_text.value = self.control_slider.value
+        self.position_text.value = round(self.control_slider.value, 1)
 
     def toggle_play(self, button):
         ## toggle
@@ -114,12 +157,14 @@ class Player(VBox):
             ],
             layout=Layout(width="100%", height="50px"),
         )
-        self.control_slider = IntSlider(
+        self.control_slider = FloatSlider(
             description=self.title,
             continuous_update=False,
-            min=0,
-            max=max(self.length - 1, 0),
-            value=0,
+            min=0.0,
+            step=0.1,
+            max=max(round(self.length * 0.1 - 0.1, 1), 0.0),
+            value=0.0,
+            readout_format=".1f",
             style={"description_width": "initial"},
             layout=Layout(width="100%"),
         )

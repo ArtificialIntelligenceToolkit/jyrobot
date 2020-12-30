@@ -83,21 +83,15 @@ class Robot:
             print("  " + ("-" * 25))
 
     def plot(
-        self,
-        function,
-        x_label="x",
-        y_label="y",
-        wheres=[],
-        clear=True,
-        layout=None,
-        title="Jyrobot Plot",
+        self, function, x_label="x", y_label="y", title=None,
     ):
         from .plots import Plot
 
-        plot = Plot(self, function, x_label, y_label)
+        if title is None:
+            title = "%r Robot" % self.name
 
+        plot = Plot(self, function, x_label, y_label, title)
         self.watchers.append(plot)
-
         return plot.widget
 
     def update_watchers(self):
@@ -111,6 +105,9 @@ class Robot:
     def reset_watchers(self):
         for watcher in self.watchers:
             watcher.reset()
+
+    def del_watchers(self):
+        self.watchers[:] = []
 
     def set_color(self, color):
         """
@@ -159,7 +156,6 @@ class Robot:
         self.world = None
         self.name = "Robbie"
         self.state = {}
-        self.recording = False
         self._set_color("red")
         self.do_trace = True
         self.trace = []
@@ -639,7 +635,7 @@ class Robot:
             self.vx = 0
             self.vy = 0
 
-        if self.do_trace or self.recording:
+        if self.do_trace:
             self.trace.append((Point(self.x, self.y), self.direction))
 
         # Devices:
@@ -724,8 +720,6 @@ class Robot:
                 ],
                 stroke_style=self.trace_color,
             )
-
-        if not self.recording:
             self.trace = self.trace[-self.max_trace_length :]
 
         backend.pushMatrix()

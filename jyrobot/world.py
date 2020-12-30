@@ -59,6 +59,7 @@ class World:
         self.step_display = "tqdm"
         self.debug = False
         self.debug_list = []
+        self.watchers = []
         self._robots = []
         self.backend = None
         self.config = config.copy()
@@ -357,58 +358,56 @@ class World:
         self.update(show=False)
         self.draw()  # force
 
-    def playback(self, wheres=[]):
-        from .widgets import Player
-
-        # FIXME: robot.recording needs to be set
-
-        def goto(index):
-            # place robots where they go
-            for robot in self:
-                if index < len(robot.trace):
-                    point, a = robot.trace[index]
-                    robot._set_pose(point.x, point.y, a)
-            # FIXME: need to get image without updating
-            # FIXME: show trace correctly
-            # canvas/wacther
-            self.update(show=True)
-            picture = self.take_picture()
-            # replace robots
-            index = 0
-            for robot in self:
-                if index < len(robot.trace):
-                    point, a = robot.trace[index]
-                    robot._set_pose(point.x, point.y, a)
-            self.update(show=True)
-            return picture
-
-        player = Player("Index:", goto, int(self.time / self.time_step))
-
-        # FIXME: allow to work with jyrobot.display
-        # display(player, title="Jyrobot Playback", wheres=wheres)
-        return player
-
-    def get_widget(self):
+    def watch(self):
         self.step_display = "notebook"
         return self.backend.get_widget()
+
+    def record(self):
+        from .widgets import Recorder
+
+        recorder = Recorder(self)
+        self.watchers.append(recorder)
+        return recorder.widget
+
+    def plot(
+        self, function, x_label="x", y_label="y", title=None,
+    ):
+        from .plots import Plot
+
+        if title is None:
+            title = "Jyrobot World"
+
+        plot = Plot(self, function, x_label, y_label, title)
+        self.watchers.append(plot)
+        return plot.widget
 
     def draw_watchers(self):
         if self.backend is not None:
             self.backend.draw_watcher()
+        for watcher in self.watchers:
+            watcher.draw()
         for robot in self:
             robot.draw_watchers()
 
     def reset_watchers(self):
         if self.backend is not None:
             self.backend.reset_watcher()
+        for watcher in self.watchers:
+            watcher.reset()
         for robot in self:
             robot.reset_watchers()
 
     def update_watchers(self):
         if self.backend is not None:
             self.backend.update_watcher()
+        for watcher in self.watchers:
+            watcher.update()
         for robot in self:
             robot.update_watchers()
+
+    def del_watchers(self):
+        for robot in self:
+            robot.del_watchers()
 
     def add_wall(self, color, x1, y1, x2, y2):
         """
