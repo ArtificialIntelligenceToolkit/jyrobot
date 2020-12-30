@@ -13,10 +13,58 @@ import time
 import logging
 
 from IPython.display import display
-from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox
+from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox, Image
 
-from .utils import Point
+from .utils import Point, image_to_png
 from .world import World
+
+
+class RobotWatcher:
+    def __init__(self, robot, size=100):
+        self.robot = robot
+        self.size = size
+        self.widget = Image()
+        self.draw()
+
+    def draw(self):
+        if self.robot.world is None:
+            print("This robot is not in a world")
+            return
+
+        picture = self.robot.world.take_picture()
+        start_x = round(max(self.robot.x * self.robot.world.scale - self.size / 2, 0))
+        start_y = round(max(self.robot.y * self.robot.world.scale - self.size / 2, 0))
+        rectangle = (
+            start_x,
+            start_y,
+            min(start_x + self.size, self.robot.world.width * self.robot.world.scale),
+            min(start_y + self.size, self.robot.world.height * self.robot.world.scale),
+        )
+        picture = picture.crop(rectangle)
+        self.widget.value = image_to_png(picture)
+
+    def update(self):
+        pass
+
+    def reset():
+        pass
+
+
+class CameraWatcher:
+    def __init__(self, camera):
+        self.camera = camera
+        self.widget = Image()
+        self.draw()
+
+    def draw(self):
+        picture = self.camera.take_picture()
+        self.widget.value = image_to_png(picture)
+
+    def update(self):
+        pass
+
+    def reset():
+        pass
 
 
 class _Player(threading.Thread):

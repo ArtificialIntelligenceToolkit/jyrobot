@@ -92,7 +92,15 @@ class Robot:
 
         plot = Plot(self, function, x_label, y_label, title)
         self.watchers.append(plot)
-        return plot.widget
+        return plot
+
+    def watch(self, size=100):
+        from .widgets import RobotWatcher
+
+        robot_watcher = RobotWatcher(self, size=size)
+        self.watchers.append(robot_watcher)
+        # Return the widget:
+        return robot_watcher.widget
 
     def update_watchers(self):
         for watcher in self.watchers:

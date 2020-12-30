@@ -38,6 +38,14 @@ class Camera:
             round(self.angle * 180 / math.pi, 2),
         )
 
+    def watch(self):
+        from ..widgets import CameraWatcher
+
+        watcher = CameraWatcher(self)
+        self.robot.watchers.append(watcher)
+        # Return the widget:
+        return watcher.widget
+
     def from_json(self, config):
         if "width" in config:
             self.cameraShape[0] = config["width"]
