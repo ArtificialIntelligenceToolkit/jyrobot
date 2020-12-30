@@ -116,6 +116,11 @@ class Robot:
         """
         Set the color of a robot, and its trace.
         """
+        if self.world is None:
+            print("This robot is not in a world")
+        self._set_color(color)
+
+    def _set_color(self, color):
         if not isinstance(color, Color):
             self.color = Color(color)
         else:
@@ -129,6 +134,8 @@ class Robot:
         Set the pose of the robot. direction is in degrees.
         """
         # Clear the trace
+        if self.world is None:
+            print("This robot is not in a world")
         self.trace[:] = []
         if direction is not None:
             direction = direction * math.pi / 180
@@ -153,7 +160,7 @@ class Robot:
         self.name = "Robbie"
         self.state = {}
         self.recording = False
-        self.set_color("red")
+        self._set_color("red")
         self.do_trace = True
         self.trace = []
         self.body = []
@@ -248,7 +255,7 @@ class Robot:
             self.height = config["height"]  # ratio, 0 to 1 of height
 
         if "color" in config:
-            self.set_color(config["color"])
+            self._set_color(config["color"])
 
         if "body" in config:
             self.body[:] = config["body"]
