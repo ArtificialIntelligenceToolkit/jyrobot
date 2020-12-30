@@ -49,17 +49,17 @@ world.run(control, show=True, real_time=False)
 You can also easily assemble your own simulations, robots, and sensors.
 
 ```python
-import jyrobot as jy
+import jyrobot
 
-world = jy.World(width=100, height=100)
+world = jyrobot.World(width=100, height=100)
 world.watch()
 
-robot = jy.Scribbler()
+robot = jyrobot.Scribbler()
 
 world.add_robot(robot)
 
-robot.add_device(jy.RangeSensor())
-robot.add_device(jy.Camera())
+robot.add_device(jyrobot.RangeSensor())
+robot.add_device(jyrobot.Camera())
 
 world.save_as("world-1")
 ```
