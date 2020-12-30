@@ -49,13 +49,6 @@ class Backend:
         # reset the widget, if necessary
         pass
 
-    def watch(self, *wheres, clear=True, title="Jyrobot Simulator", **layout):
-        from ..display import display
-
-        display(
-            self.get_widget(), wheres=wheres, clear=clear, layout=layout, title=title
-        )
-
     # jyrobot API:
 
     def is_async(self):

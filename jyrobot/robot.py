@@ -14,7 +14,6 @@ import re
 from .datasets import get_dataset
 from .devices.cameras import Camera
 from .devices.rangesensors import RangeSensor
-from .display import display
 from .hit import Hit
 from .utils import Color, Line, Point, distance
 
@@ -97,15 +96,9 @@ class Robot:
 
         plot = Plot(self, function, x_label, y_label)
 
-        display(
-            plot.widget,
-            wheres=wheres,
-            clear=clear,
-            layout=layout,
-            title=title,
-            use_box=False,
-        )
         self.watchers.append(plot)
+
+        return plot.widget
 
     def update_watchers(self):
         for watcher in self.watchers:

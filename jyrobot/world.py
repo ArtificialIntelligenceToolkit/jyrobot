@@ -388,16 +388,9 @@ class World:
         # display(player, title="Jyrobot Playback", wheres=wheres)
         return player
 
-    def watch(self, *args, **kwargs):
-        """
-        Create a live view to the simulator.
-        """
+    def get_widget(self):
         self.step_display = "notebook"
-        self.backend.watch(*args, **kwargs)
-        # Two updates to force all robots to see each other
-        self.update(show=False)
-        self.update(show=False)
-        self.draw()  # force
+        return self.backend.get_widget()
 
     def draw_watchers(self):
         if self.backend is not None:

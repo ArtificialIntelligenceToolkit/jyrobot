@@ -11,7 +11,7 @@
 import threading
 import time
 
-from IPython.display import display as ipy_display
+from IPython.display import display
 from ipywidgets import Button, HBox, IntSlider, IntText, Label, Layout, Output, VBox
 
 
@@ -149,7 +149,7 @@ class Player(VBox):
         results = self.function(self.control_slider.value)
         if not isinstance(results, (list, tuple)):
             results = [results]
-        self.displayers = [ipy_display(x, display_id=True) for x in results]
+        self.displayers = [display(x, display_id=True) for x in results]
 
     def update_slider_control(self, change):
         """

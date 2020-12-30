@@ -28,6 +28,10 @@ class CanvasBackend(Canvas, Backend):
 
     # jyrobot API:
 
+    def get_widget(self):
+        # Return the Jupyter widget
+        return self
+
     def is_async(self):
         # Does the backend take time to update the drawing?
         return True
@@ -47,9 +51,6 @@ class CanvasBackend(Canvas, Backend):
         array = self.get_image_data()
         picture = Image.fromarray(array, "RGBA")
         return picture
-
-    def get_widget(self):
-        return self
 
     # High Level-API overloads:
 

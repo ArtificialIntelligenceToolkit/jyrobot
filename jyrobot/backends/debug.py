@@ -21,14 +21,14 @@ class DebugBackend(Backend):
         self.show_high = kwargs.get("show_high", True)
         self.show_low = kwargs.get("show_low", True)
 
-    def watch(self, *args, **kwargs):
-        print("watch(**%s)" % (kwargs,))
-
     def flush(self):
         print("flush()")
 
     def take_picture(self):
         print("take_picture()")
+
+    def get_widget(self):
+        print("get_widget()")
 
     # High-level API (jyrobot draw API)
 
