@@ -36,6 +36,9 @@ class Plot:
 
         self.widget = Figure(marks=[line], axes=[ax_x, ax_y], title=self.title)
 
+    def watch(self):
+        return self.widget
+
     def draw(self):
         with self.widget.marks[0].hold_sync():
             self.widget.marks[0].x = self.x_values

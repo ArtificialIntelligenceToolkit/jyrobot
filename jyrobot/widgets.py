@@ -14,6 +14,7 @@ import time
 from IPython.display import display
 from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox
 
+from .utils import Point
 from .world import World
 
 
@@ -46,9 +47,9 @@ class _Player(threading.Thread):
 class Recorder:
     def __init__(self, world, play_rate=0.1):
         self.poses = []
-        self.world = world
+        self.orig_world = world
         # Copy of the world for creating playback:
-        self.world_copy = World(**world.to_json())
+        self.world = World(**world.to_json())
         self.widget = Player("Time:", self.goto, 0, play_rate)
 
     def draw(self):
@@ -57,25 +58,45 @@ class Recorder:
     def update(self):
         # Record the poses from the real world:
         poses = []
-        for robot in self.world:
+        for robot in self.orig_world:
             poses.append((robot.x, robot.y, robot.direction))
         self.poses.append(poses)
 
     def reset(self):
         self.poses = []
 
+    def get_trace(self, robot_index, current_index, max_length):
+        # return as [Point(x,y), direction]
+        start_index = max(current_index - max_length, 0)
+        return [
+            (Point(x, y), a)
+            for (x, y, a) in self.poses[robot_index][start_index : current_index + 1]
+        ]
+
     def goto(self, time):
         index = round(time / 0.1)
         # place robots where they go in copy:
-        if index < len(self.poses):
+        if len(self.poses) == 0:
+            for i, robot in enumerate(self.orig_world):
+                x, y, a = robot.x, robot.y, robot.direction
+                self.world[i]._set_pose(x, y, a)
+                if robot.do_trace:
+                    robot.trace = self.get_trace(i, index, robot.max_trace_length)
+        else:
+            index = max(min(len(self.poses) - 1, index), 0)
             for i, pose in enumerate(self.poses[index]):
                 x, y, a = pose
-                self.world_copy[i]._set_pose(x, y, a)
-        self.world_copy.time = time
-        self.world_copy.update()
-        # FIXME: show trace correctly in copy
-        picture = self.world_copy.take_picture()
+                self.world[i]._set_pose(x, y, a)
+                self.world[i].trace[:] = []
+        self.world.time = time
+        self.world.update()
+        picture = self.world.take_picture()
         return picture
+
+    def watch(self, play_rate=None):
+        if play_rate is not None:
+            self.widget.player.time_wait = play_rate
+        return self.widget
 
 
 class Player(VBox):
@@ -99,31 +120,27 @@ class Player(VBox):
     def update_length(self, length):
         self.length = length
         self.total_text.value = "of %s" % round(self.length * 0.1, 1)
-        self.control_slider.max = round(max(self.length * 0.1 - 0.1, 0), 1)
+        self.control_slider.max = round(max(self.length * 0.1, 0), 1)
 
     def goto(self, position):
         #### Position it:
         if position == "begin":
             self.control_slider.value = 0.0
         elif position == "end":
-            self.control_slider.value = round(self.length * 0.1 - 0.1, 1)
+            self.control_slider.value = round(self.length * 0.1, 1)
         elif position == "prev":
             if self.control_slider.value - 0.1 < 0:
-                self.control_slider.value = round(
-                    self.length * 0.1 - 0.1, 1
-                )  # wrap around
+                self.control_slider.value = round(self.length * 0.1, 1)  # wrap around
             else:
                 self.control_slider.value = round(
                     max(self.control_slider.value - 0.1, 0), 1
                 )
         elif position == "next":
-            if round(self.control_slider.value + 0.1, 1) > round(
-                self.length * 0.1 - 0.1, 1
-            ):
+            if round(self.control_slider.value + 0.1, 1) > round(self.length * 0.1, 1):
                 self.control_slider.value = 0  # wrap around
             else:
                 self.control_slider.value = round(
-                    min(self.control_slider.value + 0.1, self.length * 0.1 - 0.1), 1
+                    min(self.control_slider.value + 0.1, self.length * 0.1), 1
                 )
         self.position_text.value = round(self.control_slider.value, 1)
 
@@ -162,7 +179,7 @@ class Player(VBox):
             continuous_update=False,
             min=0.0,
             step=0.1,
-            max=max(round(self.length * 0.1 - 0.1, 1), 0.0),
+            max=max(round(self.length * 0.1, 1), 0.0),
             value=0.0,
             readout_format=".1f",
             style={"description_width": "initial"},

@@ -367,7 +367,7 @@ class World:
 
         recorder = Recorder(self)
         self.watchers.append(recorder)
-        return recorder.widget
+        return recorder
 
     def plot(
         self, function, x_label="x", y_label="y", title=None,
@@ -379,7 +379,7 @@ class World:
 
         plot = Plot(self, function, x_label, y_label, title)
         self.watchers.append(plot)
-        return plot.widget
+        return plot
 
     def draw_watchers(self):
         if self.backend is not None:
