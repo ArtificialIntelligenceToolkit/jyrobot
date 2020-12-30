@@ -49,8 +49,8 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     extras_require={
-        "jupyter": ["Pillow", "ipycanvas", "ipylab", "ipywidgets", "IPython"],
-        "pictures": ["Pillow"],
+        "jupyter": ["Pillow", "ipywidgets", "IPython", "bqplot"],
+        "images": ["Pillow"],
     },
     python_requires=">=3.6",
     license="BSD-3-Clause",
