@@ -102,12 +102,6 @@ class World:
     def __repr__(self):
         return "<World width=%r, height=%r>" % (self.width, self.height)
 
-    def _repr_png_(self):
-        image = self.take_picture()
-        if image:
-            return image._repr_png_()
-        return
-
     def formatted_time(self):
         hours = self.time // 3600
         minutes = (self.time % 3600) // 60

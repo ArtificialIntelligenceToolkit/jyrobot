@@ -10,10 +10,19 @@
 
 import threading
 import time
-import logging
 
 from IPython.display import display
-from ipywidgets import Button, FloatSlider, FloatText, HBox, Label, Layout, Output, VBox, Image
+from ipywidgets import (
+    Button,
+    FloatSlider,
+    FloatText,
+    HBox,
+    Image,
+    Label,
+    Layout,
+    Output,
+    VBox,
+)
 
 from .utils import Point, image_to_png
 from .world import World
@@ -108,7 +117,17 @@ class Recorder:
         # Record the states from the real world:
         states = []
         for robot in self.orig_world:
-            states.append((robot.x, robot.y, robot.direction, robot.vx, robot.vy, robot.va, robot.stalled))
+            states.append(
+                (
+                    robot.x,
+                    robot.y,
+                    robot.direction,
+                    robot.vx,
+                    robot.vy,
+                    robot.va,
+                    robot.stalled,
+                )
+            )
         self.states.append(states)
 
     def reset(self):
@@ -119,7 +138,10 @@ class Recorder:
         start_index = max(current_index - max_length, 0)
         return [
             (Point(x, y), a)
-            for (x, y, a, vx, vy, va, stalled) in [state[robot_index] for state in self.states[start_index : current_index + 1]]
+            for (x, y, a, vx, vy, va, stalled) in [
+                state[robot_index]
+                for state in self.states[start_index : current_index + 1]
+            ]
         ]
 
     def goto(self, time):
@@ -127,7 +149,15 @@ class Recorder:
         # place robots where they go in copy:
         if len(self.states) == 0:
             for i, orig_robot in enumerate(self.orig_world):
-                x, y, a, vx, vy, va, stalled = orig_robot.x, orig_robot.y, orig_robot.direction, orig_robot.vx, orig_robot.vy, orig_robot.va, orig_robot.stalled
+                x, y, a, vx, vy, va, stalled = (
+                    orig_robot.x,
+                    orig_robot.y,
+                    orig_robot.direction,
+                    orig_robot.vx,
+                    orig_robot.vy,
+                    orig_robot.va,
+                    orig_robot.stalled,
+                )
                 self.world[i]._set_pose(x, y, a)
                 self.world[i].vx = vx
                 self.world[i].vy = vy
@@ -144,15 +174,16 @@ class Recorder:
                 self.world[i].va = va
                 self.world[i].stalled = stalled
                 if self.world[i].do_trace:
-                    self.world[i].trace = self.get_trace(i, index, self.world[i].max_trace_length)
+                    self.world[i].trace = self.get_trace(
+                        i, index, self.world[i].max_trace_length
+                    )
         self.world.time = time
         self.world.update()
         picture = self.world.take_picture()
         return picture
 
-    def watch(self, play_rate=None):
-        if play_rate is not None:
-            self.widget.player.time_wait = play_rate
+    def watch(self, play_rate=0.0):
+        self.widget.player.time_wait = play_rate
         return self.widget
 
 
