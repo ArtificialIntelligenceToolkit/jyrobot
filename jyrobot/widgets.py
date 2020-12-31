@@ -8,10 +8,11 @@
 #
 # *************************************
 
+import os
 import threading
 import time
 
-from IPython.display import display
+from IPython.display import HTML, Image as display_Image, display
 from ipywidgets import (
     Button,
     FloatSlider,
@@ -24,7 +25,7 @@ from ipywidgets import (
     VBox,
 )
 
-from .utils import Point, image_to_png
+from .utils import Point, arange, image_to_gif, image_to_png
 from .world import World
 
 
@@ -185,6 +186,63 @@ class Recorder:
     def watch(self, play_rate=0.0):
         self.widget.player.time_wait = play_rate
         return self.widget
+
+    def save_as(
+        self,
+        movie_name="jyrobot_movie",
+        start=0,
+        stop=None,
+        step=0.1,
+        loop=0,
+        duration=100,
+        embed=False,
+        mp4=True,
+    ):
+        """
+        Save as animated gif and optionally mp4; show with controls.
+        loop - 0 means continually
+        duration - in MS
+        """
+        if stop is None:
+            stop = len(self.states) * 0.1
+
+        stop = min(stop, len(self.states) * 0.1)
+
+        frames = []
+        for time_step in arange(start, stop, step):
+            # Special function to load as gif, leave fp open
+            picture = image_to_gif(self.goto(time_step))
+            frames.append(picture)
+
+        if frames:
+            # First, save animated gif:
+            frames[0].save(
+                movie_name + ".gif",
+                save_all=True,
+                append_images=frames[1:],
+                loop=loop,
+                duration=duration,
+            )
+            if not mp4:
+                return display_Image(url=movie_name + ".gif", embed=embed)
+            else:
+                if os.path.exists(movie_name + ".mp4"):
+                    os.remove(movie_name + ".mp4")
+                retval = os.system(
+                    """ffmpeg -i {0}.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {0}.mp4""".format(
+                        movie_name
+                    )
+                )
+                if retval == 0:
+                    return HTML(
+                        """<video src='{0}.mp4' controls style="width: 100%"></video>""".format(
+                            movie_name
+                        )
+                    )
+                else:
+                    print(
+                        "error running ffmpeg; see console log message or use mp4=False"
+                    )
 
 
 class Player(VBox):

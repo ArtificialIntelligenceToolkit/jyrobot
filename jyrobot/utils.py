@@ -57,6 +57,16 @@ def image_to_png(image):
         return fp.getvalue()
 
 
+def image_to_gif(image):
+    # Leave fp opened
+    from PIL import Image
+
+    fp = io.BytesIO()
+    image.save(fp, "gif")
+    frame = Image.open(fp)
+    return frame
+
+
 def gallery(*images, border_width=1, background_color=(255, 255, 255)):
     """
     Construct a gallery of images
