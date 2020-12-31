@@ -40,6 +40,28 @@ class Wall:
         return "Wall(%r, %r, %r)" % (self.color, self.robot, self.lines)
 
 
+class Light:
+    """
+    Class representing lights in the world.
+    """
+
+    def __init__(self, color, x, y, z, power):
+        self.color = Color(color)
+        self.x = x
+        self.y = y
+        self.z = z
+        self.power = power
+
+    def __repr__(self):
+        return "Light(color:%r, x:%r, y:%r, z:%r, power:%r)" % (
+            self.color,
+            self.x,
+            self.y,
+            self.z,
+            self.power,
+        )
+
+
 class World:
     """
     The Jyrobot simulator world.
@@ -180,6 +202,7 @@ class World:
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
         self.walls = []
+        self.lights = []
         self.complexity = 0
 
     def reset(self):
@@ -242,6 +265,11 @@ class World:
                 wall["p2"]["x"],
                 wall["p2"]["y"],
             )
+
+        for light in config.get("lights", []):
+            # lights are {x, y, z, color, power}
+            self.add_light(Light(**light))
+
         ## Create robot, and add to world:
         for i, robotConfig in enumerate(self.config.get("robots", [])):
             # FIXME: raise if lengths don't match
@@ -299,6 +327,7 @@ class World:
             "boundary_wall_width": self.boundary_wall_width,
             "ground_color": str(self.ground_color),
             "walls": [],
+            "lights": [],
             "robots": [],
         }
         for wall in self.walls:
@@ -309,6 +338,17 @@ class World:
                     "p2": {"x": wall.lines[2].p1.x, "y": wall.lines[2].p1.y,},
                 }
                 config["walls"].append(w)
+
+        for light in self.lights:
+            config["lights"].append(
+                {
+                    "color": str(light.color),
+                    "x": light.x,
+                    "y": light.y,
+                    "z": light.z,
+                    "power": light.power,
+                }
+            )
 
         for robot in self._robots:
             config["robots"].append(robot.to_json(config["robots"]))
@@ -408,6 +448,9 @@ class World:
     def del_watchers(self):
         for robot in self:
             robot.del_watchers()
+
+    def add_light(self, light):
+        self.lights.append(light)
 
     def add_wall(self, color, x1, y1, x2, y2):
         """
@@ -733,6 +776,13 @@ class World:
                         self.backend.vertex(line.p2.x, line.p2.y)
 
                     self.backend.endShape()
+
+            ## Draw lights:
+            for light in self.lights:
+                c = light.color
+                self.backend.noStroke()
+                self.backend.set_fill(c)
+                self.backend.draw_circle(light.x, light.y, light.power * 5)
 
             ## Draw borders:
             for wall in self.walls:

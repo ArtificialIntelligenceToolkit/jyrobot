@@ -8,12 +8,11 @@
 #
 # *************************************
 
+import importlib
 import math
 import re
 
 from .datasets import get_dataset
-from .devices.cameras import Camera
-from .devices.rangesensors import RangeSensor
 from .hit import Hit
 from .utils import Color, Line, Point, distance
 
@@ -121,6 +120,8 @@ class Robot:
         """
         Load a robot from a JSON config dict.
         """
+        DEVICES = importlib.import_module("jyrobot.devices")
+
         if "name" in config:
             self.name = config["name"]
 
@@ -197,13 +198,14 @@ class Robot:
                         )
                 else:
                     device = None
-                    if deviceConfig["class"] == "Camera":
-                        device = Camera(**deviceConfig)
-                    elif deviceConfig["class"] == "RangeSensor":
-                        device = RangeSensor(**deviceConfig)
-                    else:
-                        print("Unknown device class:", deviceConfig["class"])
-
+                    try:
+                        device_class = getattr(DEVICES, deviceConfig["class"])
+                        device = device_class(**deviceConfig)
+                    except Exception:
+                        print(
+                            "Failed to create device: %s(**%s)"
+                            % (deviceConfig["class"], deviceConfig)
+                        )
                     if device:
                         self.add_device(device)
 

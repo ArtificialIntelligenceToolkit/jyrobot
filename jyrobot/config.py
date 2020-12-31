@@ -40,3 +40,7 @@ def switch_backend(backend=None, **kwargs):
         ARGS = kwargs
     else:
         raise ValueError("unknown backend type: %r" % backend)
+
+
+def get_backend():
+    return BACKEND, ARGS

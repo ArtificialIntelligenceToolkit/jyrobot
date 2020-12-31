@@ -132,6 +132,11 @@ class DebugBackend(Backend):
             print("draw_rect%r" % ((x, y, width, height),))
         super().draw_rect(x, y, width, height)
 
+    def draw_circle(self, x, y, radius):
+        if self.show_high:
+            print("draw_cirle%r" % ((x, y, radius),))
+        super().draw_circle(x, y, radius)
+
     def draw_ellipse(self, x, y, radiusX, radiusY):
         if self.show_high:
             print("draw_ellipse%r" % ((x, y, radiusX, radiusY),))

@@ -125,7 +125,7 @@ class Backend:
         self.line_width = width
 
     def strokeStyle(self, color, width):
-        if color:
+        if color is not None:
             self.set_stroke_style(color)
         else:
             self.set_stroke_style(BLACK)
@@ -138,7 +138,7 @@ class Backend:
         self.set_stroke_style(BLACK)
 
     def set_fill(self, color):
-        if color:
+        if color is not None:
             self.set_fill_style(color)
         else:
             self.set_fill_style(BLACK)
@@ -170,7 +170,7 @@ class Backend:
         self.fill()
 
     def vertex(self, x, y):
-        if self.shape:
+        if self.shape is not None:
             self.line_to(x, y)
         else:
             self.move_to(x, y)
@@ -183,6 +183,9 @@ class Backend:
         self.begin_path()
         self.ellipse(x, y, radiusX, radiusY, 0, 0, math.pi * 2)
         self.fill()
+
+    def draw_circle(self, x, y, radius):
+        self.draw_ellipse(x, y, radius, radius)
 
     def draw_arc(self, x, y, width, height, startAngle, endAngle):
         prev_stroke_style = self.stroke_style

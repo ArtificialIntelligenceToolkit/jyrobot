@@ -263,6 +263,8 @@ class Color:
                 alpha = 255
             else:
                 red, green, blue, alpha = red
+        elif isinstance(red, Color):
+            red, green, blue, alpha = red.red, red.green, red.blue, red.alpha
 
         self.red = red
         if green is not None:

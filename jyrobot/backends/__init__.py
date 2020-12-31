@@ -8,10 +8,12 @@
 #
 # *************************************
 
-from ..config import ARGS, BACKEND
+from ..config import get_backend
 
 
 def make_backend(width, height, scale):
+    BACKEND, ARGS = get_backend()
+
     if BACKEND == "canvas":
         from .canvas import CanvasBackend
 
