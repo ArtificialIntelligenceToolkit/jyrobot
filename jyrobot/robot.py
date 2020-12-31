@@ -24,7 +24,9 @@ class Robot:
     """
 
     def __init__(self, **config):
+        self.world = None
         self.watchers = []
+        self._devices = []
         self.initialize()
         self.from_json(config)
 
@@ -57,6 +59,9 @@ class Robot:
                     return device
         return None
 
+    def __len__(self):
+        return len(self._devices)
+
     def __repr__(self):
         if self.world is None:
             return "<Robot(name=%r, unconnected)>" % (self.name,)
@@ -70,6 +75,137 @@ class Robot:
                 round(self.vy, 2),
                 round(self.va, 2),
             )
+
+    def initialize(self):
+        """
+        Initialize the robot properties.
+        """
+        self.name = "Robbie"
+        self.state = {}
+        self._set_color("red")
+        self.do_trace = True
+        self.trace = []
+        self.body = []
+        self.max_trace_length = int(1 / 0.1 * 10)  # 10 seconds
+        self.x = 0  # cm
+        self.y = 0  # cm
+        self.height = 0.25
+        self.direction = 0  # radians
+        self.vx = 0.0  # velocity in x direction, CM per second
+        self.vy = 0.0  # velocity in y direction, degrees per second
+        self.va = 0.0  # turn velocity
+        self.tvx = 0.0
+        self.tvy = 0.0
+        self.tva = 0.0
+        self.va_ramp = 1.0  # seconds to reach max speed
+        self.vx_ramp = 1.0  # seconds to reach max speed
+        self.vy_ramp = 1.0  # seconds to reach max speed
+        self.vx_max = 2.0  # CM/SEC
+        self.va_max = math.pi * 0.90  # RADIANS/SEC
+        self.vy_max = 2.0  # CM/SEC
+        self.stalled = False
+        self.bounding_lines = [
+            Line(Point(0, 0), Point(0, 0)),
+            Line(Point(0, 0), Point(0, 0)),
+            Line(Point(0, 0), Point(0, 0)),
+            Line(Point(0, 0), Point(0, 0)),
+        ]
+        self.state = {}
+        self.image_data = []
+        self.get_dataset_image = None
+        self.boundingbox = []
+        self.radius = 0.0
+        self.init_boundingbox()
+
+    def from_json(self, config):
+        """
+        Load a robot from a JSON config dict.
+        """
+        if "name" in config:
+            self.name = config["name"]
+
+        if "state" in config:
+            self.state = config["state"]
+
+        if "do_trace" in config:
+            self.do_trace = config["do_trace"]
+
+        if "va" in config:
+            self.va = config["va"]
+        if "vx" in config:
+            self.vx = config["vx"]
+        if "vy" in config:
+            self.vy = config["vy"]
+
+        if "tva" in config:
+            self.tva = config["tva"]
+        if "tvx" in config:
+            self.tvx = config["tvx"]
+        if "tvy" in config:
+            self.tvy = config["tvy"]
+
+        if "va_max" in config:
+            self.va_max = config["va_max"]
+        if "vx_max" in config:
+            self.vx_max = config["vx_max"]
+        if "vy_max" in config:
+            self.vy_max = config["vy_max"]
+
+        if "va_ramp" in config:
+            self.va_ramp = config["va_ramp"]
+        if "vx_ramp" in config:
+            self.vx_ramp = config["vx_ramp"]
+        if "vy_ramp" in config:
+            self.vy_ramp = config["vy_ramp"]
+
+        if "x" in config:
+            self.x = config["x"]
+        if "y" in config:
+            self.y = config["y"]
+        if "direction" in config:
+            self.direction = config["direction"] * math.pi / 180
+
+        if "image_data" in config:
+            self.image_data = config["image_data"]  # ["dataset", index]
+        if len(self.image_data) == 0:
+            self.get_dataset_image = None
+        else:
+            self.get_dataset_image = get_dataset(self.image_data[0])
+
+        if "height" in config:
+            self.height = config["height"]  # ratio, 0 to 1 of height
+
+        if "color" in config:
+            self._set_color(config["color"])
+
+        if "body" in config:
+            self.body[:] = config["body"]
+            self.init_boundingbox()
+
+        if "devices" in config:
+            # FIXME: raise if lengths/types don't match
+            for i, deviceConfig in enumerate(config["devices"]):
+                if i < len(self):
+                    if self[i].__class__.__name__ == deviceConfig["class"]:
+                        # already a device, let's reuse it:
+                        device = self[i]
+                        device.initialize()
+                        device.from_json(deviceConfig)
+                    else:
+                        raise Exception(
+                            "can't use reset; config changed; use load_world"
+                        )
+                else:
+                    device = None
+                    if deviceConfig["class"] == "Camera":
+                        device = Camera(**deviceConfig)
+                    elif deviceConfig["class"] == "RangeSensor":
+                        device = RangeSensor(**deviceConfig)
+                    else:
+                        print("Unknown device class:", deviceConfig["class"])
+
+                    if device:
+                        self.add_device(device)
 
     def info(self):
         """
@@ -156,127 +292,6 @@ class Robot:
             self.y = y
         if direction is not None:
             self.direction = direction
-
-    def initialize(self):
-        """
-        Initialize the robot properties.
-        """
-        self.world = None
-        self.name = "Robbie"
-        self.state = {}
-        self._set_color("red")
-        self.do_trace = True
-        self.trace = []
-        self.body = []
-        self.max_trace_length = int(1 / 0.1 * 10)  # 10 seconds
-        self.x = 0  # cm
-        self.y = 0  # cm
-        self.height = 0.25
-        self.direction = 0  # radians
-        self.vx = 0.0  # velocity in x direction, CM per second
-        self.vy = 0.0  # velocity in y direction, degrees per second
-        self.va = 0.0  # turn velocity
-        self.tvx = 0.0
-        self.tvy = 0.0
-        self.tva = 0.0
-        self.va_ramp = 1.0  # seconds to reach max speed
-        self.vx_ramp = 1.0  # seconds to reach max speed
-        self.vy_ramp = 1.0  # seconds to reach max speed
-        self.vx_max = 2.0  # CM/SEC
-        self.va_max = math.pi * 0.90  # RADIANS/SEC
-        self.vy_max = 2.0  # CM/SEC
-        self.stalled = False
-        self.bounding_lines = [
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
-        ]
-        self._devices = []
-        self.state = {}
-        self.image_data = []
-        self.get_dataset_image = None
-        self.boundingbox = []
-        self.radius = 0.0
-        self.init_boundingbox()
-
-    def from_json(self, config):
-        """
-        Load a robot from a JSON config dict.
-        """
-        if "name" in config:
-            self.name = config["name"]
-
-        if "state" in config:
-            self.state = config["state"]
-
-        if "do_trace" in config:
-            self.do_trace = config["do_trace"]
-
-        if "va" in config:
-            self.va = config["va"]
-        if "vx" in config:
-            self.vx = config["vx"]
-        if "vy" in config:
-            self.vy = config["vy"]
-
-        if "tva" in config:
-            self.tva = config["tva"]
-        if "tvx" in config:
-            self.tvx = config["tvx"]
-        if "tvy" in config:
-            self.tvy = config["tvy"]
-
-        if "va_max" in config:
-            self.va_max = config["va_max"]
-        if "vx_max" in config:
-            self.vx_max = config["vx_max"]
-        if "vy_max" in config:
-            self.vy_max = config["vy_max"]
-
-        if "va_ramp" in config:
-            self.va_ramp = config["va_ramp"]
-        if "vx_ramp" in config:
-            self.vx_ramp = config["vx_ramp"]
-        if "vy_ramp" in config:
-            self.vy_ramp = config["vy_ramp"]
-
-        if "x" in config:
-            self.x = config["x"]
-        if "y" in config:
-            self.y = config["y"]
-        if "direction" in config:
-            self.direction = config["direction"] * math.pi / 180
-
-        if "image_data" in config:
-            self.image_data = config["image_data"]  # ["dataset", index]
-        if len(self.image_data) == 0:
-            self.get_dataset_image = None
-        else:
-            self.get_dataset_image = get_dataset(self.image_data[0])
-
-        if "height" in config:
-            self.height = config["height"]  # ratio, 0 to 1 of height
-
-        if "color" in config:
-            self._set_color(config["color"])
-
-        if "body" in config:
-            self.body[:] = config["body"]
-            self.init_boundingbox()
-
-        if "devices" in config:
-            for deviceConfig in config["devices"]:
-                device = None
-                if deviceConfig["class"] == "Camera":
-                    device = Camera(**deviceConfig)
-                elif deviceConfig["class"] == "RangeSensor":
-                    device = RangeSensor(**deviceConfig)
-                else:
-                    print("Unknown device class:", deviceConfig["class"])
-
-                if device:
-                    self.add_device(device)
 
     def del_device(self, device):
         """

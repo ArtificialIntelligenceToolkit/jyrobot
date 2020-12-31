@@ -82,6 +82,7 @@
                 }
             ],
             "direction": 180,
+            "do_trace": true,
             "height": 0.23,
             "image_data": [],
             "name": "Red",
@@ -90,7 +91,7 @@
 
             },
             "tva": 0,
-            "tvx": 0,
+            "tvx": 2,
             "tvy": 0,
             "va": 0,
             "va_max": 2.827433,
@@ -179,6 +180,7 @@
                 }
             ],
             "direction": 0,
+            "do_trace": true,
             "height": 0.23,
             "image_data": [],
             "name": "Blue",
@@ -187,7 +189,7 @@
 
             },
             "tva": 0,
-            "tvx": 0,
+            "tvx": 2,
             "tvy": 0,
             "va": 0,
             "va_max": 2.827433,
@@ -202,7 +204,7 @@
             "y": 50
         }],
     "scale": 3,
-    "seed": 0,
+    "seed": 2304288,
     "walls": 
     [
         {

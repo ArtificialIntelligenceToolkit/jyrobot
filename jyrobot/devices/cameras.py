@@ -19,9 +19,13 @@ class Camera:
     """
 
     def __init__(self, **config):
+        self.robot = None
+        self.initialize()
+        self.from_json(config)
+
+    def initialize(self):
         self.type = "camera"
         self.time = 0.0
-        self.robot = None
         self.cameraShape = [256, 128]
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = 0.5
@@ -31,20 +35,8 @@ class Camera:
         self.set_fov(60)  # degrees
         self.reset()
 
-    def __repr__(self):
-        return "<Camera size=(%r,%r), angle=%r>" % (
-            self.cameraShape[0],
-            self.cameraShape[1],
-            round(self.angle * 180 / math.pi, 2),
-        )
-
-    def watch(self):
-        from ..widgets import CameraWatcher
-
-        watcher = CameraWatcher(self)
-        self.robot.watchers.append(watcher)
-        # Return the widget:
-        return watcher.widget
+    def reset(self):
+        self.hits = [[] for i in range(self.cameraShape[0])]
 
     def from_json(self, config):
         if "width" in config:
@@ -75,8 +67,20 @@ class Camera:
             "angle": self.angle * 180 / math.pi,  # save in degrees
         }
 
-    def reset(self):
-        self.hits = [[] for i in range(self.cameraShape[0])]
+    def __repr__(self):
+        return "<Camera size=(%r,%r), angle=%r>" % (
+            self.cameraShape[0],
+            self.cameraShape[1],
+            round(self.angle * 180 / math.pi, 2),
+        )
+
+    def watch(self):
+        from ..widgets import CameraWatcher
+
+        watcher = CameraWatcher(self)
+        self.robot.watchers.append(watcher)
+        # Return the widget:
+        return watcher.widget
 
     def step(self, time_step):
         pass

@@ -63,7 +63,7 @@ class World:
         self._robots = []
         self.backend = None
         self.config = config.copy()
-        self.init()  # default values
+        self.initialize()  # default values
         self.reset()  # from config
 
     def __getitem__(self, item):
@@ -163,7 +163,7 @@ class World:
         self.backend = make_backend(self.width, self.height, self.scale)
         self.backend.update_dimensions(self.width, self.height, self.scale)
 
-    def init(self):
+    def initialize(self):
         """
         Sets the default values.
         """
@@ -181,11 +181,6 @@ class World:
         self.ground_color = Color(0, 128, 0)
         self.walls = []
         self.complexity = 0
-        if len(self._robots) > 0:
-            print("Removing robots from world...")
-            for robot in self._robots:
-                robot.world = None
-        self._robots = []
 
     def reset(self):
         """
@@ -193,7 +188,6 @@ class World:
         last save.
         """
         self.reset_watchers()
-        self.init()
         self.from_json(self.config)
         self.update(show=False)  # twice to allow robots to see each other
         self.update(show=False)
@@ -249,9 +243,15 @@ class World:
                 wall["p2"]["y"],
             )
         ## Create robot, and add to world:
-        for robotConfig in self.config.get("robots", []):
-            robot = Robot(**robotConfig)
-            self.add_robot(robot)
+        for i, robotConfig in enumerate(self.config.get("robots", [])):
+            # FIXME: raise if lengths don't match
+            if i < len(self):  # already a robot; let's reuse it:
+                robot = self[i]
+                robot.initialize()
+                robot.from_json(robotConfig)
+            else:
+                robot = Robot(**robotConfig)
+                self.add_robot(robot)
         # Create the backend if first time:
         if self.backend is None:
             self.backend = make_backend(self.width, self.height, self.scale)
@@ -316,6 +316,12 @@ class World:
         return config
 
     def save(self):
+        """
+        Save the current state of the world as the config.
+        """
+        self.config = self.to_json()
+
+    def save_file(self):
         """
         Save the current state of the world as the config, and
         save it back to disc if it was loaded from disk.

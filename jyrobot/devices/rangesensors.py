@@ -22,9 +22,13 @@ class RangeSensor:
     """
 
     def __init__(self, **config):
+        self.robot = None
+        self.initialize()
+        self.from_json(config)
+
+    def initialize(self):
         self.type = "ir"
         self.time = 0.0
-        self.robot = None
         self.reading = 1.0
         self.position = [8, 0]
         self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
@@ -33,14 +37,6 @@ class RangeSensor:
         self.max = 20  # CM
         self.width = 1.0  # radians
         self.distance = self.reading * self.max
-        self.from_json(config)
-
-    def __repr__(self):
-        return "<RangeSensor angle=%r, range=%r, width=%r>" % (
-            round(self.direction * 180 / math.pi, 1),
-            self.max,
-            round(self.width * 180 / math.pi, 1),
-        )
 
     def from_json(self, config):
         if "position" in config:
@@ -67,6 +63,13 @@ class RangeSensor:
             "width": self.width * 180 / math.pi,  # save as degrees
         }
         return config
+
+    def __repr__(self):
+        return "<RangeSensor angle=%r, range=%r, width=%r>" % (
+            round(self.direction * 180 / math.pi, 1),
+            self.max,
+            round(self.width * 180 / math.pi, 1),
+        )
 
     def step(self, time_step):
         pass
