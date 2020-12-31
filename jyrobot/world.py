@@ -19,6 +19,7 @@ from itertools import count
 from numbers import Number
 
 from .backends import make_backend
+from .colors import BLACK, WHITE
 from .robot import Robot
 from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump
 
@@ -808,14 +809,14 @@ class World:
                 self.height - self.backend.char_height * 2,
             )
 
-            self.backend.set_fill(Color(0))
+            self.backend.set_fill(BLACK)
             self.backend.draw_rect(
                 pos_x,
                 pos_y,
                 self.backend.char_width * len(text),
                 self.backend.char_height + 1,
             )
-            self.backend.set_fill(Color(255))
+            self.backend.set_fill(WHITE)
             self.backend.text(text, pos_x, pos_y)
 
             if self.debug_list:

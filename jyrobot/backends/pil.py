@@ -195,25 +195,29 @@ class PILBackend(Backend):
 
     def draw_ellipse(self, x, y, radiusX, radiusY):
         # Given as center and radius
-        p1x, p1y = self.p(x - radiusX * 2, y - radiusY * 2)
-        p2x, p2y = self.p(x + radiusX * 2, y + radiusY * 2)
+        if radiusX == radiusY:
+            x, y = self.p(x, y)
 
-        minx = min(p1x, p2x)
-        miny = min(p1y, p2y)
-        maxx = max(p1x, p2x)
-        maxy = max(p1y, p2y)
+            p1x, p1y = (x - radiusX * self._scale, y - radiusY * self._scale)
+            p2x, p2y = (x + radiusX * self._scale, y + radiusY * self._scale)
 
-        # PIL ellipse is a bounding box:
-        self.draw.ellipse(
-            (minx, miny, maxx, maxy),
-            fill=self.get_style("fill"),
-            outline=self.get_style("stroke"),
-        )
+            minx = min(p1x, p2x)
+            miny = min(p1y, p2y)
+            maxx = max(p1x, p2x)
+            maxy = max(p1y, p2y)
 
-    def draw_arc(self, x, y, width, height, startAngle, endAngle):
+            self.draw.ellipse(
+                (minx, miny, maxx, maxy),
+                fill=self.get_style("fill"),
+                outline=self.get_style("stroke"),
+            )
+        else:
+            self.draw_arc(x, y, radiusX, radiusY, 0, math.pi * 2, 12)
+
+    def draw_arc(self, x, y, width, height, startAngle, endAngle, segments=5):
         points = [self.p(x, y)]
 
-        for angle in arange(startAngle, endAngle, (endAngle - startAngle) / 5):
+        for angle in arange(startAngle, endAngle, (endAngle - startAngle) / segments):
             point = (
                 x + height * math.cos(angle),
                 y + width * math.sin(angle),

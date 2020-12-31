@@ -10,10 +10,7 @@
 
 import math
 
-from ..utils import Color
-
-BLACK = Color(0)
-WHITE = Color(255)
+from ..colors import BLACK
 
 
 class Backend:
