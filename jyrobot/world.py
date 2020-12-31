@@ -112,9 +112,9 @@ class World:
         """
         Take a picture of the world, or of a robot.
         """
-        # Make sure it is up to date
+        # FIXME: Make sure it is up to date
         try:
-            picture = self.backend.take_picture()
+            picture = self.backend.take_picture(self.time)
         except RuntimeError:
             print("Backend is not ready yet; try again")
             return

@@ -92,7 +92,7 @@ class Backend:
     def flush(self):
         raise NotImplementedError("backend.flush")
 
-    def take_picture(self):
+    def take_picture(self, time):
         raise NotImplementedError("backend.take_picture")
 
     # HIGH-LEVEL Drawing API

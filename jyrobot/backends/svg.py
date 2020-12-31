@@ -58,7 +58,7 @@ class SVGBackend(Backend):
     def flush(self):
         pass
 
-    def take_picture(self):
+    def take_picture(self, time):
         try:
             import cairosvg
         except ImportError:
