@@ -32,7 +32,7 @@ def make_backend(width, height, scale):
             from .svg import SVGBackend
             
             return SVGBackend(width, height, scale, **ARGS)
-        execpt Exception:
+        except Exception:
             print("Failed to make svg backend")
             return None        
     elif BACKEND == "pil":
