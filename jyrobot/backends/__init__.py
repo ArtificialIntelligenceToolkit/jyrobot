@@ -15,22 +15,34 @@ def make_backend(width, height, scale):
     BACKEND, ARGS = get_backend()
 
     if BACKEND == "canvas":
-        from .canvas import CanvasBackend
-
-        return CanvasBackend(
-            width=round(width * scale),
-            height=round(height * scale),
-            sync_image_data=True,
-            **ARGS
-        )
+        try:
+            from .canvas import CanvasBackend
+            
+            return CanvasBackend(
+                width=round(width * scale),
+                height=round(height * scale),
+                sync_image_data=True,
+                **ARGS
+            )
+        except Exception:
+            print("Failed to make canvas backend")
+            return None
     elif BACKEND == "svg":
-        from .svg import SVGBackend
-
-        return SVGBackend(width, height, scale, **ARGS)
+        try:
+            from .svg import SVGBackend
+            
+            return SVGBackend(width, height, scale, **ARGS)
+        execpt Exception:
+            print("Failed to make svg backend")
+            return None        
     elif BACKEND == "pil":
-        from .pil import PILBackend
-
-        return PILBackend(width, height, scale, **ARGS)
+        try:
+            from .pil import PILBackend
+            
+            return PILBackend(width, height, scale, **ARGS)
+        except Exception:
+            print("Failed to make canvas backend")
+            return None
     elif BACKEND == "debug":
         from .debug import DebugBackend
 
