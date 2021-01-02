@@ -26,44 +26,53 @@ def dot(v, w):
     X, Y, Z = w
     return x * X + y * Y + z * Z
 
+
 def length(v):
     x, y, z = v
     return math.sqrt(x * x + y * y + z * z)
+
 
 def vector(b, e):
     x, y, z = b
     X, Y, Z = e
     return (X - x, Y - y, Z - z)
 
+
 def unit(v):
     x, y, z = v
     mag = length(v)
     return (x / mag, y / mag, z / mag)
 
+
 def scale(v, sc):
     x, y, z = v
     return (x * sc, y * sc, z * sc)
+
 
 def add(v, w):
     x, y, z = v
     X, Y, Z = w
     return (x + X, y + Y, z + Z)
 
+
 def ccw(ax, ay, bx, by, cx, cy):
     # counter clockwise
     return ((cy - ay) * (bx - ax)) > ((by - ay) * (cx - ax))
 
+
 def intersect(ax, ay, bx, by, cx, cy, dx, dy):
     # Return true if line segments AB and CD intersect
-    return ccw(ax, ay, cx, cy, dx, dy) != ccw(
-        bx, by, cx, cy, dx, dy
-    ) and (ccw(ax, ay, bx, by, cx, cy) != ccw(ax, ay, bx, by, dx, dy))
+    return ccw(ax, ay, cx, cy, dx, dy) != ccw(bx, by, cx, cy, dx, dy) and (
+        ccw(ax, ay, bx, by, cx, cy) != ccw(ax, ay, bx, by, dx, dy)
+    )
+
 
 def coefs(p1x, p1y, p2x, p2y):
     A = p1y - p2y
     B = p2x - p1x
     C = p1x * p2y - p2x * p1y
     return [A, B, -C]
+
 
 def intersect_coefs(L1_0, L1_1, L1_2, L2_0, L2_1, L2_2):
     D = L1_0 * L2_1 - L1_1 * L2_0
@@ -75,6 +84,7 @@ def intersect_coefs(L1_0, L1_1, L1_2, L2_0, L2_1, L2_2):
         return [x1, y1]
     else:
         return None
+
 
 def intersect_hit(p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y):
     """
@@ -90,27 +100,22 @@ def intersect_hit(p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y):
         highx = max(p1x, p2x) + 0.1
         lowy = min(p1y, p2y) - 0.1
         highy = max(p1y, p2y) + 0.1
-        if (lowx <= xy[0] and xy[0] <= highx) and (
-            lowy <= xy[1] and xy[1] <= highy
-        ):
+        if (lowx <= xy[0] and xy[0] <= highx) and (lowy <= xy[1] and xy[1] <= highy):
             lowx = min(p3x, p4x) - 0.1
             highx = max(p3x, p4x) + 0.1
             lowy = min(p3y, p4y) - 0.1
             highy = max(p3y, p4y) + 0.1
-            if (
-                lowx <= xy[0]
-                and xy[0] <= highx
-                and lowy <= xy[1]
-                and xy[1] <= highy
-            ):
+            if lowx <= xy[0] and xy[0] <= highx and lowy <= xy[1] and xy[1] <= highy:
                 return xy
     return None
+
 
 def format_time(time):
     hours = time // 3600
     minutes = (time % 3600) // 60
     seconds = (time % 3600) % 60
     return "%02d:%02d:%04.1f" % (hours, minutes, seconds)
+
 
 def load_world(filename=None):
     from .world import World

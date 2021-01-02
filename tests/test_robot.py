@@ -10,9 +10,8 @@
 
 from jyrobot import Robot
 
+
 def test_robot():
     robot = Robot()
 
     assert (robot.x, robot.y, robot.direction) == (0, 0, 0)
-
-

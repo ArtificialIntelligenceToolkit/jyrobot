@@ -14,7 +14,7 @@ import re
 
 from .datasets import get_dataset
 from .hit import Hit
-from .utils import Color, Line, Point, distance, intersect_hit, intersect
+from .utils import Color, Line, Point, distance, intersect, intersect_hit
 
 
 class Robot:
@@ -265,7 +265,7 @@ class Robot:
         if self.world is None:
             print("This robot is not in a world")
         else:
-            self.world.update() # request draw
+            self.world.update()  # request draw
 
     def _set_color(self, color):
         if not isinstance(color, Color):
@@ -288,7 +288,7 @@ class Robot:
         if self.world is None:
             print("This robot is not in a world")
         else:
-            self.world.update() # request draw
+            self.world.update()  # request draw
 
     def _set_pose(self, x=None, y=None, direction=None):
         """
@@ -321,7 +321,7 @@ class Robot:
             device.robot = self
             self._devices.append(device)
             if self.world is not None:
-                self.world.update() # request draw
+                self.world.update()  # request draw
         else:
             print("Can't add the same device to a robot more than once.")
 
@@ -582,15 +582,9 @@ class Robot:
                 w2 = line.p2
                 if (
                     intersect(p1[0], p1[1], p2[0], p2[1], w1.x, w1.y, w2.x, w2.y)
-                    or intersect(
-                        p2[0], p2[1], p3[0], p3[1], w1.x, w1.y, w2.x, w2.y
-                    )
-                    or intersect(
-                        p3[0], p3[1], p4[0], p4[1], w1.x, w1.y, w2.x, w2.y
-                    )
-                    or intersect(
-                        p4[0], p4[1], p1[0], p1[1], w1.x, w1.y, w2.x, w2.y
-                    )
+                    or intersect(p2[0], p2[1], p3[0], p3[1], w1.x, w1.y, w2.x, w2.y)
+                    or intersect(p3[0], p3[1], p4[0], p4[1], w1.x, w1.y, w2.x, w2.y)
+                    or intersect(p4[0], p4[1], p1[0], p1[1], w1.x, w1.y, w2.x, w2.y)
                 ):
                     self.stalled = True
                     break

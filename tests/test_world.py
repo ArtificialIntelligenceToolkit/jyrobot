@@ -10,6 +10,7 @@
 
 from jyrobot import World
 
+
 def test_world():
     world = World()
 

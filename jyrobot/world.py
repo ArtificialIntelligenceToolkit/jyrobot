@@ -21,7 +21,15 @@ from numbers import Number
 from .backends import make_backend
 from .colors import BLACK, WHITE
 from .robot import Robot
-from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump, format_time
+from .utils import (
+    Color,
+    Line,
+    Point,
+    distance,
+    distance_point_to_line,
+    format_time,
+    json_dump,
+)
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -446,7 +454,7 @@ class World:
 
     def add_bulb(self, bulb):
         self.bulbs.append(bulb)
-        self.update() # request draw
+        self.update()  # request draw
 
     def add_wall(self, color, x1, y1, x2, y2):
         """
@@ -462,7 +470,7 @@ class World:
         )
         self.walls.append(wall)
         self.complexity = self.compute_complexity()
-        self.update() # request draw
+        self.update()  # request draw
 
     def del_robot(self, robot):
         """
@@ -478,7 +486,7 @@ class World:
             robot.world = None
             self._robots.remove(robot)
         self.complexity = self.compute_complexity()
-        self.update() # request draw
+        self.update()  # request draw
 
     def _add_robot_randomly(self, robot):
         """
@@ -523,7 +531,7 @@ class World:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
-            self.update() # request draw
+            self.update()  # request draw
         else:
             print("Can't add the same robot to a world more than once.")
 
