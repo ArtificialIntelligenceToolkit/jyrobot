@@ -717,13 +717,13 @@ class Robot:
                 backend.noStroke()
 
             if shape_name == "polygon":
-                backend.beginShape()
-                for x, y in args:
-                    backend.vertex(x, y)
-                backend.endShape()
-                backend.noStroke()
+                backend.draw_polygon(args)
             elif shape_name == "rectangle":
                 backend.draw_rect(*args)
+            elif shape_name == "ellipse":
+                backend.draw_ellipse(*args)
+            elif shape_name == "circle":
+                backend.draw_circle(*args)
 
         for device in self._devices:
             device.draw(backend)
@@ -761,6 +761,7 @@ SCRIBBLER_CONFIG = {
         ],
         ["rectangle", "black", [-3.33, -7.67, 6.33, 1.67]],
         ["rectangle", "black", [-3.33, 6, 6.33, 1.67]],
+        ["polygon", "black", [[0, 0], [-2, 2], [2, 0], [-2, -2]]],
     ],
     "color": "#FF0000FF",
     "name": "Scribbie",

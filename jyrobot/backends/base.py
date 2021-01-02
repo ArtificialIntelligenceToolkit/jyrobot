@@ -176,6 +176,13 @@ class Backend:
     def draw_rect(self, x, y, width, height):
         self.fill_rect(x, y, width, height)
 
+    def draw_polygon(self, points):
+        self.beginShape()
+        for x, y in points:
+            self.vertex(x, y)
+        self.endShape()
+        self.noStroke()
+
     def draw_ellipse(self, x, y, radiusX, radiusY):
         self.begin_path()
         self.ellipse(x, y, radiusX, radiusY, 0, 0, math.pi * 2)
