@@ -1,5 +1,1 @@
 Pillow
-ipycanvas>=0.8.0
-ipylab
-ipywidgets
-IPython
