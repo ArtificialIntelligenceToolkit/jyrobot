@@ -56,7 +56,7 @@ class RobotWatcher:
     def update(self):
         pass
 
-    def reset():
+    def reset(self):
         pass
 
 
@@ -73,7 +73,7 @@ class CameraWatcher:
     def update(self):
         pass
 
-    def reset():
+    def reset(self):
         pass
 
 
