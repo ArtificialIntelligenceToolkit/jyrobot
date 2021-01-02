@@ -11,6 +11,10 @@ jobs:
       - python/load-cache
       - python/install-deps
       - python/save-cache
+      - python/install-packages:
+          args: pytest
+          pkg-manager: pip
+          pypi-cache: false
       - run:
           command: pytest
           name: Test
