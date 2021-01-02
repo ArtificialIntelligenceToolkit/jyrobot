@@ -14,7 +14,7 @@ import re
 
 from .datasets import get_dataset
 from .hit import Hit
-from .utils import Color, Line, Point, distance
+from .utils import Color, Line, Point, distance, intersect_hit, intersect
 
 
 class Robot:
@@ -103,11 +103,13 @@ class Robot:
         self.va_max = math.pi * 0.90  # RADIANS/SEC
         self.vy_max = 2.0  # CM/SEC
         self.stalled = False
+        # Slight box around center, in case no
+        # body:
         self.bounding_lines = [
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
-            Line(Point(0, 0), Point(0, 0)),
+            Line(Point(-1, -1), Point(1, -1)),
+            Line(Point(1, -1), Point(1, 1)),
+            Line(Point(1, 1), Point(-1, 1)),
+            Line(Point(-1, 1), Point(-1, -1)),
         ]
         self.state = {}
         self.image_data = []
@@ -259,9 +261,11 @@ class Robot:
         """
         Set the color of a robot, and its trace.
         """
+        self._set_color(color)
         if self.world is None:
             print("This robot is not in a world")
-        self._set_color(color)
+        else:
+            self.world.update() # request draw
 
     def _set_color(self, color):
         if not isinstance(color, Color):
@@ -277,12 +281,14 @@ class Robot:
         Set the pose of the robot. direction is in degrees.
         """
         # Clear the trace
-        if self.world is None:
-            print("This robot is not in a world")
         self.trace[:] = []
         if direction is not None:
             direction = direction * math.pi / 180
         self._set_pose(x, y, direction)
+        if self.world is None:
+            print("This robot is not in a world")
+        else:
+            self.world.update() # request draw
 
     def _set_pose(self, x=None, y=None, direction=None):
         """
@@ -314,6 +320,8 @@ class Robot:
         if device not in self._devices:
             device.robot = self
             self._devices.append(device)
+            if self.world is not None:
+                self.world.update() # request draw
         else:
             print("Can't add the same device to a robot more than once.")
 
@@ -401,64 +409,6 @@ class Robot:
         self.tvy = 0.0
         self.tva = 0.0
 
-    def ccw(self, ax, ay, bx, by, cx, cy):
-        # counter clockwise
-        return ((cy - ay) * (bx - ax)) > ((by - ay) * (cx - ax))
-
-    def intersect(self, ax, ay, bx, by, cx, cy, dx, dy):
-        # Return true if line segments AB and CD intersect
-        return self.ccw(ax, ay, cx, cy, dx, dy) != self.ccw(
-            bx, by, cx, cy, dx, dy
-        ) and (self.ccw(ax, ay, bx, by, cx, cy) != self.ccw(ax, ay, bx, by, dx, dy))
-
-    def coefs(self, p1x, p1y, p2x, p2y):
-        A = p1y - p2y
-        B = p2x - p1x
-        C = p1x * p2y - p2x * p1y
-        return [A, B, -C]
-
-    def intersect_coefs(self, L1_0, L1_1, L1_2, L2_0, L2_1, L2_2):
-        D = L1_0 * L2_1 - L1_1 * L2_0
-        if D != 0:
-            Dx = L1_2 * L2_1 - L1_1 * L2_2
-            Dy = L1_0 * L2_2 - L1_2 * L2_0
-            x1 = Dx / D
-            y1 = Dy / D
-            return [x1, y1]
-        else:
-            return None
-
-    def intersect_hit(self, p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y):
-        """
-        Compute the intersection between two lines.
-        """
-        # http:##stackoverflow.com/questions/20677795/find-the-point-of-intersecting-lines
-        L1 = self.coefs(p1x, p1y, p2x, p2y)
-        L2 = self.coefs(p3x, p3y, p4x, p4y)
-        xy = self.intersect_coefs(L1[0], L1[1], L1[2], L2[0], L2[1], L2[2])
-        # now check to see on both segments:
-        if xy:
-            lowx = min(p1x, p2x) - 0.1
-            highx = max(p1x, p2x) + 0.1
-            lowy = min(p1y, p2y) - 0.1
-            highy = max(p1y, p2y) + 0.1
-            if (lowx <= xy[0] and xy[0] <= highx) and (
-                lowy <= xy[1] and xy[1] <= highy
-            ):
-                lowx = min(p3x, p4x) - 0.1
-                highx = max(p3x, p4x) + 0.1
-                lowy = min(p3y, p4y) - 0.1
-                highy = max(p3y, p4y) + 0.1
-                if (
-                    lowx <= xy[0]
-                    and xy[0] <= highx
-                    and lowy <= xy[1]
-                    and xy[1] <= highy
-                ):
-                    return xy
-
-        return None
-
     def has_image(self):
         """
         Does this robot have an associated 3D set of images from
@@ -488,7 +438,7 @@ class Robot:
             for line in wall.lines:
                 p1 = line.p1
                 p2 = line.p2
-                pos = self.intersect_hit(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)
+                pos = intersect_hit(x1, y1, x2, y2, p1.x, p1.y, p2.x, p2.y)
                 if pos is not None:
                     dist = distance(pos[0], pos[1], x1, y1)
                     height = 1.0 if wall.robot is None else wall.robot.height
@@ -631,14 +581,14 @@ class Robot:
                 w1 = line.p1
                 w2 = line.p2
                 if (
-                    self.intersect(p1[0], p1[1], p2[0], p2[1], w1.x, w1.y, w2.x, w2.y)
-                    or self.intersect(
+                    intersect(p1[0], p1[1], p2[0], p2[1], w1.x, w1.y, w2.x, w2.y)
+                    or intersect(
                         p2[0], p2[1], p3[0], p3[1], w1.x, w1.y, w2.x, w2.y
                     )
-                    or self.intersect(
+                    or intersect(
                         p3[0], p3[1], p4[0], p4[1], w1.x, w1.y, w2.x, w2.y
                     )
-                    or self.intersect(
+                    or intersect(
                         p4[0], p4[1], p1[0], p1[1], w1.x, w1.y, w2.x, w2.y
                     )
                 ):

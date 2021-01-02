@@ -21,7 +21,7 @@ from numbers import Number
 from .backends import make_backend
 from .colors import BLACK, WHITE
 from .robot import Robot
-from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump
+from .utils import Color, Line, Point, distance, distance_point_to_line, json_dump, format_time
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -41,7 +41,7 @@ class Wall:
         return "Wall(%r, %r, %r)" % (self.color, self.robot, self.lines)
 
 
-class Light:
+class Bulb:
     """
     Class representing lights in the world.
     """
@@ -54,7 +54,7 @@ class Light:
         self.power = power
 
     def __repr__(self):
-        return "Light(color:%r, x:%r, y:%r, z:%r, power:%r)" % (
+        return "Bulb(color:%r, x:%r, y:%r, z:%r, power:%r)" % (
             self.color,
             self.x,
             self.y,
@@ -124,12 +124,6 @@ class World:
 
     def __repr__(self):
         return "<World width=%r, height=%r>" % (self.width, self.height)
-
-    def formatted_time(self):
-        hours = self.time // 3600
-        minutes = (self.time % 3600) // 60
-        seconds = (self.time % 3600) % 60
-        return "%02d:%02d:%04.1f" % (hours, minutes, seconds)
 
     def take_picture(self, index=None, size=100):
         """
@@ -203,7 +197,7 @@ class World:
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
         self.walls = []
-        self.lights = []
+        self.bulbs = []
         self.complexity = 0
 
     def reset(self):
@@ -267,9 +261,9 @@ class World:
                 wall["p2"]["y"],
             )
 
-        for light in config.get("lights", []):
-            # lights are {x, y, z, color, power}
-            self.add_light(Light(**light))
+        for bulb in config.get("bulbs", []):
+            # bulbs are {x, y, z, color, power}
+            self.add_bulb(Bulb(**bulb))
 
         ## Create robot, and add to world:
         for i, robotConfig in enumerate(self.config.get("robots", [])):
@@ -328,7 +322,7 @@ class World:
             "boundary_wall_width": self.boundary_wall_width,
             "ground_color": str(self.ground_color),
             "walls": [],
-            "lights": [],
+            "bulbs": [],
             "robots": [],
         }
         for wall in self.walls:
@@ -340,14 +334,14 @@ class World:
                 }
                 config["walls"].append(w)
 
-        for light in self.lights:
-            config["lights"].append(
+        for bulb in self.bulbs:
+            config["bulbs"].append(
                 {
-                    "color": str(light.color),
-                    "x": light.x,
-                    "y": light.y,
-                    "z": light.z,
-                    "power": light.power,
+                    "color": str(bulb.color),
+                    "x": bulb.x,
+                    "y": bulb.y,
+                    "z": bulb.z,
+                    "power": bulb.power,
                 }
             )
 
@@ -450,8 +444,9 @@ class World:
         for robot in self:
             robot.del_watchers()
 
-    def add_light(self, light):
-        self.lights.append(light)
+    def add_bulb(self, bulb):
+        self.bulbs.append(bulb)
+        self.update() # request draw
 
     def add_wall(self, color, x1, y1, x2, y2):
         """
@@ -467,6 +462,7 @@ class World:
         )
         self.walls.append(wall)
         self.complexity = self.compute_complexity()
+        self.update() # request draw
 
     def del_robot(self, robot):
         """
@@ -482,8 +478,9 @@ class World:
             robot.world = None
             self._robots.remove(robot)
         self.complexity = self.compute_complexity()
+        self.update() # request draw
 
-    def add_robot_randomly(self, robot):
+    def _add_robot_randomly(self, robot):
         """
         Add a robot to the world in a random position.
         """
@@ -512,33 +509,37 @@ class World:
 
     def add_robot(self, robot):
         """
-        Add a new robot to the world.
+        Add a new robot to the world. If the robot's position is 0,0 then
+        place it randomly in the world.
         """
         if robot not in self._robots:
             if robot.x == 0 and robot.y == 0:
-                robot.x, robot.y, robot.direction = self.add_robot_randomly(robot)
+                robot.x, robot.y, robot.direction = self._add_robot_randomly(robot)
             self._robots.append(robot)
             robot.world = self
             # Bounding lines form a wall:
+            if len(robot.bounding_lines) == 0:
+                print("WARNING: adding a robot with no body")
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
+            self.update() # request draw
         else:
             print("Can't add the same robot to a world more than once.")
 
-    def signal_handler(self, *args, **kwargs):
+    def _signal_handler(self, *args, **kwargs):
         """
         Handler for Control+C.
         """
         self.stop = True
 
     @contextmanager
-    def no_interrupt(self):
+    def _no_interrupt(self):
         """
         Suspends signal handling execution
         """
         self.stop = False
-        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
 
         try:
             yield None
@@ -646,7 +647,7 @@ class World:
             step_iter = count()
         else:
             step_iter = range(steps)
-        with self.no_interrupt():
+        with self._no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
             for step in self._progress(step_iter, show_progress):
@@ -673,7 +674,7 @@ class World:
         speed = (stop_time - start_time) / (stop_real_time - start_real_time)
         print(
             "Simulation stopped at: %s; speed %s x real time"
-            % (self.formatted_time(), round(speed, 2))
+            % (format_time(self.time), round(speed, 2))
         )
         self.update(show=False)  # get updates
         self.draw()  # force to update any displays
@@ -778,12 +779,12 @@ class World:
 
                     self.backend.endShape()
 
-            ## Draw lights:
-            for light in self.lights:
-                c = light.color
+            ## Draw bulbs:
+            for bulb in self.bulbs:
+                c = bulb.color
                 self.backend.noStroke()
                 self.backend.set_fill(c)
-                self.backend.draw_circle(light.x, light.y, light.power * 5)
+                self.backend.draw_circle(bulb.x, bulb.y, bulb.power * 5)
 
             ## Draw borders:
             for wall in self.walls:
@@ -803,7 +804,7 @@ class World:
             for robot in self._robots:
                 robot.draw(self.backend)
 
-            text = self.formatted_time()
+            text = format_time(self.time)
             pos_x, pos_y = (
                 self.backend.char_height,
                 self.height - self.backend.char_height * 2,
