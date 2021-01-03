@@ -77,6 +77,10 @@ class Camera:
     def watch(self):
         from ..watchers import CameraWatcher
 
+        if self.robot is None or self.robot.world is None:
+            print("ERROR: can't watch until added to robot, and robot is in world")
+            return None
+
         watcher = CameraWatcher(self)
         self.robot.world.watchers.append(watcher)
         # Return the widget:

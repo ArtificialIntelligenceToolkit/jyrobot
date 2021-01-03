@@ -41,6 +41,10 @@ class RangeSensor:
     def watch(self, title="Range Sensor:"):
         from ..watchers import AttributesWatcher
 
+        if self.robot is None or self.robot.world is None:
+            print("ERROR: can't watch until added to robot, and robot is in world")
+            return None
+
         watcher = AttributesWatcher(
             self, "reading", "distance", title=title, labels=["Reading:", "Distance:"]
         )

@@ -130,6 +130,7 @@ class AttributesWatcher(Watcher):
             self.labels = ["%s:" % attr for attr in attrs]
         self.widget = make_attr_widget(self.map, title, attrs, labels)
         self.update()
+        self.draw()
 
     def draw(self):
         for i in range(len(self.attrs)):
@@ -149,6 +150,7 @@ class CameraWatcher:
         self.widget = Image(
             layout=Layout(width="-webkit-fill-available", height="auto")
         )
+        # Update and draw:
         self.draw()
 
     def draw(self):

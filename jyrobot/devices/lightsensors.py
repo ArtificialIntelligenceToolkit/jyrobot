@@ -79,8 +79,10 @@ class LightSensor:
             if len(hits) == 0:  # nothing blocking! we can see the light
                 # Make sure distance not zero:
                 dist = max(dist, 0.001)
-                # Maximum value of 1.0:
-                self.value += min(brightness * self.multiplier / (dist ** 2), 1.0)
+                # Maximum value of 100.0 with defaults:
+                self.value += min(
+                    brightness * self.multiplier / (dist ** 2), self.multiplier / 10
+                )
                 if debug_list is not None:
                     debug_list.append(("strokeStyle", (PURPLE, 1)))
                     debug_list.append(("draw_line", (x, y, p[0], p[1])))
@@ -94,6 +96,10 @@ class LightSensor:
 
     def watch(self, label="Light:"):
         from ..watchers import AttributesWatcher
+
+        if self.robot is None or self.robot.world is None:
+            print("ERROR: can't watch until added to robot, and robot is in world")
+            return None
 
         watcher = AttributesWatcher(self, "value", labels=[label])
         self.robot.world.watchers.append(watcher)
