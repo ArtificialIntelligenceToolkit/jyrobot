@@ -21,6 +21,26 @@ from .color_data import COLORS
 from .config import PATHS
 
 
+def progress_bar(range, show_progress=True, progress_type="tqdm"):
+    """
+    Wrap a range/iter in a progress bar (or not).
+    """
+    try:
+        import tqdm
+        import tqdm.notebook
+    except ImportError:
+        tqdm = None
+
+    if progress_type is None or tqdm is None or show_progress is False:
+        return range
+    elif progress_type == "tqdm":
+        return tqdm.tqdm(range)
+    elif progress_type == "notebook":
+        return tqdm.notebook.tqdm(range)
+    else:
+        return range
+
+
 def dot(v, w):
     x, y, z = v
     X, Y, Z = w
@@ -196,11 +216,27 @@ def gallery(*images, border_width=1, background_color=(255, 255, 255)):
     return gallery_image
 
 
-def arange(start, stop, step):
-    current = start
-    while current <= stop:
-        yield current
-        current += step
+class arange:
+    def __init__(self, start, stop, step):
+        self.start = start
+        self.stop = stop
+        self.step = step
+
+    def __iter__(self):
+        current = self.start
+        while current <= self.stop:
+            yield current
+            current += self.step
+
+    def __len__(self):
+        return (self.stop - self.start) / self.step
+
+
+# def arange(start, stop, step):
+#     current = start
+#     while current <= stop:
+#         yield current
+#         current += step
 
 
 def distance(x1, y1, x2, y2):

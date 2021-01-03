@@ -19,7 +19,7 @@ from itertools import count
 from numbers import Number
 
 from .backends import make_backend
-from .colors import BLACK, WHITE
+from .colors import BLACK_50, WHITE
 from .robot import Robot
 from .utils import (
     Color,
@@ -29,6 +29,7 @@ from .utils import (
     distance_point_to_line,
     format_time,
     json_dump,
+    progress_bar,
 )
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
@@ -403,10 +404,10 @@ class World:
 
     def watch(self):
         self.step_display = "notebook"
-        return self.backend.get_widget()
+        return self.backend.watch()
 
     def record(self):
-        from .widgets import Recorder
+        from .watchers import Recorder
 
         recorder = Recorder(self)
         self.watchers.append(recorder)
@@ -429,28 +430,21 @@ class World:
             self.backend.draw_watcher()
         for watcher in self.watchers:
             watcher.draw()
-        for robot in self:
-            robot.draw_watchers()
 
     def reset_watchers(self):
         if self.backend is not None:
             self.backend.reset_watcher()
         for watcher in self.watchers:
             watcher.reset()
-        for robot in self:
-            robot.reset_watchers()
 
     def update_watchers(self):
         if self.backend is not None:
             self.backend.update_watcher()
         for watcher in self.watchers:
             watcher.update()
-        for robot in self:
-            robot.update_watchers()
 
     def del_watchers(self):
-        for robot in self:
-            robot.del_watchers()
+        self.watchers[:] = []
 
     def add_bulb(self, bulb):
         self.bulbs.append(bulb)
@@ -531,7 +525,6 @@ class World:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
-            self.update()  # request draw
         else:
             print("Can't add the same robot to a world more than once.")
 
@@ -607,25 +600,6 @@ class World:
         steps = round(seconds / time_step)
         self.steps(steps, function, time_step, show, real_time, show_progress)
 
-    def _progress(self, range, show_progress=True):
-        """
-        Wrap a range/iter in a progress bar (or not).
-        """
-        try:
-            import tqdm
-            import tqdm.notebook
-        except ImportError:
-            tqdm = None
-
-        if self.step_display is None or tqdm is None or show_progress is False:
-            return range
-        elif self.step_display == "tqdm":
-            return tqdm.tqdm(range)
-        elif self.step_display == "notebook":
-            return tqdm.notebook.tqdm(range)
-        else:
-            return range
-
     def steps(
         self,
         steps=1,
@@ -658,7 +632,7 @@ class World:
         with self._no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
-            for step in self._progress(step_iter, show_progress):
+            for step in progress_bar(step_iter, show_progress, self.step_display):
                 if self.stop:
                     break
                 if function is not None:
@@ -818,7 +792,7 @@ class World:
                 self.height - self.backend.char_height * 2,
             )
 
-            self.backend.set_fill(BLACK)
+            self.backend.set_fill(BLACK_50)
             self.backend.draw_rect(
                 pos_x,
                 pos_y,

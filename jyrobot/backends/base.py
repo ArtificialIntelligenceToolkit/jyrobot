@@ -83,8 +83,8 @@ class Backend:
 
     # Need to implement in subclasses:
 
-    def get_widget(self):
-        raise NotImplementedError("backend.get_widget")
+    def watch(self):
+        raise NotImplementedError("backend.watch")
 
     def flush(self):
         raise NotImplementedError("backend.flush")

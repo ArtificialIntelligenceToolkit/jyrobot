@@ -75,10 +75,10 @@ class Camera:
         )
 
     def watch(self):
-        from ..widgets import CameraWatcher
+        from ..watchers import CameraWatcher
 
         watcher = CameraWatcher(self)
-        self.robot.watchers.append(watcher)
+        self.robot.world.watchers.append(watcher)
         # Return the widget:
         return watcher.widget
 

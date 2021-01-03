@@ -28,7 +28,7 @@ class CanvasBackend(Canvas, Backend):
 
     # jyrobot API:
 
-    def get_widget(self):
+    def watch(self):
         # Return the Jupyter widget
         return self
 

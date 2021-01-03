@@ -63,7 +63,7 @@ class LightSensor:
                 bulb.brightness,
                 bulb.color,
             )
-            # FIXME: use bulb_color for something?
+            # FIXME: use bulb_color for filter?
 
             angle = math.atan2(x - p[0], y - p[1])
             dist = distance(x, y, p[0], p[1])
@@ -77,8 +77,10 @@ class LightSensor:
                     debug_list.append(("draw_circle", (hit.x, hit.y, 2)))
 
             if len(hits) == 0:  # nothing blocking! we can see the light
-                # Make sure not zero:
-                self.value += brightness * self.multiplier / (dist ** 2)
+                # Make sure distance not zero:
+                dist = max(dist, 0.001)
+                # Maximum value of 1.0:
+                self.value += min(brightness * self.multiplier / (dist ** 2), 1.0)
                 if debug_list is not None:
                     debug_list.append(("strokeStyle", (PURPLE, 1)))
                     debug_list.append(("draw_line", (x, y, p[0], p[1])))
@@ -90,9 +92,9 @@ class LightSensor:
     def get_reading(self):
         return self.value
 
-    def watch(self):
-        from ..widgets import TextWatcher
+    def watch(self, label="Light:"):
+        from ..watchers import AttributesWatcher
 
-        watcher = TextWatcher(self, "value", "Light:")
-        self.robot.watchers.append(watcher)
+        watcher = AttributesWatcher(self, "value", labels=[label])
+        self.robot.world.watchers.append(watcher)
         return watcher.widget

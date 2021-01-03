@@ -24,7 +24,6 @@ class Robot:
 
     def __init__(self, **config):
         self.world = None
-        self.watchers = []
         self._devices = []
         self.initialize()
         self.from_json(config)
@@ -231,31 +230,16 @@ class Robot:
             title = "%r Robot" % self.name
 
         plot = Plot(self, function, x_label, y_label, title)
-        self.watchers.append(plot)
+        self.world.watchers.append(plot)
         return plot
 
     def watch(self, size=100):
-        from .widgets import RobotWatcher
+        from .watchers import RobotWatcher
 
         robot_watcher = RobotWatcher(self, size=size)
-        self.watchers.append(robot_watcher)
+        self.world.watchers.append(robot_watcher)
         # Return the widget:
-        return robot_watcher.widget
-
-    def update_watchers(self):
-        for watcher in self.watchers:
-            watcher.update()
-
-    def draw_watchers(self):
-        for watcher in self.watchers:
-            watcher.draw()
-
-    def reset_watchers(self):
-        for watcher in self.watchers:
-            watcher.reset()
-
-    def del_watchers(self):
-        self.watchers[:] = []
+        return robot_watcher.watch()
 
     def set_color(self, color):
         """
@@ -264,8 +248,6 @@ class Robot:
         self._set_color(color)
         if self.world is None:
             print("This robot is not in a world")
-        else:
-            self.world.update()  # request draw
 
     def _set_color(self, color):
         if not isinstance(color, Color):
@@ -287,8 +269,6 @@ class Robot:
         self._set_pose(x, y, direction)
         if self.world is None:
             print("This robot is not in a world")
-        else:
-            self.world.update()  # request draw
 
     def _set_pose(self, x=None, y=None, direction=None):
         """

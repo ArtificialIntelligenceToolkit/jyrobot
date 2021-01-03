@@ -39,7 +39,7 @@ class SVGBackend(Backend):
 
     # Overrides:
 
-    def get_widget(self):
+    def watch(self):
         from ipywidgets import HTML
 
         if self.widget is None:

@@ -27,8 +27,8 @@ class DebugBackend(Backend):
     def take_picture(self, time):
         print("take_picture()")
 
-    def get_widget(self):
-        print("get_widget()")
+    def watch(self):
+        print("watch()")
 
     # High-level API (jyrobot draw API)
 

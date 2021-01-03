@@ -26,15 +26,70 @@ from ipywidgets import (
     VBox,
 )
 
-from .utils import Point, arange, image_to_gif, image_to_png
+from .utils import Point, arange, image_to_gif, image_to_png, progress_bar
 from .world import World
 
 
-class RobotWatcher:
+def make_attr_widget(map, title, attrs, labels):
+    box = VBox()
+    children = []
+    if title is not None:
+        children.append(Label(value=title))
+    for i, attr in enumerate(attrs):
+        widget = Text(description=labels[i])
+        map[labels[i]] = widget
+        children.append(widget)
+    box.children = children
+    return box
+
+
+class Watcher:
+    def __init__(self):
+        """
+        All watchers need a widget.
+        """
+        self.widget = None
+
+    def draw(self):
+        """
+        Some watchers need to be told explicitly when to draw.
+        """
+        raise NotImplementedError("need to implement watcher.draw()")
+
+    def update(self):
+        """
+        Some watchers need to be told explicitly when to update
+        their state.
+        """
+        raise NotImplementedError("need to implement watcher.update()")
+
+    def reset(self):
+        """
+        Some watchers hold state and need to be reset.
+        """
+        raise NotImplementedError("need to implement watcher.reset()")
+
+    def watch(self):
+        """
+        This method should return the widget associated with
+        the watcher.
+        """
+        return self.widget
+
+
+class RobotWatcher(Watcher):
     def __init__(self, robot, size=100):
+        super().__init__()
         self.robot = robot
         self.size = size
-        self.widget = Image()
+        self.map = {}
+        self.attrs = ["name", "x", "y", "direction", "stalled"]
+        self.labels = ["%s:" % attr.title() for attr in self.attrs]
+        widget = make_attr_widget(self.map, None, self.attrs, self.labels)
+        image = Image(layout=Layout(width="-webkit-fill-available", height="auto"))
+        widget.children = [image] + list(widget.children)
+        self.widget = widget
+        self.update()
         self.draw()
 
     def draw(self):
@@ -52,7 +107,9 @@ class RobotWatcher:
             min(start_y + self.size, self.robot.world.height * self.robot.world.scale),
         )
         picture = picture.crop(rectangle)
-        self.widget.value = image_to_png(picture)
+        self.widget.children[0].value = image_to_png(picture)
+        for i in range(len(self.attrs)):
+            self.map[self.labels[i]].value = str(getattr(self.robot, self.attrs[i]))
 
     def update(self):
         pass
@@ -61,18 +118,25 @@ class RobotWatcher:
         pass
 
 
-class TextWatcher:
-    def __init__(self, obj, attr, label="Label:"):
+class AttributesWatcher(Watcher):
+    def __init__(self, obj, *attrs, title=None, labels=None):
+        super().__init__()
         self.obj = obj
-        self.attr = attr
-        self.widget = Text(description=label)
+        self.map = {}
+        self.attrs = attrs
+        self.title = title
+        self.labels = labels
+        if self.labels is None:
+            self.labels = ["%s:" % attr for attr in attrs]
+        self.widget = make_attr_widget(self.map, title, attrs, labels)
         self.update()
 
     def draw(self):
-        pass
+        for i in range(len(self.attrs)):
+            self.map[self.labels[i]].value = str(getattr(self.obj, self.attrs[i]))
 
     def update(self):
-        self.widget.value = str(getattr(self.obj, self.attr))
+        pass
 
     def reset(self):
         pass
@@ -80,8 +144,11 @@ class TextWatcher:
 
 class CameraWatcher:
     def __init__(self, camera):
+        super().__init__()
         self.camera = camera
-        self.widget = Image()
+        self.widget = Image(
+            layout=Layout(width="-webkit-fill-available", height="auto")
+        )
         self.draw()
 
     def draw(self):
@@ -121,8 +188,9 @@ class _Player(threading.Thread):
         self.can_run.set()
 
 
-class Recorder:
+class Recorder(Watcher):
     def __init__(self, world, play_rate=0.1):
+        super().__init__()
         self.states = []
         self.orig_world = world
         # Copy of the world for creating playback:
@@ -151,6 +219,10 @@ class Recorder:
 
     def reset(self):
         self.states = []
+
+    def watch(self, play_rate=0.0):
+        self.widget.player.time_wait = play_rate
+        return self.widget
 
     def get_trace(self, robot_index, current_index, max_length):
         # return as [Point(x,y), direction]
@@ -201,10 +273,6 @@ class Recorder:
         picture = self.world.take_picture()
         return picture
 
-    def watch(self, play_rate=0.0):
-        self.widget.player.time_wait = play_rate
-        return self.widget
-
     def save_as(
         self,
         movie_name="jyrobot_movie",
@@ -227,7 +295,7 @@ class Recorder:
         stop = min(stop, len(self.states) * 0.1)
 
         frames = []
-        for time_step in arange(start, stop, step):
+        for time_step in progress_bar(arange(start, stop, step)):
             # Special function to load as gif, leave fp open
             picture = image_to_gif(self.goto(time_step))
             frames.append(picture)

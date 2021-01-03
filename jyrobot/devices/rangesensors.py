@@ -38,6 +38,15 @@ class RangeSensor:
         self.width = 1.0  # radians
         self.distance = self.reading * self.max
 
+    def watch(self, title="Range Sensor:"):
+        from ..watchers import AttributesWatcher
+
+        watcher = AttributesWatcher(
+            self, "reading", "distance", title=title, labels=["Reading:", "Distance:"]
+        )
+        self.robot.world.watchers.append(watcher)
+        return watcher.widget
+
     def from_json(self, config):
         if "position" in config:
             self.position = config["position"]
