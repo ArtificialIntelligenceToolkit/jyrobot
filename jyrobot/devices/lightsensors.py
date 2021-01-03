@@ -65,7 +65,6 @@ class LightSensor:
             )
             # FIXME: use bulb_color for something?
 
-            # FIXME: this is angle from center: add dir_from_center?
             angle = math.atan2(x - p[0], y - p[1])
             dist = distance(x, y, p[0], p[1])
             hits = self.robot.cast_ray(p[0], p[1], angle, dist)
