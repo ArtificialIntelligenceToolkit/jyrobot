@@ -425,6 +425,8 @@ class Robot:
     def cast_ray(self, x1, y1, a, maxRange):
         """
         Cast a ray into this world and see what it hits.
+
+        Returns list of hits, furthest away first (back to front)
         """
         # walls and robots
         hits = []

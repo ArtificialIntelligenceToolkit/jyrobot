@@ -22,6 +22,7 @@ from ipywidgets import (
     Label,
     Layout,
     Output,
+    Text,
     VBox,
 )
 
@@ -55,6 +56,23 @@ class RobotWatcher:
 
     def update(self):
         pass
+
+    def reset(self):
+        pass
+
+
+class TextWatcher:
+    def __init__(self, obj, attr, label="Label:"):
+        self.obj = obj
+        self.attr = attr
+        self.widget = Text(description=label)
+        self.update()
+
+    def draw(self):
+        pass
+
+    def update(self):
+        self.widget.value = str(getattr(self.obj, self.attr))
 
     def reset(self):
         pass

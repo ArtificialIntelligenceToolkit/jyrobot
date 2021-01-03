@@ -10,7 +10,7 @@
 
 import math
 
-from ..colors import YELLOW
+from ..colors import PURPLE, YELLOW
 from ..utils import distance
 
 
@@ -22,6 +22,9 @@ class LightSensor:
 
     def initialize(self):
         self.type = "light"
+        self.value = 0.0
+        # FIXME: add to config
+        self.multiplier = 1000  # CM
         self.position = [0, 0]
         self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
         self.dir_from_center = math.atan2(-self.position[0], self.position[1])
@@ -44,40 +47,53 @@ class LightSensor:
         pass
 
     def update(self, debug_list=None):
-        pass
+        self.value = 0
+        # Location of sensor:
+        p = self.robot.rotate_around(
+            self.robot.x,
+            self.robot.y,
+            self.dist_from_center,
+            self.robot.direction + self.dir_from_center + math.pi / 2,
+        )
+        for bulb in self.robot.world.bulbs:  # for each light source:
+            x, y, z, brightness, light_color = (  # noqa: F841
+                bulb.x,
+                bulb.y,
+                bulb.z,
+                bulb.brightness,
+                bulb.color,
+            )
+            # FIXME: use bulb_color for something?
+
+            # FIXME: this is angle from center: add dir_from_center?
+            angle = math.atan2(x - p[0], y - p[1])
+            dist = distance(x, y, p[0], p[1])
+            hits = self.robot.cast_ray(p[0], p[1], angle, dist)
+            if debug_list is not None:
+                debug_list.append(("draw_circle", (p[0], p[1], 2)))
+                debug_list.append(("draw_circle", (x, y, 2)))
+
+                for hit in hits:
+                    debug_list.append(("set_fill_style", (PURPLE,)))
+                    debug_list.append(("draw_circle", (hit.x, hit.y, 2)))
+
+            if len(hits) == 0:  # nothing blocking! we can see the light
+                # Make sure not zero:
+                self.value += brightness * self.multiplier / (dist ** 2)
+                if debug_list is not None:
+                    debug_list.append(("strokeStyle", (PURPLE, 1)))
+                    debug_list.append(("draw_line", (x, y, p[0], p[1])))
 
     def draw(self, backend):
         backend.set_fill_style(YELLOW)
         backend.draw_circle(self.position[0], self.position[1], 2)
 
     def get_reading(self):
-        pass
-        # for light in robot.physics.lights: # for each light source:
-        #     x, y, brightness, light_rgb = light.x, light.y, light.brightness, light.rgb
-        #     # FIXME: never using light_rgb
-        #     seg = Segment((x,y), (gx, gy))
-        #     seg_length = seg.length()
-        #     a = -seg.angle() + PIOVER2
-        #     dist, hit, obj = robot.physics.castRay(robot, x, y, a, seg_length - .1,
-        #                                            ignoreRobot=self.ignore, rayType="light")
-        #     # scaled over distance, but not zero:
-        #     dist_to_light = min(max(seg_length, min_dist_meters), self.maxRange) / self.maxRange
-        #     min_scaled_d = min_dist_meters/self.maxRange
-        #     if self.lightMode == "ambient":
-        #         maxValueAmbient = 1.0 / min_scaled_d
-        #         intensity = (1.0 / dist_to_light) / maxValueAmbient
-        #     elif self.lightMode == "direct":
-        #         maxValueIntensity = 1.0 / (min_scaled_d ** 2)
-        #         intensity = (1.0 / (dist_to_light ** 2)) / maxValueIntensity
-        #     elif self.lightMode == "linear":
-        #         intensity = 1.0 - dist_to_light
-        #     if hit:
-        #         intensity /= 2.0 # cut in half if in shadow
-        #     sum += intensity * brightness
-        #     if not hit: # no hit means it has a clear shot:
-        #         if robot.display["devices"] == 1:
-        #             robot.drawRay("light", x, y, gx, gy, "orange")
-        #     else:
-        #         if robot.display["devices"] == 1:
-        #             robot.drawRay("lightBlocked", x, y, hit[0], hit[1], "purple")
-        # self.scan[i] = sum
+        return self.value
+
+    def watch(self):
+        from ..widgets import TextWatcher
+
+        watcher = TextWatcher(self, "value", "Light:")
+        self.robot.watchers.append(watcher)
+        return watcher.widget

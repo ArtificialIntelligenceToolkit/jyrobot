@@ -54,20 +54,20 @@ class Bulb:
     Class representing lights in the world.
     """
 
-    def __init__(self, color, x, y, z, power):
+    def __init__(self, color, x, y, z, brightness):
         self.color = Color(color)
         self.x = x
         self.y = y
         self.z = z
-        self.power = power
+        self.brightness = brightness
 
     def __repr__(self):
-        return "Bulb(color:%r, x:%r, y:%r, z:%r, power:%r)" % (
+        return "Bulb(color:%r, x:%r, y:%r, z:%r, brightness:%r)" % (
             self.color,
             self.x,
             self.y,
             self.z,
-            self.power,
+            self.brightness,
         )
 
 
@@ -270,7 +270,7 @@ class World:
             )
 
         for bulb in config.get("bulbs", []):
-            # bulbs are {x, y, z, color, power}
+            # bulbs are {x, y, z, color, brightness}
             self.add_bulb(Bulb(**bulb))
 
         ## Create robot, and add to world:
@@ -349,7 +349,7 @@ class World:
                     "x": bulb.x,
                     "y": bulb.y,
                     "z": bulb.z,
-                    "power": bulb.power,
+                    "brightness": bulb.brightness,
                 }
             )
 
@@ -792,7 +792,7 @@ class World:
                 c = bulb.color
                 self.backend.noStroke()
                 self.backend.set_fill(c)
-                self.backend.draw_circle(bulb.x, bulb.y, bulb.power * 5)
+                self.backend.draw_circle(bulb.x, bulb.y, bulb.brightness * 5)
 
             ## Draw borders:
             for wall in self.walls:
