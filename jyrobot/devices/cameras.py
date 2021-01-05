@@ -24,9 +24,11 @@ class Camera:
         self.from_json(config)
 
     def initialize(self):
+        # FIXME: camera is fixed at (0,0) facing forward
         self.type = "camera"
         self.time = 0.0
         self.cameraShape = [256, 128]
+        self.max_range = 1000
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = 0.5
         self.sizeFadeWithDistance = 1.0
@@ -54,6 +56,8 @@ class Camera:
             self.reflectSky = config["reflectSky"]
         if "angle" in config:
             self.set_fov(config["angle"])  # degrees
+        if "max_range" in config:
+            self.max_range = config["max_range"]
 
     def to_json(self):
         return {
@@ -65,6 +69,7 @@ class Camera:
             "reflectGround": self.reflectGround,
             "reflectSky": self.reflectSky,
             "angle": self.angle * 180 / math.pi,  # save in degrees
+            "max_range": self.max_range,
         }
 
     def __repr__(self):
@@ -102,12 +107,51 @@ class Camera:
         self.cameraShape[1] = height
         self.reset()
 
+    def _get_visible_area(self):
+        """
+        What are the ranges of the field of view?
+        Return a list of (p1, p2) that represent lines
+        across the background, from front to back.
+        """
+        all_points = []
+        for angle in [self.angle / 2, -self.angle / 2]:
+            points = []
+            dx, dy = self.robot.rotate_around(0, 0, 1, self.robot.direction + angle)
+            cx, cy = self.robot.x, self.robot.y
+            x, y = cx, cy
+            for i in range(self.max_range):
+                points.append((x, y))
+                x += dx
+                y += dy
+            all_points.append(points)
+        return zip(*all_points)
+
     def update(self, debug_list=None):
         """
         Cameras operate in a lazy way: they don't actually update
         until needed because they are so expensive.
         """
-        pass
+        if debug_list is not None:
+            debug_list.append(("set_stroke_style", (Color("white"),)))
+            p = self.robot.rotate_around(
+                self.robot.x,
+                self.robot.y,
+                self.max_range,
+                self.robot.direction + self.angle / 2,
+            )
+            debug_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
+            p = self.robot.rotate_around(
+                self.robot.x,
+                self.robot.y,
+                self.max_range,
+                self.robot.direction - self.angle / 2,
+            )
+            debug_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
+
+            all_points = self._get_visible_area()
+            debug_list.append(("set_stroke_style", (Color("gray"),)))
+            for (p1, p2) in all_points:
+                debug_list.append(("draw_line", (p1[0], p1[1], p2[0], p2[1])))
 
     def _update(self):
         # Update timestamp:
@@ -122,6 +166,9 @@ class Camera:
             )
 
     def draw(self, backend):
+        """
+        Currently, cameras are fixed at 0,0 and face forwards.
+        """
         backend.set_fill(Color(0, 64, 0))
         backend.strokeStyle(None, 0)
         backend.draw_rect(5.0, -3.33, 1.33, 6.33)
@@ -133,6 +180,20 @@ class Camera:
             return hit.distance
         return float("inf")
 
+    def get_ground_color(self, area, i, j):
+        # # i is width ray (camera width), j is distance (height of camera/2, 64 to 128)
+        # dist = self.cameraShape[1] - j
+        # visible_width_points = area[dist]
+        # p1, p2 = visible_width_points
+        # # get a position i/width on line
+        # minx, maxx = sorted([p1[0], p2[0]])
+        # miny, maxy = sorted([p1[1], p2[1]])
+        # x = round((maxx - minx) * i/self.cameraShape[0] + minx)
+        # y = round((maxy - miny) * i/self.cameraShape[0] + miny)
+        # # find that pixel
+        # return Color(self.robot.world.ground_image_pixels[(x, y)])
+        return Color(0, 128, 0)
+
     def take_picture(self, type="color"):
         try:
             from PIL import Image
@@ -142,6 +203,7 @@ class Camera:
 
         # Lazy; only get the data when we need it:
         self._update()
+        area = list(self._get_visible_area())
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
         pic.__add__ = lambda other: print("other")
         pic_pixels = pic.load()
@@ -207,7 +269,7 @@ class Camera:
                         else:
                             color = Color(0)
                     elif type == "color":
-                        color = Color(0, 128, 0)
+                        color = self.get_ground_color(area, i, j)
                     else:
                         color = Color(128 / 3)
                     pic_pixels[i, j] = color.to_tuple()

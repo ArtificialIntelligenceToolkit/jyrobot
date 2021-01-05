@@ -102,6 +102,9 @@ class PILBackend(Backend):
 
     # High-level API:
 
+    def draw_image(self, image, x, y):
+        self.image.paste(image, (x, y))
+
     def get_color(self, color):
         if isinstance(color, Color):
             return color.to_tuple()

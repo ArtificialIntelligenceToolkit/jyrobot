@@ -29,6 +29,7 @@ from .utils import (
     distance_point_to_line,
     format_time,
     json_dump,
+    load_image,
     progress_bar,
 )
 
@@ -205,6 +206,9 @@ class World:
         self.boundary_wall_width = 1
         self.boundary_wall_color = Color(128, 0, 128)
         self.ground_color = Color(0, 128, 0)
+        self.ground_image_filename = None
+        self.ground_image = None
+        self.ground_image_pixels = None
         self.walls = []
         self.bulbs = []
         self.complexity = 0
@@ -257,6 +261,8 @@ class World:
             self.boundary_wall_width = config["boundary_wall_width"]
         if "ground_color" in config:
             self.ground_color = Color(config["ground_color"])
+        if "ground_image_filename" in config:
+            self.set_ground_image(config["ground_image_filename"], show=False)
 
         self.add_boundary_walls()
 
@@ -330,6 +336,7 @@ class World:
             "boundary_wall_color": str(self.boundary_wall_color),
             "boundary_wall_width": self.boundary_wall_width,
             "ground_color": str(self.ground_color),
+            "ground_image_filename": self.ground_image_filename,
             "walls": [],
             "bulbs": [],
             "robots": [],
@@ -390,6 +397,22 @@ class World:
             json_dump(self.to_json(), fp, sort_keys=True, indent=4)
         self.config["filename"] = filename
         # Now you can use save():
+
+    def set_ground_image(self, filename, show=True):
+        """
+        Set the background image
+        """
+        self.ground_image_filename = filename
+        self.ground_image = load_image(
+            self.ground_image_filename,
+            round(self.width * self.scale),
+            round(self.height * self.scale),
+        )
+        if self.ground_image:
+            self.ground_image_pixels = self.ground_image.load()
+        if show:
+            self.update(show=False)
+            self.draw()  # force
 
     def set_scale(self, scale):
         """
@@ -746,8 +769,11 @@ class World:
         with self.backend:
             self.backend.clear()
             self.backend.noStroke()
-            self.backend.set_fill(self.ground_color)
-            self.backend.draw_rect(0, 0, self.width, self.height)
+            if self.ground_image is not None:
+                self.backend.draw_image(self.ground_image, 0, 0)
+            else:
+                self.backend.set_fill(self.ground_color)
+                self.backend.draw_rect(0, 0, self.width, self.height)
             ## Draw walls:
             for wall in self.walls:
                 if len(wall.lines) >= 1 and wall.robot is None:

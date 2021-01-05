@@ -167,6 +167,37 @@ def load_world(filename=None):
     return None
 
 
+def load_image(filename, width=None, height=None):
+    from PIL import Image
+
+    pathname = find_resource(filename)
+    if pathname is not None:
+        image = Image.open(pathname)
+        if width is not None and height is not None:
+            image = image.resize((width, height))
+        return image
+
+
+def find_resource(filename=None):
+    if filename is None:
+        print("Searching for jyrobot files...")
+        for path in PATHS:
+            files = sorted(glob.glob(os.path.join(path, "*.*")))
+            print("Directory:", path)
+            if len(files) > 0:
+                for filename in files:
+                    print("    %r" % filename)
+            else:
+                print("    no files found")
+    else:
+        for path in PATHS:
+            path_filename = os.path.abspath(os.path.join(path, filename))
+            if os.path.exists(path_filename):
+                return path_filename
+        print("No such file found: %r" % filename)
+    return None
+
+
 def image_to_png(image):
     with io.BytesIO() as fp:
         image.save(fp, format="png")

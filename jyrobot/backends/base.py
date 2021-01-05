@@ -94,6 +94,9 @@ class Backend:
 
     # HIGH-LEVEL Drawing API
 
+    def draw_image(self, image, x, y):
+        pass
+
     def draw_lines(self, points, stroke_style=None):
         if stroke_style is not None:
             self.set_stroke_style(stroke_style)

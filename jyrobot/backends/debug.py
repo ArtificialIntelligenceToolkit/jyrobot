@@ -32,6 +32,11 @@ class DebugBackend(Backend):
 
     # High-level API (jyrobot draw API)
 
+    def draw_image(self, image, x, y):
+        if self.show_high:
+            print("draw_image%r" % ((image, x, y)))
+        super().draw_image(image, x, y)
+
     def draw_lines(self, points, stroke_style=None):
         if self.show_high:
             print("draw_lines%r" % ((points, stroke_style),))
