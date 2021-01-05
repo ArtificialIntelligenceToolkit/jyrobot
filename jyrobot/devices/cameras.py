@@ -111,15 +111,17 @@ class Camera:
         """
         What are the ranges of the field of view?
         Return a list of (p1, p2) that represent lines
-        across the background, from front to back.
+        across the background, from front to back,
+        down the edges of the field of view.
         """
+        step = 1
         all_points = []
         for angle in [self.angle / 2, -self.angle / 2]:
             points = []
-            dx, dy = self.robot.rotate_around(0, 0, 1, self.robot.direction + angle)
+            dx, dy = self.robot.rotate_around(0, 0, step, self.robot.direction + angle)
             cx, cy = self.robot.x, self.robot.y
             x, y = cx, cy
-            for i in range(self.max_range):
+            for i in range(0, self.max_range, step):
                 points.append((x, y))
                 x += dx
                 y += dy
@@ -147,11 +149,6 @@ class Camera:
                 self.robot.direction - self.angle / 2,
             )
             debug_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
-
-            all_points = self._get_visible_area()
-            debug_list.append(("set_stroke_style", (Color("gray"),)))
-            for (p1, p2) in all_points:
-                debug_list.append(("draw_line", (p1[0], p1[1], p2[0], p2[1])))
 
     def _update(self):
         # Update timestamp:
@@ -181,18 +178,35 @@ class Camera:
         return float("inf")
 
     def get_ground_color(self, area, i, j):
-        # # i is width ray (camera width), j is distance (height of camera/2, 64 to 128)
-        # dist = self.cameraShape[1] - j
-        # visible_width_points = area[dist]
-        # p1, p2 = visible_width_points
-        # # get a position i/width on line
-        # minx, maxx = sorted([p1[0], p2[0]])
-        # miny, maxy = sorted([p1[1], p2[1]])
-        # x = round((maxx - minx) * i/self.cameraShape[0] + minx)
-        # y = round((maxy - miny) * i/self.cameraShape[0] + miny)
-        # # find that pixel
-        # return Color(self.robot.world.ground_image_pixels[(x, y)])
-        return Color(0, 128, 0)
+        if self.robot.world.ground_image is not None and area is not None:
+            # i is width ray (camera width),
+            # j is distance (height of camera/2, 64 to 128)
+            dist = round(
+                ((self.cameraShape[1] - j) / self.cameraShape[1] / 2) * len(area)
+            )
+            visible_width_points = area[dist]
+            p1, p2 = visible_width_points
+            # get a position i/width on line
+            minx, maxx = sorted([p1[0], p2[0]])
+            miny, maxy = sorted([p1[1], p2[1]])
+            x = round(
+                ((maxx - minx) * i / self.cameraShape[0] + minx)
+                * self.robot.world.scale
+            )
+            y = round(
+                ((maxy - miny) * i / self.cameraShape[0] + miny)
+                * self.robot.world.scale
+            )
+            # find that pixel
+            if (0 <= x < (self.robot.world.width - 1) * self.robot.world.scale) and (
+                0 <= y < (self.robot.world.height - 1) * self.robot.world.scale
+            ):
+                # FIXME: sample from pixels to get average color
+                c = Color(*self.robot.world.ground_image_pixels[(x, y)])
+                # self.robot.world.ground_image_pixels[(x, y)] = (0, 0, 0)
+                return c
+
+        return self.robot.world.ground_color
 
     def take_picture(self, type="color"):
         try:
@@ -203,7 +217,10 @@ class Camera:
 
         # Lazy; only get the data when we need it:
         self._update()
-        area = list(self._get_visible_area())
+        if self.robot.world.ground_image is not None:
+            area = list(self._get_visible_area())
+        else:
+            area = None
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
         pic.__add__ = lambda other: print("other")
         pic_pixels = pic.load()
@@ -219,6 +236,7 @@ class Camera:
             high = None
             hcolor = None
             if hit:
+                # FIXME: need to figure out what height would actually be at this distance
                 distance_ratio = max(min(1.0 - hit.distance / size, 1.0), 0.0)
                 s = max(
                     min(1.0 - hit.distance / size * self.sizeFadeWithDistance, 1.0), 0.0
