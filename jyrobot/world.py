@@ -261,10 +261,7 @@ class World:
             self.boundary_wall_width = config["boundary_wall_width"]
         if "ground_color" in config:
             self.ground_color = Color(config["ground_color"])
-        if (
-            "ground_image_filename" in config
-            and config["ground_image_filename"] is not None
-        ):
+        if "ground_image_filename" in config:
             self.set_ground_image(config["ground_image_filename"], show=False)
 
         self.add_boundary_walls()
@@ -406,12 +403,16 @@ class World:
         Set the background image
         """
         self.ground_image_filename = filename
-        self.ground_image = load_image(
-            self.ground_image_filename,
-            round(self.width * self.scale),
-            round(self.height * self.scale),
-        )
-        if self.ground_image:
+        if self.ground_image_filename is not None:
+            self.ground_image = load_image(
+                self.ground_image_filename,
+                round(self.width * self.scale),
+                round(self.height * self.scale),
+            )
+        else:
+            self.ground_image = None
+
+        if self.ground_image is not None:
             self.ground_image_pixels = self.ground_image.load()
         if show:
             self.update(show=False)
