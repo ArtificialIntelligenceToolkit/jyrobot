@@ -14,11 +14,44 @@ from ..utils import Color
 
 
 class Camera:
-    """
-    A camera device.
-    """
+    def __init__(
+        self,
+        width=256,
+        height=128,
+        angle=60,
+        colorsFadeWithDistance=0.5,
+        sizeFadeWithDistance=1.0,
+        reflectGround=True,
+        reflectSky=False,
+        max_range=1000,
+        **kwargs
+    ):
+        """
+        A camera device.
 
-    def __init__(self, **config):
+        Args:
+            * width: (int) width of camera in pixels
+            * height: (int) height of camera in pixels
+            * angle: (number) width of camera field of view in degrees. Can be
+                180 or even 360 for wide angle cameras.
+            * colorsFadeWithDistance: (bool) colors get darker with distance?
+            * sizeFadeWithDistance: (bool) size get smaller with distance?
+            * reflectGround: (bool) ground reflects for 3D point cloud
+            * reflectSky: (bool) sky reflects for 3D point cloud
+            * max_range: (int) maximum range of camera
+
+        Note: currently the camera faces forward. TODO.
+        """
+        config = {
+            "width": width,
+            "height": height,
+            "angle": angle,
+            "colorsFadeWithDistance": colorsFadeWithDistance,
+            "sizeFadeWithDistance": sizeFadeWithDistance,
+            "reflectGround": reflectGround,
+            "reflectSky": reflectSky,
+            "max_range": max_range,
+        }
         self.robot = None
         self.initialize()
         self.from_json(config)

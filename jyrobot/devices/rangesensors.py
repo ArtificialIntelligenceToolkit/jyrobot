@@ -14,14 +14,25 @@ from ..utils import Color, arange, distance
 
 
 class RangeSensor:
-    """
-    A range sensor that reads "reading" when
-    no obstacle has been detected. "reading" is
-    a ratio of distance/max, and "distance" is
-    the reading in CM.
-    """
+    def __init__(self, position=(8, 0), direction=0, max=20, width=1.0, **kwargs):
+        """
+        A range sensor that reads "reading" when no obstacle has been
+        detected. "reading" is a ratio of distance/max, and "distance"
+        is the reading in CM.
 
-    def __init__(self, **config):
+        Args:
+            * position: (int, int) the location on the robot in (x, y)
+            * direction: (number) the direction in degrees the sensor is
+                facing.
+            * max: (number) max distance in CM that the range sensor can sense
+            * width: (number) 0 for laser, or wider for sonar
+        """
+        config = {
+            "position": position,
+            "direction": direction,
+            "max": max,
+            "width": width,
+        }
         self.robot = None
         self.initialize()
         self.from_json(config)

@@ -93,8 +93,21 @@ class World:
         **kwargs
     ):
         """
-        Takes a world JSON config dict (as **) or
-        any keyword from the config.
+        The Jyrobot simulator world.
+
+        Args:
+            * width: (int) width of world in pixels
+            * height: (int) height of world in pixels
+            * seed: (int) random number generator seed
+            * scale: (number) value to use in drawing the world
+            * boundary_wall: (bool) draw a boundary around the world?
+            * boundary_wall_color: (str) color name of boundary wall
+            * boundary_wall_width: (int) width of boundary wall
+            * ground_color: (str) color name
+            * ground_image_filename: (str) image file used for backgound
+            * filename: (str) name of json world file
+
+        You can also pass any valid item from the world config settings.
         """
         # For faster-than real time display with synchronous backends,
         # keep processing time below this percentage of throttle_period:
@@ -116,7 +129,9 @@ class World:
         config["bulbs"] = kwargs.pop("bulbs", [])
         config["robots"] = kwargs.pop("robots", [])
         if len(kwargs) != 0:
-            raise AttributeError("unknown arguments: %s" % list(kwargs.keys()))
+            raise AttributeError(
+                "unknown arguments for World: %s" % list(kwargs.keys())
+            )
         self.show_throttle_percentage = 0.40
         self.time_decimal_places = 1
         self.throttle_period = 0.1
@@ -584,6 +599,7 @@ class World:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
+            self.save()
         else:
             print("Can't add the same robot to a world more than once.")
 

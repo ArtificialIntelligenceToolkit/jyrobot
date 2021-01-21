@@ -22,7 +22,55 @@ class Robot:
     The base robot class.
     """
 
-    def __init__(self, **config):
+    def __init__(
+        self,
+        x=0,
+        y=0,
+        direction=0,
+        color="red",
+        name="Robbie",
+        do_trace=True,
+        height=0.25,
+        **kwargs
+    ):
+        """
+        Base robot class. You'll need to define a body.
+        """
+        config = {
+            "x": x,
+            "y": y,
+            "direction": direction,
+            "color": color,
+            "name": name,
+            "do_trace": do_trace,
+            "height": height,
+        }
+        for item in [
+            "state",
+            "va",
+            "vx",
+            "vy",
+            "tva",
+            "tvx",
+            "tvy",
+            "va_max",
+            "vx_max",
+            "vy_max",
+            "va_ramp",
+            "vx_ramp",
+            "vy_ramp",
+            "image_data",
+            "body",
+            "devices",
+        ]:
+            arg = kwargs.pop(item, None)
+            if arg is not None:
+                config[item] = arg
+        if len(kwargs) != 0:
+            raise AttributeError(
+                "unknown arguments for Robot: %s" % list(kwargs.keys())
+            )
+
         self.world = None
         self._devices = []
         self.initialize()
@@ -750,13 +798,76 @@ SCRIBBLER_CONFIG = {
         ["rectangle", "black", [-3.33, 6, 6.33, 1.67]],
         ["polygon", "black", [[0, 0], [-2, 2], [2, 0], [-2, -2]]],
     ],
-    "color": "#FF0000FF",
-    "name": "Scribbie",
 }
 
 
 class Scribbler(Robot):
-    def __init__(self, **config):
+    def __init__(
+        self,
+        x=0,
+        y=0,
+        direction=0,
+        color="red",
+        name="Scribbie",
+        do_trace=True,
+        height=0.25,
+        **kwargs
+    ):
+        """
+        A small little two-wheeled robot. x,y should fit in the world that
+        you will place the robot into (or use x=0, y=0 to put in a random place).
+
+        Args:
+            * x: (int) starting location in the horizontal direction. Leave 0 to
+                place in a random location.
+            * y: (int) starting location in the horizontal direction. Leave 0 to
+                place in a random location.
+            * direction: (number) starting angle in degrees.
+            * color:
+            * name: (str) a name to give your robot
+            * do_trace: (bool) should the robot leave a trace?
+            * height: (number) height of robot (use number < 1)
+
+        Any of the other valid config settings can also be passed in, including:
+            * state: (dict) serializable memory for a robot
+            * va, vx, vy: (numbers) velocities
+            * tva, tvx, tvy: (numbers) target velocities
+            * va_max, vx_max, vy_max: (numbers) max velocities
+            * va_ramp, vx_ramp, vy_ramp: (numbers) linear accelerations
+            * image_data: ["dataset-name", index] to use a 3D set of images
+            * body: data structure that defines a robot body
+            * devices: list of serialized devices
+        """
+        config = {
+            "x": x,
+            "y": y,
+            "direction": direction,
+            "color": color,
+            "name": name,
+            "do_trace": do_trace,
+            "height": height,
+        }
+        for item in [
+            "state",
+            "va",
+            "vx",
+            "vy",
+            "tva",
+            "tvx",
+            "tvy",
+            "va_max",
+            "vx_max",
+            "vy_max",
+            "va_ramp",
+            "vx_ramp",
+            "vy_ramp",
+            "image_data",
+            "body",
+            "devices",
+        ]:
+            arg = kwargs.pop(item, None)
+            if arg is not None:
+                config[item] = arg
         defaults = SCRIBBLER_CONFIG.copy()
         defaults.update(config)
         super().__init__(**defaults)

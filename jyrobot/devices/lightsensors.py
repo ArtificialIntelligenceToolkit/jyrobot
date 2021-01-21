@@ -15,7 +15,8 @@ from ..utils import distance
 
 
 class LightSensor:
-    def __init__(self, **config):
+    def __init__(self, position=(0, 0), **kwargs):
+        config = {"position": position}
         self.robot = None
         self.initialize()
         self.from_json(config)
