@@ -24,6 +24,7 @@ class Camera:
         reflectGround=True,
         reflectSky=False,
         max_range=1000,
+        name="camera",
         **kwargs
     ):
         """
@@ -39,6 +40,7 @@ class Camera:
             * reflectGround: (bool) ground reflects for 3D point cloud
             * reflectSky: (bool) sky reflects for 3D point cloud
             * max_range: (int) maximum range of camera
+            * name: (str) the name of the camera
 
         Note: currently the camera faces forward. TODO.
         """
@@ -51,6 +53,7 @@ class Camera:
             "reflectGround": reflectGround,
             "reflectSky": reflectSky,
             "max_range": max_range,
+            "name": name,
         }
         self.robot = None
         self.initialize()
@@ -62,6 +65,7 @@ class Camera:
         self.time = 0.0
         self.cameraShape = [256, 128]
         self.max_range = 1000
+        self.name = "camera"
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = 0.5
         self.sizeFadeWithDistance = 1.0
@@ -91,6 +95,8 @@ class Camera:
             self.set_fov(config["angle"])  # degrees
         if "max_range" in config:
             self.max_range = config["max_range"]
+        if "name" in config:
+            self.name = config["name"]
 
     def to_json(self):
         return {
@@ -103,10 +109,12 @@ class Camera:
             "reflectSky": self.reflectSky,
             "angle": self.angle * 180 / math.pi,  # save in degrees
             "max_range": self.max_range,
+            "name": self.name,
         }
 
     def __repr__(self):
-        return "<Camera size=(%r,%r), angle=%r>" % (
+        return "<Camera %r size=(%r,%r), angle=%r>" % (
+            self.name,
             self.cameraShape[0],
             self.cameraShape[1],
             round(self.angle * 180 / math.pi, 2),
@@ -126,19 +134,6 @@ class Camera:
 
     def step(self, time_step):
         pass
-
-    def set_fov(self, angle):
-        # given in degrees
-        # save in radians
-        # scale = min(max(angle / 6.0, 0.0), 1.0)
-        self.angle = angle * math.pi / 180.0
-        # self.sizeFadeWithDistance = scale
-        self.reset()
-
-    def set_size(self, width, height):
-        self.cameraShape[0] = width
-        self.cameraShape[1] = height
-        self.reset()
 
     def _get_visible_area(self):
         """
@@ -445,3 +440,106 @@ class Camera:
                         ]
                     )
         return points
+
+    def set_fov(self, angle):
+        """
+        Set the field of view angle in degrees of the camera.
+
+        Args:
+            * angle: (number) angle in degrees of field of view
+        """
+        # given in degrees
+        # save in radians
+        # scale = min(max(angle / 6.0, 0.0), 1.0)
+        self.angle = angle * math.pi / 180.0
+        # self.sizeFadeWithDistance = scale
+        self.reset()
+
+    def set_size(self, width, height):
+        """
+        Set the height and width of the camera in pixels.
+
+        Args:
+            * width: (int) width of camera in pixels
+            * height: (int) height of camera in pixels
+        """
+        self.cameraShape[0] = width
+        self.cameraShape[1] = height
+        self.reset()
+
+    def set_angle(self, angle):
+        """
+        Set the field of view angle of the camera.
+
+        Args:
+            * angle: (number) angle in degrees of field of view
+        """
+        self.set_fov(angle)
+
+    def set_max(self, max_range):
+        """
+        Set the maximum distance the camera can see.
+
+        Args:
+            * max_range: (number) distance (in CM) the camera can see
+        """
+        self.max_range = max_range
+
+    def set_width(self, width):
+        """
+        Set the width of the camera in pixels.
+
+        Args:
+            * width: (int) width of camera in pixels
+        """
+        self.cameraShape[0] = width
+        self.reset()
+
+    def set_height(self, height):
+        """
+        Set the height of the camera in pixels.
+
+        Args:
+            * height: (int) height of camera in pixels
+        """
+        self.cameraShape[1] = height
+        self.reset()
+
+    def set_name(self, name):
+        """
+        Set the name of the camera.
+
+        Args:
+            * name: (str) the name of the camera
+        """
+        self.name = name
+
+    def get_name(self):
+        """
+        Get the name of the camera.
+        """
+        return self.name
+
+    def get_width(self):
+        """
+        Get the width in pixels of the camera.
+        """
+        return self.cameraShape[0]
+
+    def get_height(self):
+        """
+        Get the height in pixels of the camera.
+        """
+        return self.cameraShape[1]
+
+    def get_angle(self):
+        """
+        Get the field of view angle in degrees.
+        """
+        return self.angle * 180 / math.pi
+
+    def get_max(self):
+        """
+        Get the maximum distance in CM the camera can see.
+        """
+        return self.max_range

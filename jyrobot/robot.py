@@ -450,6 +450,13 @@ class Robot:
         """
         return self.get_dataset_image(self.image_data[1], degrees)
 
+    def get_pose(self):
+        """
+        Get the pose of the robot (x, y, direction) where direction
+        is in degrees.
+        """
+        return (self.x, self.y, self.direction * 180 / math.pi)
+
     def cast_ray(self, x1, y1, a, maxRange):
         """
         Cast a ray into this world and see what it hits.
