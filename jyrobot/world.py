@@ -78,13 +78,45 @@ class World:
     The Jyrobot simulator world.
     """
 
-    def __init__(self, **config):
+    def __init__(
+        self,
+        width=500,
+        height=250,
+        seed=0,
+        scale=3.0,
+        boundary_wall=True,
+        boundary_wall_color="purple",
+        boundary_wall_width=1,
+        ground_color="green",
+        ground_image_filename=None,
+        filename=None,
+        **kwargs
+    ):
         """
         Takes a world JSON config dict (as **) or
         any keyword from the config.
         """
         # For faster-than real time display with synchronous backends,
         # keep processing time below this percentage of throttle_period:
+        config = {
+            "width": width,
+            "height": height,
+            "seed": seed,
+            "scale": scale,
+            "boundary_wall": boundary_wall,
+            "boundary_wall_width": boundary_wall_width,
+            "boundary_wall_color": boundary_wall_color,
+            "ground_color": ground_color,
+        }
+        if filename is not None:
+            config["filename"] = filename
+        if ground_image_filename is not None:
+            config["ground_image_filename"] = ground_image_filename
+        config["walls"] = kwargs.pop("walls", [])
+        config["bulbs"] = kwargs.pop("bulbs", [])
+        config["robots"] = kwargs.pop("robots", [])
+        if len(kwargs) != 0:
+            raise AttributeError("unknown arguments: %s" % list(kwargs.keys()))
         self.show_throttle_percentage = 0.40
         self.time_decimal_places = 1
         self.throttle_period = 0.1
