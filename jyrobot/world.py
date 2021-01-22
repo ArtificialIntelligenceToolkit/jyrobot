@@ -488,6 +488,7 @@ class World:
 
     def watch(self):
         self.step_display = "notebook"
+        self.update()
         return self.backend.watch()
 
     def record(self):

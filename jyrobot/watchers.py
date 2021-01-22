@@ -8,6 +8,7 @@
 #
 # *************************************
 
+import json
 import os
 import threading
 import time
@@ -23,6 +24,7 @@ from ipywidgets import (
     Layout,
     Output,
     Text,
+    Textarea,
     VBox,
 )
 
@@ -30,13 +32,16 @@ from .utils import Point, arange, image_to_gif, image_to_png, progress_bar
 from .world import World
 
 
-def make_attr_widget(map, title, attrs, labels):
+def make_attr_widget(obj, map, title, attrs, labels):
     box = VBox()
     children = []
     if title is not None:
         children.append(Label(value=title))
     for i, attr in enumerate(attrs):
-        widget = Text(description=labels[i])
+        if hasattr(obj, attr) and isinstance(getattr(obj, attr), dict):
+            widget = Textarea(description=labels[i])
+        else:
+            widget = Text(description=labels[i])
         map[labels[i]] = widget
         children.append(widget)
     box.children = children
@@ -83,9 +88,9 @@ class RobotWatcher(Watcher):
         self.robot = robot
         self.size = size
         self.map = {}
-        self.attrs = ["name", "x", "y", "direction", "stalled"]
+        self.attrs = ["name", "x", "y", "direction", "stalled", "state"]
         self.labels = ["%s:" % attr.title() for attr in self.attrs]
-        widget = make_attr_widget(self.map, None, self.attrs, self.labels)
+        widget = make_attr_widget(self.robot, self.map, None, self.attrs, self.labels)
         image = Image(layout=Layout(width="-webkit-fill-available", height="auto"))
         widget.children = [image] + list(widget.children)
         self.widget = widget
@@ -109,7 +114,12 @@ class RobotWatcher(Watcher):
         picture = picture.crop(rectangle)
         self.widget.children[0].value = image_to_png(picture)
         for i in range(len(self.attrs)):
-            self.map[self.labels[i]].value = str(getattr(self.robot, self.attrs[i]))
+            attr = getattr(self.robot, self.attrs[i])
+            if isinstance(attr, dict):
+                string = json.dumps(attr, sort_keys=True, indent=2)
+            else:
+                string = str(attr)
+            self.map[self.labels[i]].value = string
 
     def update(self):
         pass
@@ -128,7 +138,7 @@ class AttributesWatcher(Watcher):
         self.labels = labels
         if self.labels is None:
             self.labels = ["%s:" % attr for attr in attrs]
-        self.widget = make_attr_widget(self.map, title, attrs, labels)
+        self.widget = make_attr_widget(self.obj, self.map, title, attrs, labels)
         self.update()
         self.draw()
 
