@@ -84,7 +84,11 @@ class Robot:
             search_groups = re.match(r"(.*)-(\d*)", item)
             if search_groups:
                 search_type = search_groups[1].lower()
-                search_index = int(search_groups[2])
+                if search_groups[2].isdigit():
+                    search_index = int(search_groups[2])
+                else:
+                    search_type = item
+                    search_index = 1
             else:
                 search_type = item.lower()
                 search_index = 1
@@ -94,8 +98,12 @@ class Robot:
                 device_name = device.name.lower()
                 device_index = None
                 if "-" in device_type:
-                    device_type, device_index = device_type.rsplit("-", 1)
-                    device_index = int(device_index)
+                    device_prefix, device_index = device_type.rsplit("-", 1)
+                    if device_index.isdigit():
+                        device_type = device_prefix
+                        device_index = int(device_index)
+                    else:
+                        device_index = 1
                 if device_type not in type_map:
                     type_map[device_type] = 1
                 else:
@@ -461,7 +469,7 @@ class Robot:
         Get the pose of the robot (x, y, direction) where direction
         is in degrees.
         """
-        return (self.x, self.y, self.direction * 180 / math.pi)
+        return (self.x, self.y, (self.direction * 180 / math.pi) % 360)
 
     def cast_ray(self, x1, y1, a, maxRange):
         """

@@ -154,7 +154,11 @@ class World:
             search_groups = re.match(r"(.*)-(\d*)", item)
             if search_groups:
                 search_name = search_groups[1].lower()
-                search_index = int(search_groups[2])
+                if search_groups[2].isdigit():
+                    search_index = int(search_groups[2])
+                else:
+                    search_name = item
+                    search_index = 1
             else:
                 search_name = item.lower()
                 search_index = 1
@@ -163,8 +167,12 @@ class World:
                 robot_name = robot.name.lower()
                 robot_index = None
                 if "-" in robot_name:
-                    robot_name, robot_index = robot_name.rsplit("-", 1)
-                    robot_index = int(robot_index)
+                    robot_prefix, robot_index = robot_name.rsplit("-", 1)
+                    if robot_index.isdigit():
+                        robot_name = robot_prefix
+                        robot_index = int(robot_index)
+                    else:
+                        robot_index = 1
                 if robot_name not in name_map:
                     name_map[robot_name] = 1
                 else:
