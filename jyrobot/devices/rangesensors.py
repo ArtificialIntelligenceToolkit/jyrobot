@@ -62,7 +62,12 @@ class RangeSensor:
             return None
 
         watcher = AttributesWatcher(
-            self, "reading", "distance", title=title, labels=["Reading:", "Distance:"]
+            self,
+            "name",
+            "reading",
+            "distance",
+            title=title,
+            labels=["Name:", "Reading:", "Distance:"],
         )
         self.robot.world.watchers.append(watcher)
         return watcher.widget
