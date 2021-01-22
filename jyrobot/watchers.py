@@ -89,8 +89,17 @@ class RobotWatcher(Watcher):
         self.size = size
         self.show_robot = show_robot
         self.map = {}
-        self.attrs = ["name", "x", "y", "direction", "stalled", "state"]
-        self.labels = ["%s:" % attr.title() for attr in self.attrs]
+        self.attrs = ["name", "x", "y", "direction", "stalled", "tvx", "tva", "state"]
+        self.labels = [
+            "Name:",
+            "X:",
+            "Y:",
+            "Direction:",
+            "Stalled:",
+            "Trans vel:",
+            "Rotate vel:",
+            "State:",
+        ]
         widget = make_attr_widget(self.robot, self.map, None, self.attrs, self.labels)
         if self.show_robot:
             image = Image(layout=Layout(width="-webkit-fill-available", height="auto"))

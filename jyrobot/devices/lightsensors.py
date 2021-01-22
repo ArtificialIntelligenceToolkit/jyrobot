@@ -108,14 +108,16 @@ class LightSensor:
         """
         return self.value
 
-    def watch(self, label="Light:"):
+    def watch(self, title="Light Sensor:"):
         from ..watchers import AttributesWatcher
 
         if self.robot is None or self.robot.world is None:
             print("ERROR: can't watch until added to robot, and robot is in world")
             return None
 
-        watcher = AttributesWatcher(self, "name", "value", labels=["Name:", label])
+        watcher = AttributesWatcher(
+            self, "name", "value", title=title, labels=["Name:", "Light:"]
+        )
         self.robot.world.watchers.append(watcher)
         return watcher.widget
 
