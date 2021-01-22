@@ -609,6 +609,7 @@ class World:
             wall = Wall(robot.color, robot, *robot.bounding_lines)
             self.walls.append(wall)
             self.complexity = self.compute_complexity()
+            self.update()
             self.save()
         else:
             print("Can't add the same robot to a world more than once.")
