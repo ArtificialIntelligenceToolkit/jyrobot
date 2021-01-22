@@ -295,10 +295,10 @@ class Robot:
         self.world.watchers.append(plot)
         return plot
 
-    def watch(self, size=100):
+    def watch(self, size=100, show_robot=True):
         from .watchers import RobotWatcher
 
-        robot_watcher = RobotWatcher(self, size=size)
+        robot_watcher = RobotWatcher(self, size=size, show_robot=show_robot)
         self.world.watchers.append(robot_watcher)
         # Return the widget:
         return robot_watcher.watch()

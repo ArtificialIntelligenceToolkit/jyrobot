@@ -115,7 +115,7 @@ class LightSensor:
             print("ERROR: can't watch until added to robot, and robot is in world")
             return None
 
-        watcher = AttributesWatcher(self, "value", labels=[label])
+        watcher = AttributesWatcher(self, "name", "value", labels=["Name:", label])
         self.robot.world.watchers.append(watcher)
         return watcher.widget
 

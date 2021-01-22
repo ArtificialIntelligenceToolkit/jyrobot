@@ -83,16 +83,19 @@ class Watcher:
 
 
 class RobotWatcher(Watcher):
-    def __init__(self, robot, size=100):
+    def __init__(self, robot, size=100, show_robot=True):
         super().__init__()
         self.robot = robot
         self.size = size
+        self.show_robot = show_robot
         self.map = {}
         self.attrs = ["name", "x", "y", "direction", "stalled", "state"]
         self.labels = ["%s:" % attr.title() for attr in self.attrs]
         widget = make_attr_widget(self.robot, self.map, None, self.attrs, self.labels)
-        image = Image(layout=Layout(width="-webkit-fill-available", height="auto"))
-        widget.children = [image] + list(widget.children)
+        if self.show_robot:
+            image = Image(layout=Layout(width="-webkit-fill-available", height="auto"))
+            widget.children = [image] + list(widget.children)
+
         self.widget = widget
         self.update()
         self.draw()
@@ -102,17 +105,27 @@ class RobotWatcher(Watcher):
             print("This robot is not in a world")
             return
 
-        picture = self.robot.world.take_picture()
-        start_x = round(max(self.robot.x * self.robot.world.scale - self.size / 2, 0))
-        start_y = round(max(self.robot.y * self.robot.world.scale - self.size / 2, 0))
-        rectangle = (
-            start_x,
-            start_y,
-            min(start_x + self.size, self.robot.world.width * self.robot.world.scale),
-            min(start_y + self.size, self.robot.world.height * self.robot.world.scale),
-        )
-        picture = picture.crop(rectangle)
-        self.widget.children[0].value = image_to_png(picture)
+        if self.show_robot:
+            picture = self.robot.world.take_picture()
+            start_x = round(
+                max(self.robot.x * self.robot.world.scale - self.size / 2, 0)
+            )
+            start_y = round(
+                max(self.robot.y * self.robot.world.scale - self.size / 2, 0)
+            )
+            rectangle = (
+                start_x,
+                start_y,
+                min(
+                    start_x + self.size, self.robot.world.width * self.robot.world.scale
+                ),
+                min(
+                    start_y + self.size,
+                    self.robot.world.height * self.robot.world.scale,
+                ),
+            )
+            picture = picture.crop(rectangle)
+            self.widget.children[0].value = image_to_png(picture)
         for i in range(len(self.attrs)):
             attr = getattr(self.robot, self.attrs[i])
             if isinstance(attr, dict):
