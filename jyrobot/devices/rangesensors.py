@@ -97,7 +97,7 @@ class RangeSensor:
         return config
 
     def __repr__(self):
-        return "<RangeSensor %r angle=%r, range=%r, width=%r>" % (
+        return "<RangeSensor %r direction=%r, range=%r, width=%r>" % (
             self.name,
             round(self.direction * 180 / math.pi, 1),
             self.max,

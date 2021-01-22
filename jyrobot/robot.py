@@ -91,6 +91,7 @@ class Robot:
             for device in self._devices:
                 # update type_map
                 device_type = device.type.lower()
+                device_name = device.name.lower()
                 device_index = None
                 if "-" in device_type:
                     device_type, device_index = device_type.rsplit("-", 1)
@@ -102,6 +103,8 @@ class Robot:
                 if device_index is None:
                     device_index = type_map[device_type]
                 if search_type == device_type and search_index == device_index:
+                    return device
+                if search_type == device_name:
                     return device
         return None
 

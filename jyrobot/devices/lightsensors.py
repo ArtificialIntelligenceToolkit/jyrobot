@@ -15,14 +15,21 @@ from ..utils import distance
 
 
 class LightSensor:
-    def __init__(self, position=(0, 0), **kwargs):
-        config = {"position": position}
+    def __init__(self, position=(0, 0), name="light", **kwargs):
+        config = {
+            "position": position,
+            "name": name,
+        }
         self.robot = None
         self.initialize()
         self.from_json(config)
 
+    def __repr__(self):
+        return "<LightSensor %r position=%r>" % (self.name, self.position,)
+
     def initialize(self):
         self.type = "light"
+        self.name = "light"
         self.value = 0.0
         # FIXME: add to config
         self.multiplier = 1000  # CM
@@ -31,6 +38,8 @@ class LightSensor:
         self.dir_from_center = math.atan2(-self.position[0], self.position[1])
 
     def from_json(self, config):
+        if "name" in config:
+            self.name = config["name"]
         if "position" in config:
             self.position = config["position"]
             # Get location of sensor, doesn't change once position is set:
@@ -41,6 +50,7 @@ class LightSensor:
         config = {
             "class": self.__class__.__name__,
             "position": self.position,
+            "name": self.name,
         }
         return config
 
@@ -93,6 +103,9 @@ class LightSensor:
         backend.draw_circle(self.position[0], self.position[1], 2)
 
     def get_reading(self):
+        """
+        Get the light reading from the sensor.
+        """
         return self.value
 
     def watch(self, label="Light:"):
@@ -105,3 +118,20 @@ class LightSensor:
         watcher = AttributesWatcher(self, "value", labels=[label])
         self.robot.world.watchers.append(watcher)
         return watcher.widget
+
+    def set_position(self, position):
+        """
+        Set the position of the light sensor with respect to the center of the
+        robot.
+
+        Args:
+            * position: (list/tuple of length 2) represents [x, y] in CM from
+                center of robot
+        """
+        if len(position) != 2:
+            raise ValueError("position must be of length two")
+
+        self.position = position
+        # Get location of sensor, doesn't change once position is set:
+        self.dist_from_center = distance(0, 0, self.position[0], self.position[1])
+        self.dir_from_center = math.atan2(-self.position[0], self.position[1])
