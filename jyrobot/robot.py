@@ -269,7 +269,10 @@ class Robot:
             print("  This robot has no devices.")
         else:
             for i, device in enumerate(self._devices):
-                print("      device[%s or %r]: %r" % (i, device.type, device))
+                print(
+                    "      device[%s or %r or %r]: %r"
+                    % (i, device.type, device.name, device)
+                )
             print("  " + ("-" * 25))
 
     def plot(
