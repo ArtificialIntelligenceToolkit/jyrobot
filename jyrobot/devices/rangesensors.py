@@ -97,11 +97,12 @@ class RangeSensor:
         return config
 
     def __repr__(self):
-        return "<RangeSensor %r direction=%r, range=%r, width=%r>" % (
+        return "<RangeSensor %r direction=%r, range=%r, width=%r, position=%r>" % (
             self.name,
             round(self.direction * 180 / math.pi, 1),
             self.max,
             round(self.width * 180 / math.pi, 1),
+            self.position,
         )
 
     def step(self, time_step):
