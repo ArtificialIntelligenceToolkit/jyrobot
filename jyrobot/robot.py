@@ -31,6 +31,7 @@ class Robot:
         name="Robbie",
         do_trace=True,
         height=0.25,
+        max_trace_length=10,
         **kwargs
     ):
         """
@@ -44,6 +45,7 @@ class Robot:
             "name": name,
             "do_trace": do_trace,
             "height": height,
+            "max_trace_length": max_trace_length,
         }
         for item in [
             "state",
@@ -143,7 +145,7 @@ class Robot:
         self.do_trace = True
         self.trace = []
         self.body = []
-        self.max_trace_length = int(1 / 0.1 * 10)  # 10 seconds
+        self.max_trace_length = 10  # seconds
         self.x = 0  # cm
         self.y = 0  # cm
         self.height = 0.25
@@ -239,6 +241,9 @@ class Robot:
         if "color" in config:
             self._set_color(config["color"])
 
+        if "max_trace_length" in config:
+            self.max_trace_length = config["max_trace_length"]
+
         if "body" in config:
             self.body[:] = config["body"]
             self.init_boundingbox()
@@ -296,12 +301,28 @@ class Robot:
         return plot
 
     def watch(self, size=100, show_robot=True):
+        """
+        Watch the robot stats with live updates.
+
+        Args:
+            * size: (int) size in pixels around robot
+            * show_robot: (bool) show picture of robot
+        """
         from .watchers import RobotWatcher
 
         robot_watcher = RobotWatcher(self, size=size, show_robot=show_robot)
         self.world.watchers.append(robot_watcher)
         # Return the widget:
         return robot_watcher.watch()
+
+    def set_max_trace_length(self, seconds):
+        """
+        Set the max length of trace, in seconds.
+
+        Args:
+            * seconds: (number) the length of trace
+        """
+        self.max_trace_length = seconds
 
     def set_color(self, color):
         """
@@ -392,6 +413,7 @@ class Robot:
             "image_data": self.image_data,
             "height": self.height,
             "color": str(self.color),
+            "max_trace_length": self.max_trace_length,
             "body": self.body,
             "devices": [device.to_json() for device in self._devices],
             "do_trace": self.do_trace,
@@ -457,6 +479,12 @@ class Robot:
         a dataset?
         """
         return self.get_dataset_image is not None
+
+    def get_max_trace_length(self):
+        """
+        Get the max step lengths of the trace.
+        """
+        return self.max_trace_length
 
     def get_image(self, degrees):
         """
@@ -744,14 +772,17 @@ class Robot:
         Draw the robot.
         """
         if self.do_trace:
+            time_step = self.world.time_step if self.world is not None else 0.1
+            max_trace_length = int(1.0 / time_step * self.max_trace_length)
+
             backend.draw_lines(
                 [
                     (point[0], point[1])
-                    for (point, direction) in self.trace[-self.max_trace_length :]
+                    for (point, direction) in self.trace[-max_trace_length:]
                 ],
                 stroke_style=self.trace_color,
             )
-            self.trace = self.trace[-self.max_trace_length :]
+            self.trace = self.trace[-max_trace_length:]
 
         backend.pushMatrix()
         backend.translate(self.x, self.y)
@@ -832,6 +863,7 @@ class Scribbler(Robot):
         name="Scribbie",
         do_trace=True,
         height=0.25,
+        max_trace_length=10,
         **kwargs
     ):
         """
@@ -848,6 +880,7 @@ class Scribbler(Robot):
             * name: (str) a name to give your robot
             * do_trace: (bool) should the robot leave a trace?
             * height: (number) height of robot (use number < 1)
+            * max_trace_length: (number) max length of trace, in seconds
 
         Any of the other valid config settings can also be passed in, including:
             * state: (dict) serializable memory for a robot
@@ -867,6 +900,7 @@ class Scribbler(Robot):
             "name": name,
             "do_trace": do_trace,
             "height": height,
+            "max_trace_length": max_trace_length,
         }
         for item in [
             "state",
