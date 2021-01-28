@@ -296,6 +296,8 @@ class World:
         self.reset_watchers()
         self.from_json(self.config)
         self.time = 0.0
+        for robot in self._robots:
+            robot.reset()
         self.stop = False  # should stop?
         self.update(show=False)  # twice to allow robots to see each other
         self.update(show=False)

@@ -229,6 +229,10 @@ class Recorder(Watcher):
         self.orig_world = world
         # Copy of the world for creating playback:
         self.world = World(**world.to_json())
+        # Copy items needed for playback
+        for i in range(len(self.world._robots)):
+            # Copy list reference:
+            self.world._robots[i].text_trace = self.orig_world._robots[i].text_trace
         self.widget = Player("Time:", self.goto, 0, play_rate)
 
     def draw(self):

@@ -144,6 +144,7 @@ class Robot:
         self._set_color("red")
         self.do_trace = True
         self.trace = []
+        self.text_trace = []
         self.body = []
         self.max_trace_length = 10  # seconds
         self.x = 0  # cm
@@ -491,6 +492,23 @@ class Robot:
         """
         return self.get_dataset_image is not None
 
+    def speak(self, text=None):
+        """
+        Show some text in the robot's speech bubble.
+
+        Args:
+            * text: (str) the text to show; use None to clear
+
+        Note: not for use in a robot in a recorder.
+        """
+        if self.world:
+            if len(self.text_trace) > 0:
+                # If same as last, don't add again
+                if self.text_trace[-1][1] != text:
+                    self.text_trace.append((self.world.time, text))
+            else:
+                self.text_trace.append((self.world.time, text))
+
     def get_max_trace_length(self):
         """
         Get the max step lengths of the trace.
@@ -598,6 +616,13 @@ class Robot:
             p = self.rotate_around(px, py, dist, pdirection + angle + math.pi / 2)
             ps.append(p)
         return ps
+
+    def reset(self):
+        """
+        Reset the robot's internal stuff. Typeocally, called from the world.
+        """
+        self.trace[:] = []
+        self.text_trace[:] = []
 
     def restore_boundingbox(self):
         self.update_boundingbox(*self.last_boundingbox)
@@ -778,6 +803,18 @@ class Robot:
         """
         return [x1 + length * math.cos(-angle), y1 - length * math.sin(-angle)]
 
+    def get_current_text(self, time):
+        """
+        Get the text for the specific time.
+        """
+        # FIXME: rewrite as binary search
+        if len(self.text_trace) > 0:
+            # find the last text that is after time
+            for index in range(-1, -len(self.text_trace) - 1, -1):
+                curr_time, curr_text = self.text_trace[index]
+                if curr_time <= time:
+                    return curr_text
+
     def draw(self, backend):
         """
         Draw the robot.
@@ -827,6 +864,53 @@ class Robot:
             device.draw(backend)
 
         backend.popMatrix()
+
+        text = self.get_current_text(self.world.time)
+        if text:
+            backend.set_fill_style(Color(255))
+            pad = 10
+            box_pad = 5
+            width = self.world.backend.char_width * len(text)
+            height = 20
+            if self.x - pad - width < 0:
+                side = 1  # put on right
+            else:
+                side = -1  # put on left
+            if self.y - height < 0:
+                half = 1  # put on top
+            else:
+                half = -1  # put on bottom
+            points = [
+                (self.x, self.y),
+                (self.x + pad * side, self.y + height / 2 * half),
+                (self.x + pad * side, self.y + height * half),
+                (self.x + (pad + width + pad) * side, self.y + height * half),
+                (self.x + (pad + width + pad) * side, self.y),
+                (self.x + pad * side, self.y),
+                (self.x + pad * side, self.y + height / 4 * half),
+            ]
+            backend.set_stroke_style(Color(0))
+            backend.set_fill_style(Color(255, 255, 255, 200))
+            backend.draw_polygon(points)
+            backend.set_fill_style(Color(0))
+            if side == 1:  # right
+                if half == 1:  # bottom
+                    backend.text(text, self.x + (pad + box_pad), self.y + box_pad)
+                else:  # top
+                    backend.text(
+                        text,
+                        self.x + (pad + box_pad),
+                        self.y - self.world.backend.char_height - box_pad,
+                    )
+            else:  # left
+                if half == 1:  # bottom
+                    backend.text(text, self.x - pad - width - box_pad, self.y + box_pad)
+                else:  # top
+                    backend.text(
+                        text,
+                        self.x - pad - width - box_pad,
+                        self.y - self.world.backend.char_height - box_pad,
+                    )
 
 
 SCRIBBLER_CONFIG = {
