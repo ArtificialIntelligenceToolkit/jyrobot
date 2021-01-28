@@ -156,27 +156,27 @@ class Camera:
             all_points.append(points)
         return zip(*all_points)
 
-    def update(self, debug_list=None):
+    def update(self, draw_list=None):
         """
         Cameras operate in a lazy way: they don't actually update
         until needed because they are so expensive.
         """
-        if debug_list is not None:
-            debug_list.append(("set_stroke_style", (Color("white"),)))
+        if self.robot.world.debug and draw_list is not None:
+            draw_list.append(("set_stroke_style", (Color("white"),)))
             p = self.robot.rotate_around(
                 self.robot.x,
                 self.robot.y,
                 self.max_range,
                 self.robot.direction + self.angle / 2,
             )
-            debug_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
+            draw_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
             p = self.robot.rotate_around(
                 self.robot.x,
                 self.robot.y,
                 self.max_range,
                 self.robot.direction - self.angle / 2,
             )
-            debug_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
+            draw_list.append(("draw_line", (self.robot.x, self.robot.y, p[0], p[1])))
 
     def _update(self):
         # Update timestamp:

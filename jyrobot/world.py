@@ -73,6 +73,55 @@ class Bulb:
         )
 
 
+class RobotList(list):
+    def __init__(self, world):
+        self.world = world
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.world._robots[item]
+        elif isinstance(item, str):
+            name_map = {}  # mapping of base to count
+            search_groups = re.match(r"(.*)-(\d*)", item)
+            if search_groups:
+                search_name = search_groups[1].lower()
+                if search_groups[2].isdigit():
+                    search_index = int(search_groups[2])
+                else:
+                    search_name = item
+                    search_index = 1
+            else:
+                search_name = item.lower()
+                search_index = 1
+            for robot in self.world._robots:
+                # update name_map
+                robot_name = robot.name.lower()
+                robot_index = None
+                if "-" in robot_name:
+                    robot_prefix, robot_index = robot_name.rsplit("-", 1)
+                    if robot_index.isdigit():
+                        robot_name = robot_prefix
+                        robot_index = int(robot_index)
+                    else:
+                        robot_index = 1
+                if robot_name not in name_map:
+                    name_map[robot_name] = 1
+                else:
+                    name_map[robot_name] += 1
+                if robot_index is None:
+                    robot_index = name_map[robot_name]
+                if search_name == robot_name and search_index == robot_index:
+                    return robot
+
+        return None
+
+    def __len__(self):
+        return len(self.world._robots)
+
+    def __repr__(self):
+        return repr(self.world._robots)
+
+
 class World:
     """
     The Jyrobot simulator world.
@@ -138,54 +187,13 @@ class World:
         self.time_of_last_call = 0
         self.step_display = "tqdm"
         self.debug = False
-        self.debug_list = []
         self.watchers = []
         self._robots = []
         self.backend = None
         self.config = config.copy()
         self.initialize()  # default values
         self.reset()  # from config
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return self._robots[item]
-        elif isinstance(item, str):
-            name_map = {}  # mapping of base to count
-            search_groups = re.match(r"(.*)-(\d*)", item)
-            if search_groups:
-                search_name = search_groups[1].lower()
-                if search_groups[2].isdigit():
-                    search_index = int(search_groups[2])
-                else:
-                    search_name = item
-                    search_index = 1
-            else:
-                search_name = item.lower()
-                search_index = 1
-            for robot in self._robots:
-                # update name_map
-                robot_name = robot.name.lower()
-                robot_index = None
-                if "-" in robot_name:
-                    robot_prefix, robot_index = robot_name.rsplit("-", 1)
-                    if robot_index.isdigit():
-                        robot_name = robot_prefix
-                        robot_index = int(robot_index)
-                    else:
-                        robot_index = 1
-                if robot_name not in name_map:
-                    name_map[robot_name] = 1
-                else:
-                    name_map[robot_name] += 1
-                if robot_index is None:
-                    robot_index = name_map[robot_name]
-                if search_name == robot_name and search_index == robot_index:
-                    return robot
-
-        return None
-
-    def __len__(self):
-        return len(self._robots)
+        self.robots = RobotList(self)
 
     def __repr__(self):
         return "<World width=%r, height=%r>" % (self.width, self.height)
@@ -229,11 +237,22 @@ class World:
         if len(self._robots) == 0:
             print("This world has no robots.")
         else:
+            print("Size: %s x %s" % (self.width, self.height))
             print("Robots:")
             print("-" * 25)
             for i, robot in enumerate(self._robots):
-                print("  robot[%s or %r]: %r" % (i, robot.name, robot))
+                print("  .robots[%s or %r]: %r" % (i, robot.name, robot))
                 robot.info()
+
+    def get_robot(self, item):
+        """
+        Get the robot by name or index. Equivalent to
+        world.robots[item]
+
+        Args:
+            * item: (int or string) index or name of robot
+        """
+        return self.robots[item]
 
     def switch_backend(self, backend):
         """
@@ -249,6 +268,7 @@ class World:
         """
         Sets the default values.
         """
+        self.draw_list = []
         self.filename = None
         self.seed = 0
         self.width = 500
@@ -340,8 +360,8 @@ class World:
         ## Create robot, and add to world:
         for i, robotConfig in enumerate(self.config.get("robots", [])):
             # FIXME: raise if lengths don't match
-            if i < len(self):  # already a robot; let's reuse it:
-                robot = self[i]
+            if i < len(self._robots):  # already a robot; let's reuse it:
+                robot = self._robots[i]
                 robot.initialize()
                 robot.from_json(robotConfig)
             else:
@@ -567,7 +587,7 @@ class World:
         self.complexity = self.compute_complexity()
         self.update()  # request draw
 
-    def _add_robot_randomly(self, robot):
+    def _find_random_pose(self, robot):
         """
         Add a robot to the world in a random position.
         """
@@ -578,7 +598,7 @@ class World:
             py = round(
                 robot.radius + random.random() * (self.height - 2 * robot.radius)
             )
-            for other in self:
+            for other in self._robots:
                 if distance(px, py, other.x, other.y) < robot.radius + other.radius:
                     too_close = True
                     break
@@ -601,7 +621,7 @@ class World:
         """
         if robot not in self._robots:
             if robot.x == 0 and robot.y == 0:
-                robot.x, robot.y, robot.direction = self._add_robot_randomly(robot)
+                robot.x, robot.y, robot.direction = self._find_random_pose(robot)
             self._robots.append(robot)
             robot.world = self
             # Bounding lines form a wall:
@@ -802,10 +822,9 @@ class World:
         world.
         """
         ## Update robots:
-        # None, or a list
-        self.debug_list = [] if self.debug else None
+        self.draw_list = []
         for robot in self._robots:
-            robot.update(self.debug_list)
+            robot.update(self.draw_list)
         if show:
             self.request_draw()
 
@@ -892,8 +911,7 @@ class World:
             self.backend.set_fill(WHITE)
             self.backend.text(text, pos_x, pos_y)
 
-            if self.debug_list:
-                for command, args in self.debug_list:
-                    self.backend.do_command(command, *args)
+            for command, args in self.draw_list:
+                self.backend.do_command(command, *args)
 
         self.draw_watchers()

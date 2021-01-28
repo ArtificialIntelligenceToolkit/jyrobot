@@ -57,7 +57,7 @@ class LightSensor:
     def step(self, time_step):
         pass
 
-    def update(self, debug_list=None):
+    def update(self, draw_list=None):
         self.value = 0
         # Location of sensor:
         p = self.robot.rotate_around(
@@ -79,13 +79,13 @@ class LightSensor:
             angle = math.atan2(x - p[0], y - p[1])
             dist = distance(x, y, p[0], p[1])
             hits = self.robot.cast_ray(p[0], p[1], angle, dist)
-            if debug_list is not None:
-                debug_list.append(("draw_circle", (p[0], p[1], 2)))
-                debug_list.append(("draw_circle", (x, y, 2)))
+            if self.robot.world.debug and draw_list is not None:
+                draw_list.append(("draw_circle", (p[0], p[1], 2)))
+                draw_list.append(("draw_circle", (x, y, 2)))
 
                 for hit in hits:
-                    debug_list.append(("set_fill_style", (PURPLE,)))
-                    debug_list.append(("draw_circle", (hit.x, hit.y, 2)))
+                    draw_list.append(("set_fill_style", (PURPLE,)))
+                    draw_list.append(("draw_circle", (hit.x, hit.y, 2)))
 
             if len(hits) == 0:  # nothing blocking! we can see the light
                 # Make sure distance not zero:
@@ -94,9 +94,9 @@ class LightSensor:
                 self.value += min(
                     brightness * self.multiplier / (dist ** 2), self.multiplier / 10
                 )
-                if debug_list is not None:
-                    debug_list.append(("strokeStyle", (PURPLE, 1)))
-                    debug_list.append(("draw_line", (x, y, p[0], p[1])))
+                if draw_list is not None:
+                    draw_list.append(("strokeStyle", (PURPLE, 1)))
+                    draw_list.append(("draw_line", (x, y, p[0], p[1])))
 
     def draw(self, backend):
         backend.set_fill_style(YELLOW)

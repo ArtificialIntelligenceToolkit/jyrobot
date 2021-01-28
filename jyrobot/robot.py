@@ -129,7 +129,7 @@ class Robot:
                 self.name,
                 round(self.x, 2),
                 round(self.y, 2),
-                round(self.direction, 2),
+                round((self.direction * (180 / math.pi)) % 360, 2),
                 round(self.vx, 2),
                 round(self.vy, 2),
                 round(self.va, 2),
@@ -283,7 +283,7 @@ class Robot:
         else:
             for i, device in enumerate(self._devices):
                 print(
-                    "      device[%s or %r or %r]: %r"
+                    "      robot[%s or %r or %r]: %r"
                     % (i, device.type, device.name, device)
                 )
             print("  " + ("-" * 25))
@@ -341,22 +341,33 @@ class Robot:
             self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
         )
 
-    def set_pose(self, x=None, y=None, direction=None):
+    def set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
         Set the pose of the robot. direction is in degrees.
         """
-        # Clear the trace
-        self.trace[:] = []
-        if direction is not None:
-            direction = direction * math.pi / 180
-        self._set_pose(x, y, direction)
         if self.world is None:
             print("This robot is not in a world")
+        else:
+            if direction is not None:
+                direction = direction * math.pi / 180
+            self._set_pose(x, y, direction, clear_trace)
 
-    def _set_pose(self, x=None, y=None, direction=None):
+    def set_random_pose(self, clear_trace=True):
+        """
+        Set the pose of the robot to a random location.
+        """
+        if self.world is None:
+            print("This robot is not in a world")
+        else:
+            x, y, direction = self.world._find_random_pose(self)
+            self._set_pose(x, y, direction, clear_trace)
+
+    def _set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
         Set the pose of the robot. direction is in radians.
         """
+        if clear_trace:
+            self.trace[:] = []
         if x is not None:
             self.x = x
         if y is not None:
@@ -701,14 +712,14 @@ class Robot:
         for device in self._devices:
             device.step(time_step)
 
-    def update(self, debug_list=None):
+    def update(self, draw_list=None):
         """
         Update the robot, and devices.
         """
         self.init_boundingbox()
-        if debug_list is not None:
-            debug_list.append(("strokeStyle", (Color(255), 1)))
-            debug_list.append(
+        if self.world.debug and draw_list is not None:
+            draw_list.append(("strokeStyle", (Color(255), 1)))
+            draw_list.append(
                 (
                     "draw_line",
                     (
@@ -720,7 +731,7 @@ class Robot:
                 )
             )
 
-            debug_list.append(
+            draw_list.append(
                 (
                     "draw_line",
                     (
@@ -732,7 +743,7 @@ class Robot:
                 )
             )
 
-            debug_list.append(
+            draw_list.append(
                 (
                     "draw_line",
                     (
@@ -744,7 +755,7 @@ class Robot:
                 )
             )
 
-            debug_list.append(
+            draw_list.append(
                 (
                     "draw_line",
                     (
@@ -758,7 +769,7 @@ class Robot:
 
         # Devices:
         for device in self._devices:
-            device.update(debug_list)
+            device.update(draw_list)
         return
 
     def rotate_around(self, x1, y1, length, angle):

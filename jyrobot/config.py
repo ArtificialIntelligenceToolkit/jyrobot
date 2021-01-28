@@ -12,7 +12,7 @@ import ast
 import os
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-PATHS = ["./", os.path.join(HERE, "worlds")]
+PATHS = ["./", "./worlds/", os.path.join(HERE, "worlds")]
 
 BACKEND = "pil"  # or any valid backends
 ARGS = {}

@@ -237,7 +237,7 @@ class Recorder(Watcher):
     def update(self):
         # Record the states from the real world:
         states = []
-        for robot in self.orig_world:
+        for robot in self.orig_world._robots:
             states.append(
                 (
                     robot.x,
@@ -273,7 +273,7 @@ class Recorder(Watcher):
         index = round(time / 0.1)
         # place robots where they go in copy:
         if len(self.states) == 0:
-            for i, orig_robot in enumerate(self.orig_world):
+            for i, orig_robot in enumerate(self.orig_world._robots):
                 x, y, a, vx, vy, va, stalled = (
                     orig_robot.x,
                     orig_robot.y,
@@ -283,24 +283,24 @@ class Recorder(Watcher):
                     orig_robot.va,
                     orig_robot.stalled,
                 )
-                self.world[i]._set_pose(x, y, a)
-                self.world[i].vx = vx
-                self.world[i].vy = vy
-                self.world[i].va = va
-                self.world[i].stalled = stalled
-                self.world[i].trace[:] = []
+                self.world.robots[i]._set_pose(x, y, a)
+                self.world.robots[i].vx = vx
+                self.world.robots[i].vy = vy
+                self.world.robots[i].va = va
+                self.world.robots[i].stalled = stalled
+                self.world.robots[i].trace[:] = []
         else:
             index = max(min(len(self.states) - 1, index), 0)
             for i, state in enumerate(self.states[index]):
                 x, y, a, vx, vy, va, stalled = state
-                self.world[i]._set_pose(x, y, a)
-                self.world[i].vx = vx
-                self.world[i].vy = vy
-                self.world[i].va = va
-                self.world[i].stalled = stalled
-                if self.world[i].do_trace:
-                    self.world[i].trace = self.get_trace(
-                        i, index, self.world[i].max_trace_length
+                self.world.robots[i]._set_pose(x, y, a)
+                self.world.robots[i].vx = vx
+                self.world.robots[i].vy = vy
+                self.world.robots[i].va = va
+                self.world.robots[i].stalled = stalled
+                if self.world.robots[i].do_trace:
+                    self.world.robots[i].trace = self.get_trace(
+                        i, index, self.world.robots[i].max_trace_length
                     )
         self.world.time = time
         self.world.update()

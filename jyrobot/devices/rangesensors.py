@@ -113,7 +113,7 @@ class RangeSensor:
     def step(self, time_step):
         pass
 
-    def update(self, debug_list=None):
+    def update(self, draw_list=None):
         # Update timestamp:
         self.time = self.robot.world.time
         # This changes:
@@ -124,8 +124,8 @@ class RangeSensor:
             self.robot.direction + self.dir_from_center + math.pi / 2,
         )
 
-        if debug_list is not None:
-            debug_list.append(("draw_ellipse", (p[0], p[1], 2, 2)))
+        if self.robot.world.debug and draw_list is not None:
+            draw_list.append(("draw_ellipse", (p[0], p[1], 2, 2)))
 
         self.set_reading(1.0)
         if self.width != 0:
@@ -137,8 +137,8 @@ class RangeSensor:
                     self.max,
                 )
                 if hits:
-                    if debug_list is not None:
-                        debug_list.append(
+                    if self.robot.world.debug and draw_list is not None:
+                        draw_list.append(
                             ("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2))
                         )
                     # Closest hit:
@@ -152,8 +152,8 @@ class RangeSensor:
                 self.max,
             )
             if hits:
-                if debug_list is not None:
-                    debug_list.append(("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
+                if self.robot.world.debug and draw_list is not None:
+                    draw_list.append(("draw_ellipse", (hits[-1].x, hits[-1].y, 2, 2)))
                 # Closest hit:
                 if hits[-1].distance < self.get_distance():
                     self.set_distance(hits[-1].distance)
