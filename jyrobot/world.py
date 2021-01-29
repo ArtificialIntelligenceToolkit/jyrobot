@@ -318,10 +318,10 @@ class World:
         self.config = config
         if "seed" not in config or config["seed"] == 0:
             seed = random.randint(0, 9999999)
-            print("Random seed initialized to:", seed)
+            print("Random seed set to:", seed)
         else:
             seed = config["seed"]
-            print("Reusing random seed:", seed)
+            print("Using random seed:", seed)
         self.set_seed(seed)
 
         if "filename" in config:
