@@ -779,8 +779,9 @@ class World:
                 "Simulation stopped at: %s; speed %s x real time"
                 % (format_time(self.time), round(speed, 2))
             )
-        self.update(show=False)  # get updates
-        self.draw()  # force to update any displays
+        if show:
+            self.update(show=False)  # get updates
+            self.draw()  # force to update any displays
 
     def compute_complexity(self):
         # Proxy for how much drawing
