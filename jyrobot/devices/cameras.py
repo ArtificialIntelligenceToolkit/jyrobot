@@ -267,7 +267,7 @@ class Camera:
                     sum += c
                 return sum / count
 
-        return Color(255, 0, 0)  # self.robot.world.ground_color
+        return self.robot.world.ground_color
 
     def take_picture(self, type="color"):
         try:
