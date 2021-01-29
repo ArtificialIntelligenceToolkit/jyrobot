@@ -663,6 +663,7 @@ class World:
         show=True,
         real_time=True,
         show_progress=True,
+        quiet=False,
     ):
         """
         Run the simulator until one of the control functions returns True
@@ -677,9 +678,13 @@ class World:
             show - (optional) update the watchers
             real_time - (optional) run simulation in real time
             show_progress - (optional) show progress bar
+            quiet - (optional) if True, do not show the status message when
+                completed
         """
         time_step = time_step if time_step is not None else self.time_step
-        self.steps(float("inf"), function, time_step, show, real_time, show_progress)
+        self.steps(
+            float("inf"), function, time_step, show, real_time, show_progress, quiet
+        )
 
     def seconds(
         self,
@@ -689,6 +694,7 @@ class World:
         show=True,
         real_time=True,
         show_progress=True,
+        quiet=False,
     ):
         """
         Run the simulator for N seconds, or until one of the control
@@ -704,10 +710,12 @@ class World:
             show - (optional) update the watchers
             real_time - (optional) run simulation in real time
             show_progress - (optional) show progress bar
+            quiet - (optional) if True, do not show the status message when
+                completed
         """
         time_step = time_step if time_step is not None else self.time_step
         steps = round(seconds / time_step)
-        self.steps(steps, function, time_step, show, real_time, show_progress)
+        self.steps(steps, function, time_step, show, real_time, show_progress, quiet)
 
     def steps(
         self,
@@ -717,6 +725,7 @@ class World:
         show=True,
         real_time=True,
         show_progress=True,
+        quiet=False,
     ):
         """
         Run the simulator for N steps, or until one of the control
@@ -732,6 +741,8 @@ class World:
             show - (optional) update the watchers
             real_time - (optional) run simulation in real time
             show_progress - (optional) show progress bar
+            quiet - (optional) if True, do not show the status message when
+                completed
         """
         time_step = time_step if time_step is not None else self.time_step
         if steps == float("inf"):
@@ -763,10 +774,11 @@ class World:
         stop_real_time = time.monotonic()
         stop_time = self.time
         speed = (stop_time - start_time) / (stop_real_time - start_real_time)
-        print(
-            "Simulation stopped at: %s; speed %s x real time"
-            % (format_time(self.time), round(speed, 2))
-        )
+        if steps > 1 and not quiet:
+            print(
+                "Simulation stopped at: %s; speed %s x real time"
+                % (format_time(self.time), round(speed, 2))
+            )
         self.update(show=False)  # get updates
         self.draw()  # force to update any displays
 
