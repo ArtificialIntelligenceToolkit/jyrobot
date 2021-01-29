@@ -10,7 +10,7 @@
 
 import math
 
-from ..utils import Color
+from ..utils import Color, distance
 
 
 class Camera:
@@ -204,6 +204,10 @@ class Camera:
         backend.set_fill(Color(0, 64, 0))
         backend.strokeStyle(None, 0)
         backend.draw_rect(5.0, -3.33, 1.33, 6.33)
+        p = self.robot.rotate_around(0, 0, self.max_range, -self.angle / 2,)
+        backend.draw_line(0, 0, p[0], p[1])
+        p = self.robot.rotate_around(0, 0, self.max_range, self.angle / 2,)
+        backend.draw_line(0, 0, p[0], p[1])
 
     def find_closest_wall(self, hits):
         for hit in reversed(hits):  # reverse make it closest first
@@ -283,7 +287,6 @@ class Camera:
         else:
             area = None
         pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
-        pic.__add__ = lambda other: print("other")
         pic_pixels = pic.load()
         # FIXME: probably should have a specific size rather than scale it to world
         size = max(self.robot.world.width, self.robot.world.height)
@@ -576,3 +579,126 @@ class Camera:
         Get the maximum distance in CM the camera can see.
         """
         return self.max_range
+
+
+class GroundCamera:
+    def __init__(self, width=15, height=15, name="ground-camera", samples=1, **kwargs):
+        """
+        A downward-facing camera device.
+
+        Args:
+            * width: (int) width of camera in pixels
+            * height: (int) height of camera in pixels
+            * name: (str) the name of the camera
+            * samples: (int) how many pixels should it sample
+        """
+        config = {
+            "width": width,
+            "height": height,
+            "name": name,
+            "samples": samples,
+        }
+        self.robot = None
+        self.initialize()
+        self.from_json(config)
+
+    def initialize(self):
+        self.type = "ground-camera"
+        self.time = 0.0
+        self.cameraShape = [15, 15]
+        self.samples = 1
+        self.name = "ground-camera"
+
+    def from_json(self, config):
+        if "width" in config:
+            self.cameraShape[0] = config["width"]
+        if "height" in config:
+            self.cameraShape[1] = config["height"]
+        if "samples" in config:
+            self.samples = config["samples"]
+        if "name" in config:
+            self.name = config["name"]
+
+    def to_json(self):
+        return {
+            "class": self.__class__.__name__,
+            "width": self.cameraShape[0],
+            "height": self.cameraShape[1],
+            "samples": self.samples,
+            "name": self.name,
+        }
+
+    def __repr__(self):
+        return "<GroundCamera %r size=(%r,%r)>" % (
+            self.name,
+            self.cameraShape[0],
+            self.cameraShape[1],
+        )
+
+    def watch(self):
+        from ..watchers import CameraWatcher
+
+        if self.robot is None or self.robot.world is None:
+            print("ERROR: can't watch until added to robot, and robot is in world")
+            return None
+
+        watcher = CameraWatcher(self)
+        self.robot.world.watchers.append(watcher)
+        # Return the widget:
+        return watcher.widget
+
+    def step(self, time_step):
+        """
+        Cameras operate in a lazy way: they don't actually update
+        until needed because they are so expensive.
+        """
+        pass
+
+    def update(self, draw_list=None):
+        """
+        Cameras operate in a lazy way: they don't actually update
+        until needed because they are so expensive.
+        """
+        pass
+
+    def draw(self, backend):
+        pass
+
+    def take_picture(self):
+        """
+        Take a picture from the down-ward facing camera.
+        """
+        try:
+            from PIL import Image
+        except ImportError:
+            print("Pillow (PIL) module not available; take_picture() unavailable")
+            return
+
+        pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
+        pic_pixels = pic.load()
+
+        for i in range(-self.cameraShape[0] // 2, self.cameraShape[0] // 2 + 1, 1):
+            for j in range(-self.cameraShape[1] // 2, self.cameraShape[1] // 2 + 1, 1):
+                dist = distance(0, 0, i, j)
+                angle = math.atan2(i, j)
+                p = self.robot.rotate_around(
+                    self.robot.x, self.robot.y, dist, self.robot.direction + angle
+                )
+                x, y = p
+                if (0 <= x < self.robot.world.width) and (
+                    0 <= y < self.robot.world.height
+                ):
+                    c = Color(
+                        *self.robot.world.ground_image_pixels[
+                            int(x * self.robot.world.scale),
+                            int(y * self.robot.world.scale),
+                        ]
+                    )
+                    xp = i + self.cameraShape[0] // 2
+                    yp = j + self.cameraShape[1] // 2
+                    if (0 <= xp < self.cameraShape[0]) and (
+                        0 <= yp < self.cameraShape[1]
+                    ):
+                        pic_pixels[xp, self.cameraShape[1] - yp - 1] = c.to_tuple()
+
+        return pic

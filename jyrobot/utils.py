@@ -255,12 +255,17 @@ class arange:
 
     def __iter__(self):
         current = self.start
-        while current <= self.stop:
-            yield current
-            current += self.step
+        if self.step > 0:
+            while current <= self.stop:
+                yield current
+                current += self.step
+        else:
+            while current >= self.stop:
+                yield current
+                current += self.step
 
     def __len__(self):
-        return (self.stop - self.start) / self.step
+        return abs(self.stop - self.start) / self.step
 
 
 # def arange(start, stop, step):

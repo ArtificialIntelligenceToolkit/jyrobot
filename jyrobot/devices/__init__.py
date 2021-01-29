@@ -8,6 +8,6 @@
 #
 # *************************************
 
-from .cameras import Camera  # noqa: F401
+from .cameras import Camera, GroundCamera  # noqa: F401
 from .lightsensors import LightSensor  # noqa: F401
 from .rangesensors import RangeSensor  # noqa: F401
