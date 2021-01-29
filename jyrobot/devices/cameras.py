@@ -25,6 +25,7 @@ class Camera:
         reflectSky=False,
         max_range=1000,
         name="camera",
+        samples=1,
         **kwargs
     ):
         """
@@ -41,6 +42,7 @@ class Camera:
             * reflectSky: (bool) sky reflects for 3D point cloud
             * max_range: (int) maximum range of camera
             * name: (str) the name of the camera
+            * samples: (int) how many pixels should it sample
 
         Note: currently the camera faces forward. TODO.
         """
@@ -54,6 +56,7 @@ class Camera:
             "reflectSky": reflectSky,
             "max_range": max_range,
             "name": name,
+            "samples": samples,
         }
         self.robot = None
         self.initialize()
@@ -65,6 +68,7 @@ class Camera:
         self.time = 0.0
         self.cameraShape = [256, 128]
         self.max_range = 1000
+        self.samples = 1
         self.name = "camera"
         # 0 = no fade, 1.0 = max fade
         self.colorsFadeWithDistance = 0.5
@@ -95,6 +99,8 @@ class Camera:
             self.set_fov(config["angle"])  # degrees
         if "max_range" in config:
             self.max_range = config["max_range"]
+        if "samples" in config:
+            self.samples = config["samples"]
         if "name" in config:
             self.name = config["name"]
 
@@ -109,6 +115,7 @@ class Camera:
             "reflectSky": self.reflectSky,
             "angle": self.angle * 180 / math.pi,  # save in degrees
             "max_range": self.max_range,
+            "samples": self.samples,
             "name": self.name,
         }
 
@@ -210,31 +217,57 @@ class Camera:
             # i is width ray (camera width),
             # j is distance (height of camera/2, 64 to 128)
             dist = round(
-                ((self.cameraShape[1] - j) / self.cameraShape[1] / 2) * len(area)
+                ((self.cameraShape[1] - j) / self.cameraShape[1] / 3) * len(area)
             )
             visible_width_points = area[dist]
             p1, p2 = visible_width_points
             # get a position i/width on line
-            minx, maxx = sorted([p1[0], p2[0]])
-            miny, maxy = sorted([p1[1], p2[1]])
-            x = round(
-                ((maxx - minx) * i / self.cameraShape[0] + minx)
-                * self.robot.world.scale
-            )
-            y = round(
-                ((maxy - miny) * i / self.cameraShape[0] + miny)
-                * self.robot.world.scale
-            )
+            # minx, maxx = sorted([p1[0], p2[0]])
+            # miny, maxy = sorted([p1[1], p2[1]])
+            spanx = abs(p1[0] - p2[0])
+            spany = abs(p1[1] - p2[1])
+            if p1[0] < p2[0]:
+                x = round(
+                    (p1[0] + spanx * (1.0 - i / self.cameraShape[0]))
+                    * self.robot.world.scale
+                )
+            else:
+                x = round(
+                    (p1[0] - spanx * (1.0 - i / self.cameraShape[0]))
+                    * self.robot.world.scale
+                )
+            if p1[1] < p2[1]:
+                y = round(
+                    (p1[1] + spany * (1.0 - i / self.cameraShape[0]))
+                    * self.robot.world.scale
+                )
+            else:
+                y = round(
+                    (p1[1] - spany * (1.0 - i / self.cameraShape[0]))
+                    * self.robot.world.scale
+                )
             # find that pixel
             if (0 <= x < (self.robot.world.width - 1) * self.robot.world.scale) and (
                 0 <= y < (self.robot.world.height - 1) * self.robot.world.scale
             ):
-                # FIXME: sample from pixels to get average color
-                c = Color(*self.robot.world.ground_image_pixels[(x, y)])
+                # c = Color(*self.robot.world.ground_image_pixels[(x, y)])
                 # self.robot.world.ground_image_pixels[(x, y)] = (0, 0, 0)
-                return c
+                # return c
 
-        return self.robot.world.ground_color
+                sum = Color(0)
+                count = 0
+                # Need more sampling as distance increases:
+                for j in range(self.samples):
+                    try:
+                        c = Color(*self.robot.world.ground_image_pixels[(x + j, y)])
+                        # self.robot.world.ground_image_pixels[(x + j, y)] = (0, 0, 0)
+                        count += 1
+                    except Exception:
+                        continue
+                    sum += c
+                return sum / count
+
+        return Color(255, 0, 0)  # self.robot.world.ground_color
 
     def take_picture(self, type="color"):
         try:

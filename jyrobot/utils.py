@@ -440,6 +440,20 @@ class Color:
     def to_hexcode(self):
         return "#%02X%02X%02X%02X" % self.to_tuple()
 
+    def __add__(self, other):
+        new_color = Color(self)
+        new_color.red += other.red
+        new_color.green += other.green
+        new_color.blue += other.blue
+        return new_color
+
+    def __truediv__(self, number):
+        new_color = Color(self)
+        new_color.red /= number
+        new_color.green /= number
+        new_color.blue /= number
+        return new_color
+
 
 class Point:
     def __init__(self, x, y):
