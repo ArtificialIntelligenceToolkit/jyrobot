@@ -805,9 +805,15 @@ class World:
         Run the simulator for 1 step.
 
         Args:
+            * time_step: (Number, optional) the time unit to advance the simulation
+            * show: (bool) if True, update the watchers
+            * real_time: (bool) if True, run in real time, even introducing a
+                delay if necessary
         """
-        if not isinstance(time_step, Number):
-            raise ValueError("Invalid time_step: %r; should be a number" % time_step)
+        if time_step is not None and not isinstance(time_step, Number):
+            raise ValueError(
+                "Invalid time_step: %r; should be a number or None" % time_step
+            )
         if not isinstance(show, bool):
             raise ValueError("Invalid show: %r; should be a bool" % show)
         if not isinstance(real_time, bool):
