@@ -497,6 +497,19 @@ class World:
             self.update(show=False)
             self.draw()  # force
 
+    def paste_ground_image(self, image, x, y):
+        """
+        Paste an image onto the ground image. Requires
+        a ground image to have already been set.
+
+        Args:
+            * image: a Python Image Library image
+            * x: (int) the x coordinate of upper lefthand corner
+            * y: (int) the y coordinate of upper lefthand corner
+        """
+        if self.ground_image:
+            self.ground_image.paste(image, (x, y))
+
     def set_scale(self, scale):
         """
         Change the scale of the rendered world.

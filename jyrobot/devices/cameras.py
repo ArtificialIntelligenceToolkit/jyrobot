@@ -582,7 +582,7 @@ class Camera:
 
 
 class GroundCamera:
-    def __init__(self, width=15, height=15, name="ground-camera", samples=1, **kwargs):
+    def __init__(self, width=15, height=15, name="ground-camera", **kwargs):
         """
         A downward-facing camera device.
 
@@ -590,13 +590,11 @@ class GroundCamera:
             * width: (int) width of camera in pixels
             * height: (int) height of camera in pixels
             * name: (str) the name of the camera
-            * samples: (int) how many pixels should it sample
         """
         config = {
             "width": width,
             "height": height,
             "name": name,
-            "samples": samples,
         }
         self.robot = None
         self.initialize()
@@ -606,7 +604,6 @@ class GroundCamera:
         self.type = "ground-camera"
         self.time = 0.0
         self.cameraShape = [15, 15]
-        self.samples = 1
         self.name = "ground-camera"
 
     def from_json(self, config):
@@ -614,8 +611,6 @@ class GroundCamera:
             self.cameraShape[0] = config["width"]
         if "height" in config:
             self.cameraShape[1] = config["height"]
-        if "samples" in config:
-            self.samples = config["samples"]
         if "name" in config:
             self.name = config["name"]
 
@@ -624,7 +619,6 @@ class GroundCamera:
             "class": self.__class__.__name__,
             "width": self.cameraShape[0],
             "height": self.cameraShape[1],
-            "samples": self.samples,
             "name": self.name,
         }
 
@@ -679,8 +673,12 @@ class GroundCamera:
 
         for i in range(-self.cameraShape[0] // 2, self.cameraShape[0] // 2 + 1, 1):
             for j in range(-self.cameraShape[1] // 2, self.cameraShape[1] // 2 + 1, 1):
-                dist = distance(0, 0, i, j)
-                angle = math.atan2(i, j)
+                dist = distance(
+                    0, 0, i / self.robot.world.scale, j / self.robot.world.scale
+                )
+                angle = math.atan2(
+                    i / self.robot.world.scale, j / self.robot.world.scale
+                )
                 p = self.robot.rotate_around(
                     self.robot.x, self.robot.y, dist, self.robot.direction + angle
                 )
