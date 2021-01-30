@@ -28,12 +28,12 @@ import random
 
 world = jyrobot.load("two-scribblers")
 
-for robot in world:
+for robot in world.robots:
     # Give each robot a desired speed:
     robot.forward(1)
 
 def control(world):
-    for robot in world:
+    for robot in world.robots:
         if robot.stalled:
 	    # If stuck, just reverse:
             robot.reverse()
