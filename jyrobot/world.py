@@ -14,6 +14,7 @@ import random
 import re
 import signal
 import time
+from collections.abc import Sequence
 from contextlib import contextmanager
 from itertools import count
 from numbers import Number
@@ -73,7 +74,7 @@ class Bulb:
         )
 
 
-class RobotList(list):
+class RobotList(Sequence):
     def __init__(self, world):
         self.world = world
 
@@ -213,7 +214,7 @@ class World:
             return
 
         if index is not None:
-            robot = self[index]
+            robot = self.robots[index]
             if robot:
                 start_x = round(max(robot.x * self.scale - size / 2, 0))
                 start_y = round(max(robot.y * self.scale - size / 2, 0))
@@ -592,7 +593,7 @@ class World:
         """
         if not isinstance(robot, Robot):
             # Then look it up by index/name/type:
-            robot = self[robot]
+            robot = self.robots[robot]
         for wall in list(self.walls):
             if wall.robot is robot:
                 self.walls.remove(wall)
