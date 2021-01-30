@@ -10,7 +10,7 @@
 
 import math
 
-from ..utils import Color, distance
+from ..utils import Color
 
 
 class Camera:
@@ -656,47 +656,28 @@ class GroundCamera:
         pass
 
     def draw(self, backend):
-        pass
+        left = -(self.cameraShape[0] // 2) / self.robot.world.scale
+        upper = -(self.cameraShape[1] // 2) / self.robot.world.scale
+        right = (self.cameraShape[0] // 2) / self.robot.world.scale
+        lower = (self.cameraShape[1] // 2) / self.robot.world.scale
+        backend.strokeStyle(Color(128), 1)
+        backend.draw_line(left, upper, right, upper)
+        backend.draw_line(right, upper, right, lower)
+        backend.draw_line(right, lower, left, lower)
+        backend.draw_line(left, lower, left, upper)
 
     def take_picture(self):
-        """
-        Take a picture from the down-ward facing camera.
-        """
-        try:
-            from PIL import Image
-        except ImportError:
-            print("Pillow (PIL) module not available; take_picture() unavailable")
-            return
-
-        pic = Image.new("RGBA", (self.cameraShape[0], self.cameraShape[1]))
-        pic_pixels = pic.load()
-
-        for i in range(-self.cameraShape[0] // 2, self.cameraShape[0] // 2 + 1, 1):
-            for j in range(-self.cameraShape[1] // 2, self.cameraShape[1] // 2 + 1, 1):
-                dist = distance(
-                    0, 0, i / self.robot.world.scale, j / self.robot.world.scale
-                )
-                angle = math.atan2(
-                    i / self.robot.world.scale, j / self.robot.world.scale
-                )
-                p = self.robot.rotate_around(
-                    self.robot.x, self.robot.y, dist, self.robot.direction + angle
-                )
-                x, y = p
-                if (0 <= x < self.robot.world.width) and (
-                    0 <= y < self.robot.world.height
-                ):
-                    c = Color(
-                        *self.robot.world.ground_image_pixels[
-                            int(x * self.robot.world.scale),
-                            int(y * self.robot.world.scale),
-                        ]
-                    )
-                    xp = i + self.cameraShape[0] // 2
-                    yp = j + self.cameraShape[1] // 2
-                    if (0 <= xp < self.cameraShape[0]) and (
-                        0 <= yp < self.cameraShape[1]
-                    ):
-                        pic_pixels[xp, self.cameraShape[1] - yp - 1] = c.to_tuple()
-
-        return pic
+        # FIXME: would be faster to trim image down
+        # before rotating
+        center = (
+            self.robot.x * self.robot.world.scale,
+            self.robot.y * self.robot.world.scale,
+        )
+        rotated_image = self.robot.world.ground_image.rotate(
+            (self.robot.direction - math.pi / 4 * 6) * (180 / math.pi), center=center,
+        )
+        left = center[0] - self.cameraShape[0] // 2
+        right = center[0] + self.cameraShape[0] // 2
+        upper = center[1] - self.cameraShape[1] // 2
+        lower = center[1] + self.cameraShape[1] // 2
+        return rotated_image.crop((left, upper, right, lower))
