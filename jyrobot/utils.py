@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from .color_data import COLORS
-from .config import PATHS
+from .config import get_jyrobot_search_paths
 
 
 def progress_bar(range, show_progress=True, progress_type="tqdm"):
@@ -138,25 +138,39 @@ def format_time(time):
 
 
 def load_world(filename=None):
+    """
+    worlds/
+        test1/
+            worlds/test1/w1.json
+            worlds/test1/w2.json
+        test2/
+            worlds/test2/w1.json
+        worlds/w1.json
+
+    """
     from .world import World
 
     if filename is None:
         print("Searching for jyrobot config files...")
-        for path in PATHS:
-            files = sorted(glob.glob(os.path.join(path, "*.json")))
+        for path in get_jyrobot_search_paths():
             print("Directory:", path)
+            files = sorted(
+                glob.glob(os.path.join(path, "**", "*.json"), recursive=True),
+                key=lambda filename: (filename.count("/"), filename),
+            )
             if len(files) > 0:
-                for filename in files:
-                    basename = os.path.splitext(os.path.basename(filename))[0]
-                    print("    %r" % basename)
+                for fname in files:
+                    basename = os.path.splitext(fname)[0]
+                    print("    %r" % basename[len(path) :])
             else:
                 print("    no files found")
     else:
         if not filename.endswith(".json"):
             filename += ".json"
-        for path in PATHS:
+        for path in get_jyrobot_search_paths():
             path_filename = os.path.join(path, filename)
             if os.path.exists(path_filename):
+                print("Loading %s..." % path_filename)
                 with open(path_filename) as fp:
                     contents = fp.read()
                     config = json.loads(contents)
@@ -181,7 +195,7 @@ def load_image(filename, width=None, height=None):
 def find_resource(filename=None):
     if filename is None:
         print("Searching for jyrobot files...")
-        for path in PATHS:
+        for path in get_jyrobot_search_paths():
             files = sorted(glob.glob(os.path.join(path, "*.*")))
             print("Directory:", path)
             if len(files) > 0:
@@ -190,7 +204,7 @@ def find_resource(filename=None):
             else:
                 print("    no files found")
     else:
-        for path in PATHS:
+        for path in get_jyrobot_search_paths():
             path_filename = os.path.abspath(os.path.join(path, filename))
             if os.path.exists(path_filename):
                 return path_filename

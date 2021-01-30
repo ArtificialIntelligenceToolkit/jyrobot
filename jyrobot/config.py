@@ -11,12 +11,34 @@
 import ast
 import os
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-PATHS = ["./", "./worlds/", os.path.join(HERE, "worlds")]
-
+JYROBOTPATH = None
 BACKEND = "pil"  # or any valid backends
 ARGS = {}
 VALID_BACKENDS = ["canvas", "svg", "debug", "pil"]
+
+
+def get_jyrobot_search_paths():
+    """
+    Get the jyrobot search paths
+    """
+    custom = os.environ.get("JYROBOTPATH", JYROBOTPATH)
+    here = os.path.abspath(os.path.dirname(__file__))
+    if custom is not None:
+        if len(custom) > 0 and custom[-1] != "/":
+            custom += "/"
+        paths = [custom]
+    else:
+        paths = []
+    paths += ["./worlds/", os.path.join(here, "worlds/")]
+    return paths
+
+
+def set_jyrobot_path(path):
+    """
+    Set a custom search path for jyrobot worlds
+    """
+    global JYROBOTPATH
+    JYROBOTPATH = path
 
 
 def setup_backend():
