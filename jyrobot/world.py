@@ -191,6 +191,7 @@ class World:
         self.watchers = []
         self._robots = []
         self.backend = None
+        self.recording = False
         self.config = config.copy()
         self.initialize()  # default values
         self.reset()  # from config
@@ -483,6 +484,15 @@ class World:
         Set the background image
         """
         self.ground_image_filename = filename
+        self.reset_ground_image()
+        if show:
+            self.update(show=False)
+            self.draw()  # force
+
+    def reset_ground_image(self):
+        """
+        Reset the ground image, in case it changed.
+        """
         if self.ground_image_filename is not None:
             self.ground_image = load_image(
                 self.ground_image_filename,
@@ -494,9 +504,6 @@ class World:
 
         if self.ground_image is not None:
             self.ground_image_pixels = self.ground_image.load()
-        if show:
-            self.update(show=False)
-            self.draw()  # force
 
     def paste_ground_image(self, image, x, y):
         """
@@ -510,6 +517,45 @@ class World:
         """
         if self.ground_image:
             self.ground_image.paste(image, (x, y))
+
+    def set_ground_color_at(self, x, y, pen):
+        """
+        Set the pixel(s) of the ground image at position (x,y). Requires
+        a ground image to have already been set.
+
+        Args:
+            * x: (int) the x coordinate
+            * y: (int) the y coordinate
+            * pen: (tuple) the (color, radius) to draw with
+        """
+        if self.ground_image:
+            color, radius = pen
+            for i in range(-radius, radius + 1, 1):
+                for j in range(-radius, radius + 1, 1):
+                    self.ground_image_pixels[
+                        ((x * self.scale) + i, (y * self.scale) + j)
+                    ] = color.to_tuple()
+
+    def get_ground_color_at(self, x, y, radius=1):
+        """
+        Get the pixel(s) of the ground image at position (x,y). Requires
+        a ground image to have already been set.
+
+        Args:
+            * x: (int) the x coordinate
+            * y: (int) the y coordinate
+            * radius: (int) size of area
+        """
+        if self.ground_image:
+            results = []
+            for i in range(-radius, radius + 1, 1):
+                for j in range(-radius, radius + 1, 1):
+                    results.append(
+                        self.ground_image_pixels[
+                            ((x + i) * self.scale, (y + j) * self.scale)
+                        ]
+                    )
+            return results
 
     def set_scale(self, scale):
         """
@@ -532,6 +578,7 @@ class World:
 
         recorder = Recorder(self)
         self.watchers.append(recorder)
+        self.recording = True
         return recorder
 
     def plot(
@@ -794,7 +841,6 @@ class World:
                 % (format_time(self.time), round(speed, 2))
             )
         if show:
-            self.update(show=False)  # get updates
             self.draw()  # force to update any displays
 
     def compute_complexity(self):

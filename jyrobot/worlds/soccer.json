@@ -5,8 +5,8 @@
     "boundary_wall_width": 1,
     "bulbs": [],
     "ground_color": "#008000FF",
-    "ground_image_filename": "soccer-640x401.png",
-    "height": 401,
+    "ground_image_filename": "soccer-780x496.png",
+    "height": 496,
     "robots": 
     [
         {
@@ -88,11 +88,11 @@
             "vy": 0,
             "vy_max": 2,
             "vy_ramp": 1,
-            "x": 10,
-            "y": 200
+            "x": 50,
+            "y": 248
         }],
     "scale": 3,
     "seed": 7053746,
     "walls": [],
-    "width": 640
+    "width": 780
 }

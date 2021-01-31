@@ -231,8 +231,9 @@ class Recorder(Watcher):
         self.world = World(**world.to_json())
         # Copy items needed for playback
         for i in range(len(self.world._robots)):
-            # Copy list reference:
+            # Copy list references:
             self.world._robots[i].text_trace = self.orig_world._robots[i].text_trace
+            self.world._robots[i].pen_trace = self.orig_world._robots[i].pen_trace
         self.widget = Player("Time:", self.goto, 0, play_rate)
 
     def draw(self):
@@ -307,6 +308,9 @@ class Recorder(Watcher):
                         i, index, self.world.robots[i].max_trace_length
                     )
         self.world.time = time
+        if self.world.time == 0:
+            # In case it changed:
+            self.world.reset_ground_image()
         self.world.update()
         picture = self.world.take_picture()
         return picture

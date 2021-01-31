@@ -145,6 +145,8 @@ class Robot:
         self.do_trace = True
         self.trace = []
         self.text_trace = []
+        self.pen_trace = []
+        self.pen = (None, 0)
         self.body = []
         self.max_trace_length = 10  # seconds
         self.x = 0  # cm
@@ -502,12 +504,31 @@ class Robot:
         Note: not for use in a robot in a recorder.
         """
         if self.world:
-            if len(self.text_trace) > 0:
-                # If same as last, don't add again
-                if self.text_trace[-1][1] != text:
+            if self.world.recording:
+                if len(self.text_trace) > 0:
+                    # If same as last, don't add again
+                    if self.text_trace[-1][1] != text:
+                        self.text_trace.append((self.world.time, text))
+                else:
                     self.text_trace.append((self.world.time, text))
             else:
-                self.text_trace.append((self.world.time, text))
+                self.text_trace[:] = [(self.world.time, text)]
+
+    def pen_down(self, color, radius=1):
+        """
+        Put the pen down to change the color of the background image.
+
+        Note: not for use in a robot in a recorder.
+        """
+        self.pen = (Color(color), radius)
+
+    def pen_up(self):
+        """
+        Put the pen up to stop changing the color of the background image.
+
+        Note: not for use in a robot in a recorder.
+        """
+        self.pen = (None, 0)
 
     def get_max_trace_length(self):
         """
@@ -623,6 +644,7 @@ class Robot:
         """
         self.trace[:] = []
         self.text_trace[:] = []
+        self.pen_trace[:] = []
 
     def restore_boundingbox(self):
         self.update_boundingbox(*self.last_boundingbox)
@@ -730,12 +752,13 @@ class Robot:
             self.vx = 0
             self.vy = 0
 
-        if self.do_trace:
-            self.trace.append((Point(self.x, self.y), self.direction))
-
         # Devices:
         for device in self._devices:
             device.step(time_step)
+
+        # Update history:
+        if self.do_trace:
+            self.trace.append((Point(self.x, self.y), self.direction))
 
     def update(self, draw_list=None):
         """
@@ -795,6 +818,25 @@ class Robot:
         # Devices:
         for device in self._devices:
             device.update(draw_list)
+
+        # Update recording info:
+        if self.world.recording:
+            if len(self.pen_trace) > 0:
+                # color of pen:
+                if self.pen_trace[-1][1][0] != self.pen[0]:
+                    self.pen_trace.append((self.world.time, self.pen))
+                # same pen color, do nothing
+            elif self.pen != (None, 0):
+                self.pen_trace.append((self.world.time, self.pen))
+            # else do nothing
+        else:  # not recording
+            if self.pen == (None, 0):
+                self.pen_trace[:] = []
+            else:
+                self.pen_trace[:] = [(self.world.time, self.pen)]
+
+        # Alter world:
+        self.update_ground_image(self.world.time)
         return
 
     def rotate_around(self, x1, y1, length, angle):
@@ -814,6 +856,22 @@ class Robot:
                 curr_time, curr_text = self.text_trace[index]
                 if curr_time <= time:
                     return curr_text
+
+    def get_current_pen_color(self, time):
+        # FIXME: rewrite as binary search
+        if len(self.pen_trace) > 0:
+            # find the last color that is after time
+            for index in range(-1, -len(self.pen_trace) - 1, -1):
+                data = self.pen_trace[index]
+                # time, (color, radius)
+                if data[0] <= time:
+                    return data
+
+    def update_ground_image(self, world_time):
+        data = self.get_current_pen_color(world_time)
+        # time, (color, radius)
+        if data is not None and data[1][0] is not None:
+            self.world.set_ground_color_at(self.x, self.y, data[1])
 
     def draw(self, backend):
         """
