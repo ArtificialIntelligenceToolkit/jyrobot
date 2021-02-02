@@ -309,6 +309,11 @@ class World:
         """
         Set the random seed.
         """
+        if seed == 0:
+            seed = random.randint(0, 9999999)
+            print("Random seed set to:", seed)
+        else:
+            print("Using random seed:", seed)
         random.seed(seed)
         self.seed = seed
         self.config["seed"] = seed
@@ -318,12 +323,7 @@ class World:
         Load a json config file.
         """
         self.config = config
-        if "seed" not in config or config["seed"] == 0:
-            seed = random.randint(0, 9999999)
-            print("Random seed set to:", seed)
-        else:
-            seed = config["seed"]
-            print("Using random seed:", seed)
+        seed = config.get("seed", 0)
         self.set_seed(seed)
 
         if "filename" in config:
