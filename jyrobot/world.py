@@ -140,6 +140,7 @@ class World:
         ground_color="green",
         ground_image_filename=None,
         filename=None,
+        quiet=False,
         **kwargs
     ):
         """
@@ -156,6 +157,7 @@ class World:
             * ground_color: (str) color name
             * ground_image_filename: (str) image file used for backgound
             * filename: (str) name of json world file
+            * quiet: (bool) if True, don't print any messages
 
         You can also pass any valid item from the world config settings.
         """
@@ -170,6 +172,7 @@ class World:
             "boundary_wall_width": boundary_wall_width,
             "boundary_wall_color": boundary_wall_color,
             "ground_color": ground_color,
+            "quiet": quiet,
         }
         if filename is not None:
             config["filename"] = filename
@@ -272,6 +275,7 @@ class World:
         """
         self.draw_list = []
         self.filename = None
+        self.quiet = False
         self.seed = 0
         self.width = 500
         self.height = 250
@@ -311,9 +315,11 @@ class World:
         """
         if seed == 0:
             seed = random.randint(0, 9999999)
-            print("Random seed set to:", seed)
+            if not self.quiet:
+                print("Random seed set to:", seed)
         else:
-            print("Using random seed:", seed)
+            if not self.quiet:
+                print("Using random seed:", seed)
         random.seed(seed)
         self.seed = seed
         self.config["seed"] = seed
@@ -328,6 +334,8 @@ class World:
 
         if "filename" in config:
             self.filename = config["filename"]
+        if "quiet" in config:
+            self.quiet = config["quiet"]
         if "width" in config:
             self.width = config["width"]
         if "height" in config:
@@ -418,6 +426,7 @@ class World:
             "boundary_wall_width": self.boundary_wall_width,
             "ground_color": str(self.ground_color),
             "ground_image_filename": self.ground_image_filename,
+            "quiet": self.quiet,
             "walls": [],
             "bulbs": [],
             "robots": [],
@@ -443,7 +452,7 @@ class World:
             )
 
         for robot in self._robots:
-            config["robots"].append(robot.to_json(config["robots"]))
+            config["robots"].append(robot.to_json())
 
         return config
 
@@ -464,7 +473,8 @@ class World:
             with open(self.filename, "w") as fp:
                 json_dump(self.config, fp, sort_keys=True, indent=4)
         else:
-            print("Saved in memory. Use world.save_as('filename') to save to disk.")
+            if not self.quiet:
+                print("Saved in memory. Use world.save_as('filename') to save to disk.")
 
     def save_as(self, filename):
         """
@@ -835,7 +845,7 @@ class World:
         stop_real_time = time.monotonic()
         stop_time = self.time
         speed = (stop_time - start_time) / (stop_real_time - start_real_time)
-        if steps > 1 and not quiet:
+        if steps > 1 and not quiet and not self.quiet:
             print(
                 "Simulation stopped at: %s; speed %s x real time"
                 % (format_time(self.time), round(speed, 2))

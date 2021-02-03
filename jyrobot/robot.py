@@ -402,7 +402,7 @@ class Robot:
         else:
             print("Can't add the same device to a robot more than once.")
 
-    def to_json(self, robot_list):
+    def to_json(self):
         """
         Get this robot as a JSON config file.
         """
