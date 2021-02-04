@@ -370,6 +370,8 @@ class Robot:
     def _set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
         Set the pose of the robot. direction is in radians.
+
+        Note: the robot must be in a world.
         """
         if clear_trace:
             self.trace[:] = []
@@ -379,6 +381,8 @@ class Robot:
             self.y = y
         if direction is not None:
             self.direction = direction
+        # Save the robot's pose to the config
+        self.world.save()
 
     def del_device(self, device):
         """
