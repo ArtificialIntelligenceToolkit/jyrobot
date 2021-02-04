@@ -211,8 +211,7 @@ class World:
         try:
             picture = self.backend.take_picture(self.time)
         except RuntimeError:
-            print("Backend is not ready yet; try again")
-            return
+            raise Exception("Backend is not ready yet; try again")
 
         if picture is None:
             return
@@ -706,7 +705,7 @@ class World:
             self.update()
             self.save()
         else:
-            print("Can't add the same robot to a world more than once.")
+            raise Exception("Can't add the same robot to a world more than once.")
 
     def _signal_handler(self, *args, **kwargs):
         """

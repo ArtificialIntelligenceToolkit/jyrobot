@@ -270,7 +270,7 @@ class Robot:
                         device_class = getattr(DEVICES, deviceConfig["class"])
                         device = device_class(**deviceConfig)
                     except Exception:
-                        print(
+                        raise Exception(
                             "Failed to create device: %s(**%s)"
                             % (deviceConfig["class"], deviceConfig)
                         )
@@ -332,8 +332,6 @@ class Robot:
         Set the color of a robot, and its trace.
         """
         self._set_color(color)
-        if self.world is None:
-            print("This robot is not in a world")
 
     def _set_color(self, color):
         if not isinstance(color, Color):
@@ -349,7 +347,9 @@ class Robot:
         Set the pose of the robot. direction is in degrees.
         """
         if self.world is None:
-            print("This robot is not in a world")
+            raise Exception(
+                "This robot is not in a world; add to world before setting pose"
+            )
         else:
             if direction is not None:
                 direction = direction * math.pi / 180
@@ -360,7 +360,9 @@ class Robot:
         Set the pose of the robot to a random location.
         """
         if self.world is None:
-            print("This robot is not in a world")
+            raise Exception(
+                "This robot is not in a world; add robot to world before calling set_random_pose"
+            )
         else:
             x, y, direction = self.world._find_random_pose(self)
             self._set_pose(x, y, direction, clear_trace)
@@ -388,7 +390,7 @@ class Robot:
             device.robot = None
             self._devices.remove(device)
         else:
-            print("Device is not on robot.")
+            raise Exception("Device %r is not on robot." % device)
 
     def add_device(self, device):
         """
@@ -400,7 +402,7 @@ class Robot:
             if self.world is not None:
                 self.world.update()  # request draw
         else:
-            print("Can't add the same device to a robot more than once.")
+            raise Exception("Can't add the same device to a robot more than once.")
 
     def to_json(self):
         """
