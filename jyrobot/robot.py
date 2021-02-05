@@ -345,6 +345,8 @@ class Robot:
     def set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
         Set the pose of the robot. direction is in degrees.
+
+        Note: the robot must be in a world.
         """
         if self.world is None:
             raise Exception(
@@ -360,6 +362,8 @@ class Robot:
     def set_random_pose(self, clear_trace=True):
         """
         Set the pose of the robot to a random location.
+
+        Note: the robot must be in a world.
         """
         if self.world is None:
             raise Exception(
@@ -374,11 +378,11 @@ class Robot:
     def _set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
         Set the pose of the robot. direction is in radians.
-
-        Note: the robot must be in a world.
         """
         if clear_trace:
             self.trace[:] = []
+            self.text_trace[:] = []
+            self.pen_trace[:] = []
         if x is not None:
             self.x = x
         if y is not None:

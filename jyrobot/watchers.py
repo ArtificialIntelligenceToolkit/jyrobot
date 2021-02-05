@@ -288,7 +288,7 @@ class Recorder(Watcher):
                     orig_robot.va,
                     orig_robot.stalled,
                 )
-                self.world.robots[i]._set_pose(x, y, a)
+                self.world.robots[i]._set_pose(x, y, a, clear_trace=False)
                 self.world.robots[i].vx = vx
                 self.world.robots[i].vy = vy
                 self.world.robots[i].va = va
@@ -298,7 +298,7 @@ class Recorder(Watcher):
             index = max(min(len(self.states) - 1, index), 0)
             for i, state in enumerate(self.states[index]):
                 x, y, a, vx, vy, va, stalled = state
-                self.world.robots[i]._set_pose(x, y, a)
+                self.world.robots[i]._set_pose(x, y, a, clear_trace=False)
                 self.world.robots[i].vx = vx
                 self.world.robots[i].vy = vy
                 self.world.robots[i].va = va
