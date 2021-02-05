@@ -354,6 +354,8 @@ class Robot:
             if direction is not None:
                 direction = direction * math.pi / 180
             self._set_pose(x, y, direction, clear_trace)
+            # Save the robot's pose to the config
+            self.world.save()
 
     def set_random_pose(self, clear_trace=True):
         """
@@ -366,6 +368,8 @@ class Robot:
         else:
             x, y, direction = self.world._find_random_pose(self)
             self._set_pose(x, y, direction, clear_trace)
+            # Save the robot's pose to the config
+            self.world.save()
 
     def _set_pose(self, x=None, y=None, direction=None, clear_trace=True):
         """
@@ -381,8 +385,6 @@ class Robot:
             self.y = y
         if direction is not None:
             self.direction = direction
-        # Save the robot's pose to the config
-        self.world.save()
 
     def del_device(self, device):
         """
