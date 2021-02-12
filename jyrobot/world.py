@@ -822,7 +822,9 @@ class World:
         with self._no_interrupt():
             start_real_time = time.monotonic()
             start_time = self.time
-            for step in progress_bar(step_iter, show_progress, self.step_display):
+            for step in progress_bar(
+                step_iter, show_progress and not quiet, self.step_display
+            ):
                 if self.stop:
                     break
                 if function is not None:
