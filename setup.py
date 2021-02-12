@@ -49,10 +49,8 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     package_data={"jyrobot": ["worlds/*.json", "worlds/*.png"]},
-    extras_require={
-        "jupyter": ["Pillow", "ipywidgets", "IPython", "bqplot"],
-        "images": ["Pillow"],
-    },
+    install_requires=["Pillow"],
+    extras_require={"jupyter": ["ipywidgets", "IPython", "bqplot"],},
     python_requires=">=3.6",
     license="BSD-3-Clause",
     platforms="Linux, Mac OS X, Windows",
